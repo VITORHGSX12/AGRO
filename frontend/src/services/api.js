@@ -116,10 +116,15 @@ export const api = {
     createMovimentacao: (data) => fetchJson('/movimentacoes', { method: 'POST', body: JSON.stringify(data) }),
 
     // Sanidade
+    getSanidadeKpis: () => fetchJson('/sanidade/kpis'),
     getSanidade: (params = {}) => {
         const q = new URLSearchParams();
         if (params.tipo) q.append('tipo', params.tipo);
         if (params.status_filtro) q.append('status_filtro', params.status_filtro);
+        if (params.animal_id) q.append('animal_id', params.animal_id);
+        if (params.busca) q.append('busca', params.busca);
+        if (params.data_inicio) q.append('data_inicio', params.data_inicio);
+        if (params.data_fim) q.append('data_fim', params.data_fim);
         const query = q.toString() ? `?${q.toString()}` : '';
         return fetchJson(`/sanidade${query}`);
     },
@@ -175,6 +180,7 @@ export const api = {
     pagarTodasFolhas: (data) => fetchJson('/folha/pagar-todas', { method: 'POST', body: JSON.stringify(data) }),
 
     // Módulo Agrícola (Talhões, Safras, Insumos)
+    getAgricolaKpis: () => fetchJson('/agricola/kpis'),
     getTalhoes: () => fetchJson('/agricola/talhoes'),
     createTalhao: (data) => fetchJson('/agricola/talhoes', { method: 'POST', body: JSON.stringify(data) }),
     updateTalhao: (id, data) => fetchJson(`/agricola/talhoes/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
@@ -184,11 +190,13 @@ export const api = {
         const q = new URLSearchParams();
         if (params.status) q.append('status', params.status);
         if (params.talhao_id) q.append('talhao_id', params.talhao_id);
+        if (params.cultura) q.append('cultura', params.cultura);
         const query = q.toString() ? `?${q.toString()}` : '';
         return fetchJson(`/agricola/safras${query}`);
     },
     getSafraById: (id) => fetchJson(`/agricola/safras/${id}`),
     createSafra: (data) => fetchJson('/agricola/safras', { method: 'POST', body: JSON.stringify(data) }),
+    updateSafraStatus: (id, data) => fetchJson(`/agricola/safras/${id}/status`, { method: 'PUT', body: JSON.stringify(data) }),
     colherSafra: (id, data) => fetchJson(`/agricola/safras/${id}/colher`, { method: 'POST', body: JSON.stringify(data) }),
     deleteSafra: (id) => fetchJson(`/agricola/safras/${id}`, { method: 'DELETE' }),
 

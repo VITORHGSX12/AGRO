@@ -10,19 +10,27 @@ import {
     Calendar,
     X,
     Filter,
-    RefreshCw
+    Search,
+    RefreshCw,
+    Shield,
+    AlertCircle,
+    Activity,
+    FileText,
+    Users
 } from 'lucide-react';
 import { api } from '../services/api';
 import Pagination from '../components/Pagination';
 
 export default function SanidadeView({ onReloadDashboard, triggerNewModal, onResetTrigger }) {
+    const [kpis, setKpis] = useState(null);
     const [sanidades, setSanidades] = useState([]);
     const [animais, setAnimais] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    // Filters
     const [filtroStatus, setFiltroStatus] = useState('');
     const [filtroTipo, setFiltroTipo] = useState('');
-    const [dataInicio, setDataInicio] = useState('');
-    const [dataFim, setDataFim] = useState('');
+    const [busca, setBusca] = useState('');
 
     // Pagination
     const [currentPage, setCurrentPage] = useState(1);
@@ -37,12 +45,19 @@ export default function SanidadeView({ onReloadDashboard, triggerNewModal, onRes
         lote_ou_grupo: 'Todo o Rebanho',
         data_aplicacao: new Date().toISOString().split('T')[0],
         data_proxima_dose: '',
+        dias_carencia: '0',
         status: 'pendente',
         observacoes: ''
     });
     const [isColetivo, setIsColetivo] = useState(true);
     const [saving, setSaving] = useState(false);
     const [errorMsg, setErrorMsg] = useState('');
+    const [feedback, setFeedback] = useState('');
+
+    const showFeedback = (msg) => {
+        setFeedback(msg);
+        setTimeout(() => setFeedback(''), 4000);
+    };
 
     const loadData = async () => {
         try {
@@ -50,14 +65,15 @@ export default function SanidadeView({ onReloadDashboard, triggerNewModal, onRes
             const queryParams = {
                 status_filtro: filtroStatus || undefined,
                 tipo: filtroTipo || undefined,
-                data_inicio: dataInicio || undefined,
-                data_fim: dataFim || undefined
+                busca: busca || undefined
             };
 
-            const [sanData, animData] = await Promise.all([
+            const [kpisData, sanData, animData] = await Promise.all([
+                api.getSanidadeKpis().catch(() => null),
                 api.getSanidade(queryParams),
                 api.getAnimais({ status: 'ativo' })
             ]);
+            setKpis(kpisData);
             setSanidades(sanData);
             setAnimais(animData);
             setCurrentPage(1);
@@ -70,7 +86,7 @@ export default function SanidadeView({ onReloadDashboard, triggerNewModal, onRes
 
     useEffect(() => {
         loadData();
-    }, [filtroStatus, filtroTipo, dataInicio, dataFim]);
+    }, [filtroStatus, filtroTipo, busca]);
 
     useEffect(() => {
         if (triggerNewModal) {
@@ -83,10 +99,11 @@ export default function SanidadeView({ onReloadDashboard, triggerNewModal, onRes
         setFormData({
             tipo: 'vacina',
             nome_produto: '',
-            animal_id: '',
+            animal_id: animais.length > 0 ? String(animais[0].id) : '',
             lote_ou_grupo: 'Todo o Rebanho',
             data_aplicacao: new Date().toISOString().split('T')[0],
             data_proxima_dose: '',
+            dias_carencia: '0',
             status: 'pendente',
             observacoes: ''
         });
@@ -104,8 +121,10 @@ export default function SanidadeView({ onReloadDashboard, triggerNewModal, onRes
             await api.createSanidade({
                 ...formData,
                 animal_id: isColetivo ? null : (formData.animal_id ? Number(formData.animal_id) : null),
-                lote_ou_grupo: isColetivo ? formData.lote_ou_grupo : null
+                lote_ou_grupo: isColetivo ? formData.lote_ou_grupo : null,
+                dias_carencia: Number(formData.dias_carencia) || 0
             });
+            showFeedback('Protocolo sanitário registrado com sucesso!');
             setModalOpen(false);
             loadData();
             if (onReloadDashboard) onReloadDashboard();
@@ -116,406 +135,551 @@ export default function SanidadeView({ onReloadDashboard, triggerNewModal, onRes
         }
     };
 
-    const handleConcluir = async (id) => {
+    const handleConcluir = async (id, produto) => {
         try {
-            await api.concluirSanidade(id);
+            await api.concluirSanidade(id, {
+                data_aplicacao: new Date().toISOString().split('T')[0]
+            });
+            showFeedback(`Aplicação de ${produto} confirmada com sucesso!`);
             loadData();
             if (onReloadDashboard) onReloadDashboard();
         } catch (err) {
-            alert('Erro ao concluir dose: ' + err.message);
+            alert(err.message);
         }
     };
 
-    const handleDelete = async (id) => {
-        if (!confirm('Deseja excluir este registro de sanidade?')) return;
+    const handleDelete = async (id, produto) => {
+        if (!window.confirm(`Tem certeza que deseja excluir o registro de ${produto}?`)) {
+            return;
+        }
         try {
             await api.deleteSanidade(id);
+            showFeedback('Registro sanitário excluído!');
             loadData();
             if (onReloadDashboard) onReloadDashboard();
         } catch (err) {
-            alert('Erro ao excluir: ' + err.message);
+            alert(err.message);
         }
     };
 
-    const handleClearFilters = () => {
-        setFiltroStatus('');
-        setFiltroTipo('');
-        setDataInicio('');
-        setDataFim('');
-    };
-
-    const currentSanidades = sanidades.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+    // Pagination calculations
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = sanidades.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(sanidades.length / itemsPerPage);
 
     return (
-        <div className="space-y-4">
-            {/* Filter Bar & Quick Stats */}
-            <div className="p-4 rounded-2xl bg-slate-800/80 border border-slate-700/60 flex flex-wrap items-center justify-between gap-3 shadow-sm">
-                <div className="flex flex-wrap items-center gap-2">
-                    {/* Status Tabs */}
-                    <button
-                        onClick={() => setFiltroStatus('')}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
-                            filtroStatus === '' ? 'bg-emerald-500 text-white' : 'bg-slate-900 text-slate-400 hover:text-white'
-                        }`}
-                    >
-                        Todos
-                    </button>
-                    <button
-                        onClick={() => setFiltroStatus('atrasada')}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 ${
-                            filtroStatus === 'atrasada' ? 'bg-rose-500 text-white' : 'bg-slate-900 text-rose-400 hover:bg-rose-500/20'
-                        }`}
-                    >
-                        <AlertTriangle className="w-3.5 h-3.5" />
-                        <span>Atrasadas</span>
-                    </button>
-                    <button
-                        onClick={() => setFiltroStatus('alerta_vencendo')}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 ${
-                            filtroStatus === 'alerta_vencendo' ? 'bg-amber-500 text-white' : 'bg-slate-900 text-amber-400 hover:bg-amber-500/20'
-                        }`}
-                    >
-                        <Clock className="w-3.5 h-3.5" />
-                        <span>Vence em 7 dias</span>
-                    </button>
-                    <button
-                        onClick={() => setFiltroStatus('aplicada')}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 ${
-                            filtroStatus === 'aplicada' ? 'bg-slate-700 text-emerald-400' : 'bg-slate-900 text-slate-400 hover:text-white'
-                        }`}
-                    >
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        <span>Concluídas</span>
-                    </button>
+        <div className="space-y-6">
+            {/* Toast Feedback */}
+            {feedback && (
+                <div className="fixed top-5 right-5 z-50 flex items-center gap-2 bg-emerald-600 text-white px-5 py-3 rounded-xl shadow-xl font-medium animate-fade-in">
+                    <CheckCircle2 className="w-5 h-5" />
+                    <span>{feedback}</span>
+                </div>
+            )}
 
-                    <div className="h-4 w-[1px] bg-slate-700 mx-1"></div>
-
-                    {/* Tipo Filter */}
-                    <select
-                        value={filtroTipo}
-                        onChange={(e) => setFiltroTipo(e.target.value)}
-                        className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
-                    >
-                        <option value="">Todos os Tipos</option>
-                        <option value="vacina">Vacinas</option>
-                        <option value="vermifugo">Vermífugos</option>
-                        <option value="tratamento">Tratamentos</option>
-                        <option value="outro">Outros</option>
-                    </select>
-
-                    {/* Date Range Filter */}
-                    <div className="flex items-center gap-1.5 bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-1 text-xs">
-                        <span className="text-slate-400 text-[11px]">De:</span>
-                        <input
-                            type="date"
-                            value={dataInicio}
-                            onChange={(e) => setDataInicio(e.target.value)}
-                            className="bg-transparent text-slate-200 focus:outline-none text-xs"
-                        />
-                        <span className="text-slate-400 text-[11px]">Até:</span>
-                        <input
-                            type="date"
-                            value={dataFim}
-                            onChange={(e) => setDataFim(e.target.value)}
-                            className="bg-transparent text-slate-200 focus:outline-none text-xs"
-                        />
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900/40 border border-slate-800/80 p-5 rounded-2xl backdrop-blur-md">
+                <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20">
+                        <Shield className="w-6 h-6" />
                     </div>
-
-                    {(filtroStatus || filtroTipo || dataInicio || dataFim) && (
-                        <button
-                            onClick={handleClearFilters}
-                            className="px-2.5 py-1 rounded-xl bg-slate-700/60 hover:bg-slate-700 text-[11px] text-slate-300 transition"
-                        >
-                            Limpar
-                        </button>
-                    )}
+                    <div>
+                        <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+                            Sanidade Animal & Protocolos
+                        </h1>
+                        <p className="text-sm text-slate-400">
+                            Calendário vacinal, controle de vermífugos, histórico de tratamentos e períodos de carência
+                        </p>
+                    </div>
                 </div>
 
                 <button
                     onClick={handleOpenNew}
-                    className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition shadow-md shadow-emerald-500/20"
+                    className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white px-4 py-2.5 rounded-xl font-semibold shadow-lg shadow-emerald-600/20 hover:shadow-emerald-500/30 transition-all text-sm self-start sm:self-auto"
                 >
                     <Plus className="w-4 h-4" />
-                    <span>Lançar Vacina / Dose</span>
+                    Nova Aplicação / Protocolo
                 </button>
             </div>
 
-            {/* Sanidade Cards / Table */}
-            <div className="bg-slate-800/80 border border-slate-700/60 rounded-2xl overflow-hidden shadow-sm flex flex-col justify-between">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs">
-                        <thead className="bg-slate-900/60 text-slate-400 font-semibold border-b border-slate-700/60">
-                            <tr>
-                                <th className="px-5 py-3.5">Medicamento / Vacina</th>
-                                <th className="px-4 py-3.5">Tipo</th>
-                                <th className="px-4 py-3.5">Alvo / Rebanho</th>
-                                <th className="px-4 py-3.5">Última Aplicação</th>
-                                <th className="px-4 py-3.5">Próxima Dose</th>
-                                <th className="px-4 py-3.5">Status Sanitário</th>
-                                <th className="px-5 py-3.5 text-right">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-700/40">
-                            {currentSanidades.map((s) => (
-                                <tr key={s.id} className="hover:bg-slate-700/30 transition">
-                                    <td className="px-5 py-3.5 font-bold text-slate-100">
-                                        <div className="text-sm">{s.nome_produto}</div>
-                                        {s.observacoes && (
-                                            <div className="text-[11px] text-slate-400 font-normal">{s.observacoes}</div>
-                                        )}
-                                    </td>
-                                    <td className="px-4 py-3.5 capitalize text-slate-300">
-                                        {s.tipo}
-                                    </td>
-                                    <td className="px-4 py-3.5 text-slate-200 font-medium">
-                                        {s.animal_brinco ? (
-                                            <span className="bg-slate-900 px-2 py-0.5 rounded border border-slate-700">
-                                                Brinco {s.animal_brinco} ({s.animal_categoria})
-                                            </span>
-                                        ) : (
-                                            <span className="text-emerald-400 font-semibold">
-                                                {s.lote_ou_grupo || 'Todo o Rebanho'}
-                                            </span>
-                                        )}
-                                    </td>
-                                    <td className="px-4 py-3.5 text-slate-300">
-                                        {s.data_aplicacao}
-                                    </td>
-                                    <td className="px-4 py-3.5 font-medium text-slate-200">
-                                        {s.data_proxima_dose || '-'}
-                                    </td>
-                                    <td className="px-4 py-3.5">
-                                        {s.computed_status === 'atrasada' && (
-                                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                                                <AlertTriangle className="w-3 h-3 text-rose-400" />
-                                                Atrasada
-                                            </span>
-                                        )}
-                                        {s.computed_status === 'alerta_vencendo' && (
-                                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                                                <Clock className="w-3 h-3 text-amber-400" />
-                                                Vence em 7 dias
-                                            </span>
-                                        )}
-                                        {s.computed_status === 'pendente' && (
-                                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-blue-500/20 text-blue-300 border border-blue-500/30">
-                                                Pendente
-                                            </span>
-                                        )}
-                                        {s.computed_status === 'aplicada' && (
-                                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                                                <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                                                Aplicada
-                                            </span>
-                                        )}
-                                    </td>
-                                    <td className="px-5 py-3.5 text-right">
-                                        <div className="flex items-center justify-end gap-2">
-                                            {s.status !== 'aplicada' && (
-                                                <button
-                                                    onClick={() => handleConcluir(s.id)}
-                                                    className="px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 text-[11px] font-semibold transition flex items-center gap-1"
-                                                    title="Marcar dose como aplicada"
-                                                >
-                                                    <Check className="w-3 h-3" />
-                                                    <span>Aplicada</span>
-                                                </button>
-                                            )}
-                                            <button
-                                                onClick={() => handleDelete(s.id)}
-                                                className="p-1.5 rounded-lg bg-slate-700/60 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 transition"
-                                                title="Excluir Registro"
-                                            >
-                                                <Trash2 className="w-3.5 h-3.5" />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+            {/* Top KPIs */}
+            {kpis && (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                    <button
+                        onClick={() => setFiltroStatus('')}
+                        className={`text-left p-4 rounded-2xl border transition-all ${
+                            filtroStatus === ''
+                                ? 'bg-slate-800/90 border-slate-600 shadow-lg'
+                                : 'bg-slate-900/60 border-slate-800/80 hover:border-slate-700'
+                        }`}
+                    >
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Total Registros</span>
+                        <div className="text-2xl font-bold text-white">{kpis.total}</div>
+                        <span className="text-[11px] text-slate-500 block mt-1">Histórico completo</span>
+                    </button>
 
-                    {loading && (
-                        <div className="py-16 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
-                            <RefreshCw className="w-4 h-4 animate-spin text-emerald-400" />
-                            <span>Carregando dados sanitários...</span>
+                    <button
+                        onClick={() => setFiltroStatus('atrasada')}
+                        className={`text-left p-4 rounded-2xl border transition-all ${
+                            filtroStatus === 'atrasada'
+                                ? 'bg-red-500/20 border-red-500/50 shadow-lg'
+                                : 'bg-slate-900/60 border-slate-800/80 hover:border-red-500/40'
+                        }`}
+                    >
+                        <div className="flex items-center justify-between mb-1">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-red-400">Atrasadas</span>
+                            <AlertTriangle className="w-3.5 h-3.5 text-red-400" />
                         </div>
-                    )}
+                        <div className="text-2xl font-bold text-red-400">{kpis.atrasadas}</div>
+                        <span className="text-[11px] text-red-300/60 block mt-1">Prazo expirado</span>
+                    </button>
 
-                    {sanidades.length === 0 && !loading && (
-                        <div className="py-16 text-center text-xs text-slate-500">
-                            Nenhum registro sanitário cadastrado com os filtros selecionados.
+                    <button
+                        onClick={() => setFiltroStatus('alerta_vencendo')}
+                        className={`text-left p-4 rounded-2xl border transition-all ${
+                            filtroStatus === 'alerta_vencendo'
+                                ? 'bg-amber-500/20 border-amber-500/50 shadow-lg'
+                                : 'bg-slate-900/60 border-slate-800/80 hover:border-amber-500/40'
+                        }`}
+                    >
+                        <div className="flex items-center justify-between mb-1">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400">Vencendo (7d)</span>
+                            <Clock className="w-3.5 h-3.5 text-amber-400" />
                         </div>
-                    )}
+                        <div className="text-2xl font-bold text-amber-400">{kpis.alerta_vencendo}</div>
+                        <span className="text-[11px] text-amber-300/60 block mt-1">Próximas aplicações</span>
+                    </button>
+
+                    <button
+                        onClick={() => setFiltroStatus('sob_carencia')}
+                        className={`text-left p-4 rounded-2xl border transition-all ${
+                            filtroStatus === 'sob_carencia'
+                                ? 'bg-purple-500/20 border-purple-500/50 shadow-lg'
+                                : 'bg-slate-900/60 border-slate-800/80 hover:border-purple-500/40'
+                        }`}
+                    >
+                        <div className="flex items-center justify-between mb-1">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-purple-400">Sob Carência</span>
+                            <ShieldAlert className="w-3.5 h-3.5 text-purple-400" />
+                        </div>
+                        <div className="text-2xl font-bold text-purple-400">{kpis.sob_carencia}</div>
+                        <span className="text-[11px] text-purple-300/60 block mt-1">Bloqueio p/ abate</span>
+                    </button>
+
+                    <button
+                        onClick={() => setFiltroStatus('aplicada')}
+                        className={`text-left p-4 rounded-2xl border transition-all ${
+                            filtroStatus === 'aplicada'
+                                ? 'bg-emerald-500/20 border-emerald-500/50 shadow-lg'
+                                : 'bg-slate-900/60 border-slate-800/80 hover:border-emerald-500/40'
+                        }`}
+                    >
+                        <div className="flex items-center justify-between mb-1">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">Aplicadas</span>
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                        </div>
+                        <div className="text-2xl font-bold text-emerald-400">{kpis.aplicadas}</div>
+                        <span className="text-[11px] text-emerald-300/60 block mt-1">Doses concluídas</span>
+                    </button>
+                </div>
+            )}
+
+            {/* Filtros e Busca */}
+            <div className="bg-slate-900/40 border border-slate-800/80 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-2">
+                    <div className="relative">
+                        <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                        <input
+                            type="text"
+                            placeholder="Buscar por produto, brinco ou lote..."
+                            value={busca}
+                            onChange={(e) => setBusca(e.target.value)}
+                            className="bg-slate-800/80 border border-slate-700/80 text-white text-xs rounded-xl pl-9 pr-3 py-2 focus:outline-none focus:border-emerald-500 transition-all w-56 sm:w-64"
+                        />
+                    </div>
+
+                    <select
+                        value={filtroTipo}
+                        onChange={(e) => setFiltroTipo(e.target.value)}
+                        className="bg-slate-800/80 border border-slate-700/80 text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-500"
+                    >
+                        <option value="">Todos os Tipos</option>
+                        <option value="vacina">💉 Vacina</option>
+                        <option value="vermifugo">💊 Vermífugo</option>
+                        <option value="tratamento">🩺 Tratamento / Antibiótico</option>
+                        <option value="outro">📦 Outro</option>
+                    </select>
+
+                    <select
+                        value={filtroStatus}
+                        onChange={(e) => setFiltroStatus(e.target.value)}
+                        className="bg-slate-800/80 border border-slate-700/80 text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-500"
+                    >
+                        <option value="">Todos os Status</option>
+                        <option value="pendente">⏳ Pendente</option>
+                        <option value="alerta_vencendo">⚠️ Vencendo em 7 dias</option>
+                        <option value="atrasada">🚨 Atrasada</option>
+                        <option value="sob_carencia">🛡️ Sob Carência Sanitária</option>
+                        <option value="aplicada">✅ Aplicada</option>
+                    </select>
                 </div>
 
-                {/* Pagination */}
-                <div className="border-t border-slate-700/60 p-3 bg-slate-900/30">
-                    <Pagination
-                        currentPage={currentPage}
-                        totalItems={sanidades.length}
-                        itemsPerPage={itemsPerPage}
-                        onPageChange={(page) => setCurrentPage(page)}
-                    />
+                <div className="text-xs text-slate-400">
+                    Total: <strong className="text-white">{sanidades.length}</strong> registros
                 </div>
             </div>
 
-            {/* Modal: Novo Lançamento Sanitário */}
+            {/* Tabela de Sanidade */}
+            <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl overflow-hidden shadow-xl">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs text-slate-300">
+                        <thead className="bg-slate-950/60 text-slate-400 font-semibold uppercase tracking-wider text-[10px] border-b border-slate-800">
+                            <tr>
+                                <th className="py-3.5 px-4">Alvo / Animal</th>
+                                <th className="py-3.5 px-4">Tipo & Produto</th>
+                                <th className="py-3.5 px-4">Data Aplicação</th>
+                                <th className="py-3.5 px-4">Próxima Dose</th>
+                                <th className="py-3.5 px-4">Carência Sanitária</th>
+                                <th className="py-3.5 px-4">Status</th>
+                                <th className="py-3.5 px-4 text-right">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800/60">
+                            {loading ? (
+                                <tr>
+                                    <td colSpan="7" className="py-12 text-center text-slate-500">
+                                        Carregando registros sanitários...
+                                    </td>
+                                </tr>
+                            ) : currentItems.length === 0 ? (
+                                <tr>
+                                    <td colSpan="7" className="py-12 text-center text-slate-500">
+                                        Nenhum registro sanitário encontrado com os filtros selecionados.
+                                    </td>
+                                </tr>
+                            ) : (
+                                currentItems.map(item => {
+                                    const isAtrasada = item.is_atrasada;
+                                    const isVencendo = item.is_vencendo_7dias;
+                                    const isAplicada = item.status === 'aplicada';
+
+                                    return (
+                                        <tr key={item.id} className="hover:bg-slate-800/30 transition-all">
+                                            {/* Alvo / Animal */}
+                                            <td className="py-3 px-4">
+                                                {item.animal_brinco ? (
+                                                    <div>
+                                                        <span className="font-bold text-white tracking-wide">
+                                                            🏷️ {item.animal_brinco}
+                                                        </span>
+                                                        <span className="text-[10px] text-slate-400 block">
+                                                            {item.animal_categoria || 'Animal'} {item.piquete_nome ? `• ${item.piquete_nome}` : ''}
+                                                        </span>
+                                                    </div>
+                                                ) : (
+                                                    <div>
+                                                        <span className="font-semibold text-amber-400 flex items-center gap-1">
+                                                            <Users className="w-3 h-3" />
+                                                            {item.lote_ou_grupo || 'Aplicação Coletiva'}
+                                                        </span>
+                                                        <span className="text-[10px] text-slate-500 block">Grupo / Rebanho</span>
+                                                    </div>
+                                                )}
+                                            </td>
+
+                                            {/* Tipo & Produto */}
+                                            <td className="py-3 px-4">
+                                                <div className="font-semibold text-white">{item.nome_produto}</div>
+                                                <span className="text-[10px] uppercase font-bold text-slate-400">
+                                                    {item.tipo}
+                                                </span>
+                                            </td>
+
+                                            {/* Data Aplicação */}
+                                            <td className="py-3 px-4">
+                                                <span className="text-slate-300 font-medium">{item.data_aplicacao}</span>
+                                            </td>
+
+                                            {/* Próxima Dose */}
+                                            <td className="py-3 px-4">
+                                                {item.data_proxima_dose ? (
+                                                    <span className={`font-semibold ${
+                                                        isAtrasada ? 'text-red-400' : isVencendo ? 'text-amber-400' : 'text-slate-300'
+                                                    }`}>
+                                                        {item.data_proxima_dose}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-slate-500">—</span>
+                                                )}
+                                            </td>
+
+                                            {/* Carência */}
+                                            <td className="py-3 px-4">
+                                                {item.dias_carencia > 0 ? (
+                                                    item.sob_carencia ? (
+                                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                                                            <ShieldAlert className="w-3 h-3" />
+                                                            {item.dias_restantes_carencia}d restantes (até {item.data_fim_carencia})
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-slate-400 text-[11px]">
+                                                            {item.dias_carencia} dias (liberado)
+                                                        </span>
+                                                    )
+                                                ) : (
+                                                    <span className="text-slate-500 text-[11px]">Sem carência</span>
+                                                )}
+                                            </td>
+
+                                            {/* Status */}
+                                            <td className="py-3 px-4">
+                                                {isAplicada ? (
+                                                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                                        <CheckCircle2 className="w-3 h-3" />
+                                                        Aplicada
+                                                    </span>
+                                                ) : isAtrasada ? (
+                                                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-500/10 text-red-400 border border-red-500/20 animate-pulse">
+                                                        <AlertTriangle className="w-3 h-3" />
+                                                        Atrasada
+                                                    </span>
+                                                ) : isVencendo ? (
+                                                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                                        <Clock className="w-3 h-3" />
+                                                        Vence em breve
+                                                    </span>
+                                                ) : (
+                                                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-800 text-slate-300 border border-slate-700">
+                                                        <Calendar className="w-3 h-3" />
+                                                        Agendada
+                                                    </span>
+                                                )}
+                                            </td>
+
+                                            {/* Ações */}
+                                            <td className="py-3 px-4 text-right">
+                                                <div className="flex items-center justify-end gap-1.5">
+                                                    {!isAplicada && (
+                                                        <button
+                                                            onClick={() => handleConcluir(item.id, item.nome_produto)}
+                                                            className="flex items-center gap-1 bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all shadow-md shadow-emerald-600/20"
+                                                            title="Confirmar Aplicação da Dose"
+                                                        >
+                                                            <Check className="w-3.5 h-3.5" />
+                                                            Aplicar
+                                                        </button>
+                                                    )}
+                                                    <button
+                                                        onClick={() => handleDelete(item.id, item.nome_produto)}
+                                                        className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
+                                                        title="Excluir Registro"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+
+                {totalPages > 1 && (
+                    <div className="p-4 border-t border-slate-800">
+                        <Pagination
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={setCurrentPage}
+                        />
+                    </div>
+                )}
+            </div>
+
+            {/* Modal Nova Aplicação Sanitária */}
             {modalOpen && (
-                <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-150">
-                        <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl">
+                        <div className="flex items-center justify-between mb-5">
                             <div className="flex items-center gap-2">
-                                <ShieldAlert className="w-5 h-5 text-emerald-400" />
-                                <h3 className="font-bold text-sm text-white">Cadastrar Vacinação / Sanidade</h3>
+                                <Shield className="w-5 h-5 text-emerald-400" />
+                                <h3 className="text-lg font-bold text-white">Nova Aplicação / Protocolo Sanitário</h3>
                             </div>
-                            <button onClick={() => setModalOpen(false)} className="text-slate-400 hover:text-white">
+                            <button
+                                onClick={() => setModalOpen(false)}
+                                className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg"
+                            >
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
 
-                        <form onSubmit={handleSave} className="p-6 space-y-4">
-                            {errorMsg && (
-                                <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-400 text-xs">
-                                    {errorMsg}
-                                </div>
-                            )}
+                        {errorMsg && (
+                            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-xl flex items-center gap-2">
+                                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                                <span>{errorMsg}</span>
+                            </div>
+                        )}
 
-                            {/* Tipo */}
-                            <div>
-                                <label className="block text-xs font-semibold text-slate-300 mb-1">Tipo de Aplicação *</label>
-                                <div className="grid grid-cols-3 gap-2">
-                                    {['vacina', 'vermifugo', 'tratamento'].map((t) => (
-                                        <button
-                                            key={t}
-                                            type="button"
-                                            onClick={() => setFormData({ ...formData, tipo: t })}
-                                            className={`py-2 rounded-xl border text-xs font-semibold capitalize transition ${
-                                                formData.tipo === t
-                                                    ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300'
-                                                    : 'bg-slate-800 border-slate-700 text-slate-400'
-                                            }`}
-                                        >
-                                            {t}
-                                        </button>
-                                    ))}
-                                </div>
+                        <form onSubmit={handleSave} className="space-y-4 text-xs">
+                            {/* Toggle Individual vs Coletivo */}
+                            <div className="flex bg-slate-800/80 p-1 rounded-xl border border-slate-700/60">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsColetivo(true)}
+                                    className={`flex-1 py-2 font-semibold rounded-lg transition-all ${
+                                        isColetivo ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
+                                    }`}
+                                >
+                                    👥 Aplicação Coletiva (Lote / Rebanho)
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsColetivo(false)}
+                                    className={`flex-1 py-2 font-semibold rounded-lg transition-all ${
+                                        !isColetivo ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
+                                    }`}
+                                >
+                                    🏷️ Animal Individual (Brinco)
+                                </button>
                             </div>
 
-                            {/* Nome do Produto / Vacina */}
-                            <div>
-                                <label className="block text-xs font-semibold text-slate-300 mb-1">Nome do Medicamento / Vacina *</label>
-                                <input
-                                    type="text"
-                                    required
-                                    placeholder="Ex: Vacina Aftosa Bivalente, Ivermectina 1%..."
-                                    value={formData.nome_produto}
-                                    onChange={(e) => setFormData({ ...formData, nome_produto: e.target.value })}
-                                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
-                                />
-                            </div>
-
-                            {/* Destino: Coletivo ou Animal Específico */}
-                            <div>
-                                <div className="flex items-center justify-between mb-1.5">
-                                    <label className="text-xs font-semibold text-slate-300">Público / Alvo da Aplicação</label>
-                                    <div className="flex items-center gap-2 text-xs">
-                                        <button
-                                            type="button"
-                                            onClick={() => setIsColetivo(true)}
-                                            className={`px-2 py-0.5 rounded text-[11px] font-medium transition ${
-                                                isColetivo ? 'bg-emerald-500 text-white' : 'bg-slate-800 text-slate-400'
-                                            }`}
-                                        >
-                                            Lote / Rebanho
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setIsColetivo(false)}
-                                            className={`px-2 py-0.5 rounded text-[11px] font-medium transition ${
-                                                !isColetivo ? 'bg-emerald-500 text-white' : 'bg-slate-800 text-slate-400'
-                                            }`}
-                                        >
-                                            Animal Individual
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {isColetivo ? (
+                            {/* Alvo */}
+                            {isColetivo ? (
+                                <div>
+                                    <label className="block text-slate-400 mb-1 font-medium">Lote / Grupo Alvo *</label>
                                     <input
                                         type="text"
-                                        placeholder="Ex: Todo o Rebanho, Bezerrada 2026, Lote Piquete 1..."
+                                        required
+                                        placeholder="Ex: Todo o Rebanho, Bezerros Desmamados, Piquete 01"
                                         value={formData.lote_ou_grupo}
                                         onChange={(e) => setFormData({ ...formData, lote_ou_grupo: e.target.value })}
-                                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-emerald-500"
                                     />
-                                ) : (
+                                </div>
+                            ) : (
+                                <div>
+                                    <label className="block text-slate-400 mb-1 font-medium">Selecione o Animal (Brinco) *</label>
                                     <select
-                                        required={!isColetivo}
+                                        required
                                         value={formData.animal_id}
                                         onChange={(e) => setFormData({ ...formData, animal_id: e.target.value })}
-                                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-emerald-500"
                                     >
                                         <option value="">Selecione o animal...</option>
-                                        {animais.map((a) => (
+                                        {animais.map(a => (
                                             <option key={a.id} value={a.id}>
-                                                Brinco {a.identificacao} — {a.categoria} ({a.raca || 'S/ raça'})
+                                                {a.identificacao} - {a.raca || 'S/R'} ({a.categoria}, {a.peso_atual ? `${a.peso_atual} kg` : 's/ peso'})
                                             </option>
                                         ))}
                                     </select>
-                                )}
+                                </div>
+                            )}
+
+                            {/* Tipo e Produto */}
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-slate-400 mb-1 font-medium">Tipo de Procedimento *</label>
+                                    <select
+                                        required
+                                        value={formData.tipo}
+                                        onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
+                                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-emerald-500"
+                                    >
+                                        <option value="vacina">💉 Vacina</option>
+                                        <option value="vermifugo">💊 Vermífugo</option>
+                                        <option value="tratamento">🩺 Tratamento / Antibiótico</option>
+                                        <option value="outro">📦 Outro</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-slate-400 mb-1 font-medium">Nome do Produto / Medicamento *</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        placeholder="Ex: Vacina Febre Aftosa / Ivermectina 1%"
+                                        value={formData.nome_produto}
+                                        onChange={(e) => setFormData({ ...formData, nome_produto: e.target.value })}
+                                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-emerald-500"
+                                    />
+                                </div>
                             </div>
 
-                            {/* Datas: Aplicação e Próxima Dose */}
-                            <div className="grid grid-cols-2 gap-4">
+                            {/* Datas */}
+                            <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-xs font-semibold text-slate-300 mb-1">Data da Aplicação *</label>
+                                    <label className="block text-slate-400 mb-1 font-medium">Data de Aplicação / Agendada *</label>
                                     <input
                                         type="date"
                                         required
                                         value={formData.data_aplicacao}
                                         onChange={(e) => setFormData({ ...formData, data_aplicacao: e.target.value })}
-                                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-emerald-500"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-semibold text-slate-300 mb-1">Próxima Dose / Reforço</label>
+                                    <label className="block text-slate-400 mb-1 font-medium">Próxima Dose / Reforço</label>
                                     <input
                                         type="date"
                                         value={formData.data_proxima_dose}
                                         onChange={(e) => setFormData({ ...formData, data_proxima_dose: e.target.value })}
-                                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-emerald-500"
                                     />
                                 </div>
                             </div>
 
-                            {/* Observações */}
-                            <div>
-                                <label className="block text-xs font-semibold text-slate-300 mb-1">Observações / Dosagem</label>
-                                <textarea
-                                    rows="2"
-                                    placeholder="Ex: Dose de 5ml subcutâneo, reforço semestral..."
-                                    value={formData.observacoes}
-                                    onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
-                                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
-                                ></textarea>
+                            {/* Carência e Status */}
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-slate-400 mb-1 font-medium">Carência Sanitária (Dias)</label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        placeholder="Ex: 28 dias para abate"
+                                        value={formData.dias_carencia}
+                                        onChange={(e) => setFormData({ ...formData, dias_carencia: e.target.value })}
+                                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-emerald-500"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-slate-400 mb-1 font-medium">Status Inicial *</label>
+                                    <select
+                                        value={formData.status}
+                                        onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-emerald-500"
+                                    >
+                                        <option value="pendente">⏳ Pendente / Agendada</option>
+                                        <option value="aplicada">✅ Já Aplicada Hoje</option>
+                                    </select>
+                                </div>
                             </div>
 
-                            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+                            <div>
+                                <label className="block text-slate-400 mb-1 font-medium">Observações & Dosagem</label>
+                                <textarea
+                                    rows="2"
+                                    placeholder="Ex: Dosagem 5ml via subcutânea, lote do frasco #8921..."
+                                    value={formData.observacoes}
+                                    onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
+                                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-emerald-500"
+                                />
+                            </div>
+
+                            <div className="flex items-center justify-end gap-3 pt-3">
                                 <button
                                     type="button"
                                     onClick={() => setModalOpen(false)}
-                                    className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:bg-slate-800 transition"
+                                    className="px-4 py-2.5 text-slate-400 hover:text-white rounded-xl"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={saving}
-                                    className="px-5 py-2 rounded-xl text-xs font-semibold bg-emerald-500 hover:bg-emerald-600 text-white transition flex items-center gap-1.5 shadow-md shadow-emerald-500/20"
+                                    className="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-semibold shadow-lg shadow-emerald-600/20"
                                 >
-                                    <Check className="w-4 h-4" />
-                                    <span>{saving ? 'Gravando...' : 'Salvar Registro'}</span>
+                                    {saving ? 'Salvando...' : 'Salvar Registro'}
                                 </button>
                             </div>
                         </form>

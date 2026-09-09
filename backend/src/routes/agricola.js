@@ -4,10 +4,54 @@ import db from '../db/database.js';
 const router = Router();
 
 // ==============================================================================
+// 0. KPIS CONSOLIDADOS DO MÓDULO AGRÍCOLA
+// ==============================================================================
+router.get('/kpis', (req, res) => {
+    try {
+        const talhoes = db.prepare('SELECT * FROM talhoes').all();
+        const safras = db.prepare('SELECT * FROM safras').all();
+        const insumos = db.prepare('SELECT * FROM insumos_agricolas').all();
+
+        const totalTalhoes = talhoes.length;
+        const areaTotalHa = talhoes.reduce((acc, t) => acc + (t.area_hectares || 0), 0);
+
+        // Identifica talhões com safras ativas (não colhidas)
+        const talhoesComSafraAtivaIds = new Set(
+            safras.filter(s => s.status !== 'colhida').map(s => s.talhao_id)
+        );
+
+        const areaPlantadaHa = talhoes
+            .filter(t => talhoesComSafraAtivaIds.has(t.id))
+            .reduce((acc, t) => acc + (t.area_hectares || 0), 0);
+
+        const areaDescansoHa = Math.max(0, Number((areaTotalHa - areaPlantadaHa).toFixed(2)));
+
+        const safrasAtivas = safras.filter(s => s.status !== 'colhida').length;
+        const totalInvestidoInsumos = insumos.reduce((acc, i) => acc + (i.valor || 0), 0);
+        const totalReceitaColheitas = safras
+            .filter(s => s.status === 'colhida')
+            .reduce((acc, s) => acc + (s.valor_venda_total || 0), 0);
+
+        res.json({
+            total_talhoes: totalTalhoes,
+            area_total_ha: Number(areaTotalHa.toFixed(2)),
+            area_plantada_ha: Number(areaPlantadaHa.toFixed(2)),
+            area_descanso_ha: areaDescansoHa,
+            safras_ativas: safrasAtivas,
+            total_investido_insumos: Number(totalInvestidoInsumos.toFixed(2)),
+            total_receita_colheitas: Number(totalReceitaColheitas.toFixed(2))
+        });
+    } catch (error) {
+        console.error('Erro ao buscar KPIs agrícolas:', error);
+        res.status(500).json({ error: 'Erro ao consolidar indicadores agrícolas' });
+    }
+});
+
+// ==============================================================================
 // 1. TALHÕES (Áreas de Plantio)
 // ==============================================================================
 
-// GET /api/agricola/talhoes - Lista talhões com quantidade de safras e safras ativas
+// GET /api/agricola/talhoes - Lista talhões com quantidade de safras e safra ativa
 router.get('/talhoes', (req, res) => {
     try {
         const query = `
@@ -15,7 +59,8 @@ router.get('/talhoes', (req, res) => {
                 t.*,
                 (SELECT COUNT(*) FROM safras s WHERE s.talhao_id = t.id) as total_safras,
                 (SELECT s.cultura FROM safras s WHERE s.talhao_id = t.id AND s.status != 'colhida' ORDER BY s.data_plantio DESC LIMIT 1) as cultura_atual,
-                (SELECT s.status FROM safras s WHERE s.talhao_id = t.id AND s.status != 'colhida' ORDER BY s.data_plantio DESC LIMIT 1) as status_safra_atual
+                (SELECT s.status FROM safras s WHERE s.talhao_id = t.id AND s.status != 'colhida' ORDER BY s.data_plantio DESC LIMIT 1) as status_safra_atual,
+                (SELECT s.id FROM safras s WHERE s.talhao_id = t.id AND s.status != 'colhida' ORDER BY s.data_plantio DESC LIMIT 1) as safra_atual_id
             FROM talhoes t
             ORDER BY t.nome ASC
         `;
@@ -94,7 +139,7 @@ router.delete('/talhoes/:id', (req, res) => {
 // 2. SAFRAS & CULTURAS
 // ==============================================================================
 
-// GET /api/agricola/safras - Lista safras com cálculo de produtividade e dados agregados
+// GET /api/agricola/safras - Lista safras com métricas de produtividade, custos e receitas por hectare
 router.get('/safras', (req, res) => {
     try {
         const { status, talhao_id, cultura } = req.query;
@@ -131,18 +176,24 @@ router.get('/safras', (req, res) => {
 
         const safras = db.prepare(query).all(...params);
 
-        // Calcula a produtividade (quantidade_colhida / area_hectares)
         const enriched = safras.map(s => {
-            const produtividadeHa = (s.quantidade_colhida && s.talhao_area > 0)
-                ? Number((s.quantidade_colhida / s.talhao_area).toFixed(2))
+            const area = s.talhao_area || 1;
+            const produtividadeHa = (s.quantidade_colhida && area > 0)
+                ? Number((s.quantidade_colhida / area).toFixed(2))
                 : null;
 
+            const custoPorHa = area > 0 ? Number(((s.total_custo_insumos || 0) / area).toFixed(2)) : 0;
+            const receitaPorHa = (s.valor_venda_total && area > 0) ? Number((s.valor_venda_total / area).toFixed(2)) : 0;
             const lucroBruto = (s.valor_venda_total || 0) - (s.total_custo_insumos || 0);
+            const lucroPorHa = area > 0 ? Number((lucroBruto / area).toFixed(2)) : 0;
 
             return {
                 ...s,
                 produtividade_ha: produtividadeHa,
-                lucro_bruto: lucroBruto
+                custo_por_ha: custoPorHa,
+                receita_por_ha: receitaPorHa,
+                lucro_bruto: lucroBruto,
+                lucro_por_ha: lucroPorHa
             };
         });
 
@@ -153,7 +204,7 @@ router.get('/safras', (req, res) => {
     }
 });
 
-// GET /api/agricola/safras/:id - Detalhes da safra com insumos
+// GET /api/agricola/safras/:id - Detalhes completos da safra com insumos
 router.get('/safras/:id', (req, res) => {
     try {
         const { id } = req.params;
@@ -178,13 +229,20 @@ router.get('/safras/:id', (req, res) => {
         `).all(id);
 
         const totalCustoInsumos = insumos.reduce((acc, i) => acc + i.valor, 0);
-        const produtividadeHa = (safra.quantidade_colhida && safra.talhao_area > 0)
-            ? Number((safra.quantidade_colhida / safra.talhao_area).toFixed(2))
+        const area = safra.talhao_area || 1;
+        const produtividadeHa = (safra.quantidade_colhida && area > 0)
+            ? Number((safra.quantidade_colhida / area).toFixed(2))
             : null;
+
+        const lucroBruto = (safra.valor_venda_total || 0) - totalCustoInsumos;
 
         res.json({
             ...safra,
             total_custo_insumos: totalCustoInsumos,
+            custo_por_ha: Number((totalCustoInsumos / area).toFixed(2)),
+            receita_por_ha: Number(((safra.valor_venda_total || 0) / area).toFixed(2)),
+            lucro_bruto: lucroBruto,
+            lucro_por_ha: Number((lucroBruto / area).toFixed(2)),
             produtividade_ha: produtividadeHa,
             insumos
         });
@@ -244,7 +302,33 @@ router.post('/safras', (req, res) => {
     }
 });
 
-// POST /api/agricola/safras/:id/colher - Registra colheita e gera receita no financeiro se houver valor de venda
+// PUT /api/agricola/safras/:id/status - Atualiza estágio da safra (plantio -> em_desenvolvimento)
+router.put('/safras/:id/status', (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+
+        if (!['plantio', 'em_desenvolvimento', 'colhida'].includes(status)) {
+            return res.status(400).json({ error: 'Status inválido (plantio, em_desenvolvimento, colhida)' });
+        }
+
+        db.prepare('UPDATE safras SET status = ? WHERE id = ?').run(status, id);
+
+        const updatedSafra = db.prepare(`
+            SELECT s.*, t.nome as talhao_nome, t.area_hectares as talhao_area
+            FROM safras s
+            JOIN talhoes t ON s.talhao_id = t.id
+            WHERE s.id = ?
+        `).get(id);
+
+        res.json(updatedSafra);
+    } catch (error) {
+        console.error('Erro ao atualizar status da safra:', error);
+        res.status(500).json({ error: 'Erro ao atualizar estágio da safra' });
+    }
+});
+
+// POST /api/agricola/safras/:id/colher - Registra colheita, produtividade e gera receita financeira
 router.post('/safras/:id/colher', (req, res) => {
     try {
         const { id } = req.params;

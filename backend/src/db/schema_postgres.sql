@@ -85,6 +85,8 @@ CREATE TABLE IF NOT EXISTS sanidade (
     nome_produto VARCHAR(255) NOT NULL,
     data_aplicacao DATE NOT NULL,
     data_proxima_dose DATE,
+    dias_carencia INTEGER DEFAULT 0,
+    data_fim_carencia DATE,
     status VARCHAR(20) NOT NULL DEFAULT 'pendente' CHECK (status IN ('pendente', 'aplicada')),
     observacoes TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP

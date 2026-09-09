@@ -3,11 +3,19 @@ import db from '../db/database.js';
 
 const router = Router();
 
-// Função auxiliar para calcular status dinâmico com base na data de hoje
+// Função auxiliar para somar dias a uma data YYYY-MM-DD
+function addDays(dateStr, days) {
+    if (!dateStr || !days) return null;
+    const d = new Date(dateStr + 'T00:00:00');
+    d.setDate(d.getDate() + Number(days));
+    return d.toISOString().split('T')[0];
+}
+
+// Função auxiliar para calcular status dinâmico e controle de carência
 function enrichSanidadeStatus(registro) {
     const today = new Date().toISOString().split('T')[0];
     
-    // Calcula prazo de 7 dias
+    // Prazo de 7 dias para alertas
     const d = new Date();
     d.setDate(d.getDate() + 7);
     const in7Days = d.toISOString().split('T')[0];
@@ -26,26 +34,72 @@ function enrichSanidadeStatus(registro) {
         }
     }
 
+    // Controle de Carência Sanitária (período em que o animal não pode ser abatido/consumido)
+    let sobCarencia = false;
+    let diasRestantesCarencia = 0;
+
+    if (registro.status === 'aplicada' && registro.data_fim_carencia) {
+        if (registro.data_fim_carencia >= today) {
+            sobCarencia = true;
+            const fim = new Date(registro.data_fim_carencia + 'T00:00:00');
+            const hoje = new Date(today + 'T00:00:00');
+            diasRestantesCarencia = Math.max(0, Math.round((fim - hoje) / (1000 * 60 * 60 * 24)));
+        }
+    }
+
     return {
         ...registro,
+        dias_carencia: Number(registro.dias_carencia) || 0,
+        data_fim_carencia: registro.data_fim_carencia || null,
         computed_status: computedStatus,
         is_atrasada: computedStatus === 'atrasada',
-        is_vencendo_7dias: computedStatus === 'alerta_vencendo'
+        is_vencendo_7dias: computedStatus === 'alerta_vencendo',
+        sob_carencia: sobCarencia,
+        dias_restantes_carencia: diasRestantesCarencia
     };
 }
 
-// GET /api/sanidade - Lista registros de sanidade com cálculo dinâmico de vencimento
+// GET /api/sanidade/kpis - Indicadores consolidados do painel sanitário
+router.get('/kpis', (req, res) => {
+    try {
+        const rawList = db.prepare(`
+            SELECT s.*, a.identificacao as animal_brinco
+            FROM sanidade s
+            LEFT JOIN animais a ON s.animal_id = a.id
+        `).all();
+
+        const enriched = rawList.map(enrichSanidadeStatus);
+
+        const kpis = {
+            total: enriched.length,
+            aplicadas: enriched.filter(s => s.status === 'aplicada').length,
+            pendentes: enriched.filter(s => s.computed_status === 'pendente').length,
+            alerta_vencendo: enriched.filter(s => s.computed_status === 'alerta_vencendo').length,
+            atrasadas: enriched.filter(s => s.computed_status === 'atrasada').length,
+            sob_carencia: enriched.filter(s => s.sob_carencia).length
+        };
+
+        res.json(kpis);
+    } catch (error) {
+        console.error('Erro ao buscar KPIs de sanidade:', error);
+        res.status(500).json({ error: 'Erro ao buscar KPIs de sanidade' });
+    }
+});
+
+// GET /api/sanidade - Lista registros com filtros avançados
 router.get('/', (req, res) => {
     try {
-        const { animal_id, tipo, status_filtro, data_inicio, data_fim } = req.query;
+        const { animal_id, tipo, status_filtro, data_inicio, data_fim, busca } = req.query;
 
         let query = `
             SELECT 
                 s.*,
                 a.identificacao as animal_brinco,
-                a.categoria as animal_categoria
+                a.categoria as animal_categoria,
+                p.nome as piquete_nome
             FROM sanidade s
             LEFT JOIN animais a ON s.animal_id = a.id
+            LEFT JOIN piquetes p ON a.piquete_atual_id = p.id
             WHERE 1=1
         `;
         const params = [];
@@ -70,13 +124,23 @@ router.get('/', (req, res) => {
             params.push(data_fim, data_fim);
         }
 
+        if (busca && busca.trim()) {
+            query += ` AND (s.nome_produto LIKE ? OR a.identificacao LIKE ? OR s.lote_ou_grupo LIKE ? OR s.observacoes LIKE ?)`;
+            const term = `%${busca.trim()}%`;
+            params.push(term, term, term, term);
+        }
+
         query += ` ORDER BY s.data_proxima_dose ASC, s.data_aplicacao DESC`;
 
         const rawList = db.prepare(query).all(...params);
         let list = rawList.map(enrichSanidadeStatus);
 
         if (status_filtro) {
-            list = list.filter(item => item.computed_status === status_filtro);
+            if (status_filtro === 'sob_carencia') {
+                list = list.filter(item => item.sob_carencia);
+            } else {
+                list = list.filter(item => item.computed_status === status_filtro);
+            }
         }
 
         res.json(list);
@@ -86,7 +150,7 @@ router.get('/', (req, res) => {
     }
 });
 
-// POST /api/sanidade - Cadastra nova aplicação/agendamento de sanidade
+// POST /api/sanidade - Cadastra nova aplicação/agendamento de sanidade com cálculo de carência
 router.post('/', (req, res) => {
     try {
         const {
@@ -97,6 +161,7 @@ router.post('/', (req, res) => {
             nome_produto,
             data_aplicacao,
             data_proxima_dose = null,
+            dias_carencia = 0,
             status = 'pendente',
             observacoes = ''
         } = req.body;
@@ -113,11 +178,19 @@ router.post('/', (req, res) => {
             return res.status(400).json({ error: 'Data de aplicação é obrigatória' });
         }
 
+        const diasCarenciaNum = Number(dias_carencia) || 0;
+        let dataFimCarencia = null;
+
+        if (status === 'aplicada' && diasCarenciaNum > 0) {
+            dataFimCarencia = addDays(data_aplicacao, diasCarenciaNum);
+        }
+
         const insert = db.prepare(`
             INSERT INTO sanidade (
                 fazenda_id, animal_id, lote_ou_grupo, tipo,
-                nome_produto, data_aplicacao, data_proxima_dose, status, observacoes
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                nome_produto, data_aplicacao, data_proxima_dose,
+                dias_carencia, data_fim_carencia, status, observacoes
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `).run(
             fazenda_id,
             animal_id ? Number(animal_id) : null,
@@ -126,6 +199,8 @@ router.post('/', (req, res) => {
             nome_produto.trim(),
             data_aplicacao,
             data_proxima_dose || null,
+            diasCarenciaNum,
+            dataFimCarencia,
             status,
             observacoes ? observacoes.trim() : null
         );
@@ -134,38 +209,52 @@ router.post('/', (req, res) => {
             SELECT 
                 s.*,
                 a.identificacao as animal_brinco,
-                a.categoria as animal_categoria
+                a.categoria as animal_categoria,
+                p.nome as piquete_nome
             FROM sanidade s
             LEFT JOIN animais a ON s.animal_id = a.id
+            LEFT JOIN piquetes p ON a.piquete_atual_id = p.id
             WHERE s.id = ?
         `).get(insert.lastInsertRowid);
 
         res.status(201).json(enrichSanidadeStatus(newRegistro));
     } catch (error) {
         console.error('Erro ao cadastrar sanidade:', error);
-        res.status(500).json({ error: 'Erro ao cadastrar registro de sanidade' });
+        res.status(500).json({ error: error.message || 'Erro ao cadastrar registro de sanidade' });
     }
 });
 
-// PUT /api/sanidade/:id/concluir - Marca dose como aplicada
+// PUT /api/sanidade/:id/concluir - Marca dose como aplicada e calcula fim da carência
 router.put('/:id/concluir', (req, res) => {
     try {
         const { id } = req.params;
         const { data_aplicacao = new Date().toISOString().split('T')[0] } = req.body;
 
+        const reg = db.prepare('SELECT * FROM sanidade WHERE id = ?').get(id);
+        if (!reg) {
+            return res.status(404).json({ error: 'Registro sanitário não encontrado' });
+        }
+
+        let dataFimCarencia = null;
+        if (reg.dias_carencia > 0) {
+            dataFimCarencia = addDays(data_aplicacao, reg.dias_carencia);
+        }
+
         db.prepare(`
             UPDATE sanidade
-            SET status = 'aplicada', data_aplicacao = ?
+            SET status = 'aplicada', data_aplicacao = ?, data_fim_carencia = ?
             WHERE id = ?
-        `).run(data_aplicacao, id);
+        `).run(data_aplicacao, dataFimCarencia, id);
 
         const updated = db.prepare(`
             SELECT 
                 s.*,
                 a.identificacao as animal_brinco,
-                a.categoria as animal_categoria
+                a.categoria as animal_categoria,
+                p.nome as piquete_nome
             FROM sanidade s
             LEFT JOIN animais a ON s.animal_id = a.id
+            LEFT JOIN piquetes p ON a.piquete_atual_id = p.id
             WHERE s.id = ?
         `).get(id);
 

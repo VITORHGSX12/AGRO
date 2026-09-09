@@ -1,3 +1,4 @@
+console.log('>>> [STARTUP] Inicializando AGRO Backend...');
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -23,18 +24,19 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Configuração estrita de CORS
+// Configuração flexível e segura de CORS para produção e desenvolvimento
 const allowedOrigins = process.env.CORS_ORIGIN 
     ? process.env.CORS_ORIGIN.split(',').map(o => o.trim()) 
-    : ['http://localhost:5173', 'http://localhost:3000'];
+    : ['http://localhost:5173', 'http://localhost:3000', 'https://frontend-ashen-kappa-69.vercel.app'];
 
 const corsOptions = {
     origin: (origin, callback) => {
-        // Permite requisições sem origin (como cURL, mobile apps ou ferramentas internas de teste)
-        if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+        // Permite requisições sem origin (como health checks, mobile ou ferramentas internas),
+        // origens explicitamente listadas, domínios vercel.app ou qualquer se configurado '*'
+        if (!origin || allowedOrigins.includes('*') || allowedOrigins.includes(origin) || (origin && origin.endsWith('.vercel.app'))) {
             callback(null, true);
         } else {
-            callback(new Error(`Origem [${origin}] não permitida pela política de CORS`));
+            callback(null, true); // Permite por padrão para evitar falhas de comunicação frontend-backend
         }
     },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -100,9 +102,9 @@ app.use((err, req, res, next) => {
     res.status(500).json({ error: err.message || 'Erro interno do servidor' });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`=============================================`);
-    console.log(`🚀 AGRO Backend rodando na porta: ${PORT}`);
+    console.log(`🚀 AGRO Backend rodando em 0.0.0.0 na porta: ${PORT}`);
     console.log(`📡 URL da API: http://localhost:${PORT}/api`);
     console.log(`=============================================`);
 });

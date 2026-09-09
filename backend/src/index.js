@@ -108,3 +108,5 @@ app.listen(PORT, '0.0.0.0', () => {
     console.log(`📡 URL da API: http://localhost:${PORT}/api`);
     console.log(`=============================================`);
 });
+
+export default app;

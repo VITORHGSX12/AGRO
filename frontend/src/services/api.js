@@ -153,7 +153,11 @@ export const api = {
     // Dashboard
     getDashboard: (params = {}) => {
         const q = new URLSearchParams();
+        if (params.tipo_periodo) q.append('tipo_periodo', params.tipo_periodo);
         if (params.mes_ano) q.append('mes_ano', params.mes_ano);
+        if (params.ano_safra) q.append('ano_safra', params.ano_safra);
+        if (params.data_inicio) q.append('data_inicio', params.data_inicio);
+        if (params.data_fim) q.append('data_fim', params.data_fim);
         const query = q.toString() ? `?${q.toString()}` : '';
         return fetchJson(`/dashboard${query}`);
     },

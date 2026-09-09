@@ -16,7 +16,9 @@ import {
     ArrowRight,
     PlusCircle,
     Activity,
-    Compass
+    Compass,
+    Calendar,
+    Filter
 } from 'lucide-react';
 import { 
     BarChart, 
@@ -34,6 +36,16 @@ import { api } from '../services/api';
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#14b8a6', '#64748b'];
 
 export default function DashboardView({ mesAno, setActiveTab }) {
+    const [tipoPeriodo, setTipoPeriodo] = useState('mes'); // 'mes' | 'safra' | 'personalizado'
+    const [selectedMesAno, setSelectedMesAno] = useState(() => mesAno || new Date().toISOString().slice(0, 7));
+    const [anoSafra, setAnoSafra] = useState('2025/2026');
+    const [dataInicioCustom, setDataInicioCustom] = useState(() => {
+        const d = new Date();
+        d.setDate(d.getDate() - 30);
+        return d.toISOString().split('T')[0];
+    });
+    const [dataFimCustom, setDataFimCustom] = useState(() => new Date().toISOString().split('T')[0]);
+
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -41,7 +53,19 @@ export default function DashboardView({ mesAno, setActiveTab }) {
     const loadDashboard = async () => {
         try {
             setLoading(true);
-            const res = await api.getDashboard({ mes_ano: mesAno });
+            const params = {
+                tipo_periodo: tipoPeriodo
+            };
+            if (tipoPeriodo === 'mes') {
+                params.mes_ano = selectedMesAno;
+            } else if (tipoPeriodo === 'safra') {
+                params.ano_safra = anoSafra;
+            } else if (tipoPeriodo === 'personalizado') {
+                params.data_inicio = dataInicioCustom;
+                params.data_fim = dataFimCustom;
+            }
+
+            const res = await api.getDashboard(params);
             setData(res);
             setError(null);
         } catch (err) {
@@ -54,9 +78,9 @@ export default function DashboardView({ mesAno, setActiveTab }) {
 
     useEffect(() => {
         loadDashboard();
-    }, [mesAno]);
+    }, [tipoPeriodo, selectedMesAno, anoSafra, dataInicioCustom, dataFimCustom]);
 
-    if (loading) {
+    if (loading && !data) {
         return (
             <div className="flex items-center justify-center h-80">
                 <div className="flex flex-col items-center gap-3">
@@ -67,7 +91,7 @@ export default function DashboardView({ mesAno, setActiveTab }) {
         );
     }
 
-    if (error || !data) {
+    if (error && !data) {
         return (
             <div className="p-6 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-rose-300 text-sm">
                 Erro ao carregar dados do painel: {error || 'Sem dados disponíveis'}
@@ -76,6 +100,7 @@ export default function DashboardView({ mesAno, setActiveTab }) {
     }
 
     const { 
+        periodo = { tipo: 'mes', label: 'Mês Atual' },
         rebanho = { total_ativos: 0, total_geral: 0, total_vendidos: 0, total_mortos: 0, peso_medio_ativos: 0, distribuicao_categorias: [], distribuicao_sexo: [] }, 
         financeiro = { saldo_mes: 0, receitas_mes: 0, despesas_mes: 0, custo_medio_por_animal: 0, gasto_folha_mes: 0, despesas_por_categoria: [] }, 
         pastagens = { total_hectares: 0, taxa_lotacao_global_cab_ha: 0, ocupacao_piquetes: [] },
@@ -86,7 +111,7 @@ export default function DashboardView({ mesAno, setActiveTab }) {
         rh = { total_colaboradores_ativos: 0, total_folha_prevista: 0 }, 
         agricola = { total_talhoes: 0, area_total_hectares: 0, safras_ativas: 0, ultimas_produtividades: [] },
         patrimonio = { total_maquinas_ativas: 0, total_benfeitorias: 0, manutencoes_mes_count: 0, manutencoes_mes_gasto: 0 }
-    } = data;
+    } = data || {};
 
     const formatCurrency = (val) => {
         return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
@@ -134,7 +159,7 @@ export default function DashboardView({ mesAno, setActiveTab }) {
                                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                                 Sistema em Tempo Real
                             </span>
-                            <span className="text-xs text-slate-400">• Safra & Manejo 2025/2026</span>
+                            <span className="text-xs text-slate-400">• {periodo?.label || 'Safra & Manejo 2025/2026'}</span>
                         </div>
                         <h2 className="text-xl md:text-2xl font-black text-white tracking-tight">
                             Painel de Controle — Fazenda GD
@@ -170,35 +195,145 @@ export default function DashboardView({ mesAno, setActiveTab }) {
                 </div>
             </div>
 
-            {/* Top KPI Cards (6 Cards) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+            {/* SELETOR DE PERÍODO UNIFICADO */}
+            <div className="p-4 rounded-2xl bg-slate-800/90 border border-slate-700/70 shadow-md flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
+                        <Calendar className="w-4 h-4" />
+                    </div>
+                    <div>
+                        <div className="text-xs font-bold text-white flex items-center gap-2">
+                            <span>Período de Análise</span>
+                            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                {periodo?.label}
+                            </span>
+                        </div>
+                        <div className="text-[11px] text-slate-400">
+                            Todos os cards e relatórios agregados utilizam a mesma base temporal
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                    {/* Botões de Seleção do Tipo de Período */}
+                    <div className="flex rounded-xl bg-slate-900 p-1 border border-slate-700/80">
+                        <button
+                            onClick={() => setTipoPeriodo('mes')}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                                tipoPeriodo === 'mes'
+                                    ? 'bg-emerald-500 text-white shadow-sm'
+                                    : 'text-slate-400 hover:text-slate-200'
+                            }`}
+                        >
+                            Mês
+                        </button>
+                        <button
+                            onClick={() => setTipoPeriodo('safra')}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                                tipoPeriodo === 'safra'
+                                    ? 'bg-emerald-500 text-white shadow-sm'
+                                    : 'text-slate-400 hover:text-slate-200'
+                            }`}
+                        >
+                            Safra
+                        </button>
+                        <button
+                            onClick={() => setTipoPeriodo('personalizado')}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                                tipoPeriodo === 'personalizado'
+                                    ? 'bg-emerald-500 text-white shadow-sm'
+                                    : 'text-slate-400 hover:text-slate-200'
+                            }`}
+                        >
+                            Personalizado
+                        </button>
+                    </div>
+
+                    {/* Controles Dinâmicos baseados no tipo selecionado */}
+                    {tipoPeriodo === 'mes' && (
+                        <div className="flex items-center gap-1.5 bg-slate-900 border border-slate-700/80 rounded-xl px-3 py-1.5 text-xs text-slate-200">
+                            <span className="text-slate-400 text-[11px]">Mês:</span>
+                            <input
+                                type="month"
+                                value={selectedMesAno}
+                                onChange={(e) => setSelectedMesAno(e.target.value)}
+                                className="bg-transparent text-slate-100 font-medium focus:outline-none cursor-pointer text-xs"
+                            />
+                        </div>
+                    )}
+
+                    {tipoPeriodo === 'safra' && (
+                        <div className="flex items-center gap-1.5 bg-slate-900 border border-slate-700/80 rounded-xl px-3 py-1.5 text-xs text-slate-200">
+                            <span className="text-slate-400 text-[11px]">Ciclo:</span>
+                            <select
+                                value={anoSafra}
+                                onChange={(e) => setAnoSafra(e.target.value)}
+                                className="bg-transparent text-emerald-400 font-semibold focus:outline-none cursor-pointer text-xs"
+                            >
+                                <option value="2025/2026" className="bg-slate-900 text-white">Safra 2025/2026</option>
+                                <option value="2024/2025" className="bg-slate-900 text-white">Safra 2024/2025</option>
+                                <option value="2026/2027" className="bg-slate-900 text-white">Safra 2026/2027</option>
+                            </select>
+                        </div>
+                    )}
+
+                    {tipoPeriodo === 'personalizado' && (
+                        <div className="flex items-center gap-2 bg-slate-900 border border-slate-700/80 rounded-xl px-3 py-1 text-xs text-slate-200">
+                            <div className="flex items-center gap-1">
+                                <span className="text-slate-400 text-[10px]">De:</span>
+                                <input
+                                    type="date"
+                                    value={dataInicioCustom}
+                                    onChange={(e) => setDataInicioCustom(e.target.value)}
+                                    className="bg-transparent text-slate-100 text-xs focus:outline-none cursor-pointer"
+                                />
+                            </div>
+                            <span className="text-slate-600">|</span>
+                            <div className="flex items-center gap-1">
+                                <span className="text-slate-400 text-[10px]">Até:</span>
+                                <input
+                                    type="date"
+                                    value={dataFimCustom}
+                                    onChange={(e) => setDataFimCustom(e.target.value)}
+                                    className="bg-transparent text-slate-100 text-xs focus:outline-none cursor-pointer"
+                                />
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Top KPI Cards (6 Cards) - 100% Responsivos */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4">
                 {/* 1. Rebanho Ativo */}
                 <div 
                     onClick={() => setActiveTab('rebanho')}
-                    className="p-5 rounded-2xl bg-slate-800/80 border border-slate-700/60 hover:border-slate-600 transition cursor-pointer group shadow-sm"
+                    className="p-4 sm:p-5 rounded-2xl bg-slate-800/80 border border-slate-700/60 hover:border-slate-600 transition cursor-pointer group shadow-sm"
                 >
-                    <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Ativos</span>
+                    <div className="flex items-center justify-between mb-2 sm:mb-3">
+                        <span className="text-[11px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Ativos</span>
                         <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition">
                             <Beef className="w-4 h-4" />
                         </div>
                     </div>
-                    <div className="text-2xl font-extrabold text-white tracking-tight">
+                    <div className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
                         {rebanho.total_ativos} <span className="text-xs font-normal text-slate-400">cab.</span>
                     </div>
-                    <div className="mt-2 text-xs text-slate-400 flex items-center justify-between">
+                    <div className="mt-2 text-[11px] text-slate-400 flex items-center justify-between">
                         <span>Peso Médio:</span>
                         <span className="text-emerald-400 font-semibold">{rebanho.peso_medio_ativos || 0} kg</span>
                     </div>
                 </div>
 
-                {/* 2. Saldo Financeiro do Mês */}
+                {/* 2. Saldo Financeiro do Período */}
                 <div 
                     onClick={() => setActiveTab('financeiro')}
-                    className="p-5 rounded-2xl bg-slate-800/80 border border-slate-700/60 hover:border-slate-600 transition cursor-pointer group shadow-sm"
+                    className="p-4 sm:p-5 rounded-2xl bg-slate-800/80 border border-slate-700/60 hover:border-slate-600 transition cursor-pointer group shadow-sm"
                 >
-                    <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Saldo do Mês</span>
+                    <div className="flex items-center justify-between mb-2 sm:mb-3">
+                        <span className="text-[11px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider truncate">
+                            Saldo {tipoPeriodo === 'mes' ? 'do Mês' : 'do Período'}
+                        </span>
                         <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition group-hover:scale-110 ${
                             financeiro.saldo_mes >= 0 
                                 ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' 
@@ -207,46 +342,48 @@ export default function DashboardView({ mesAno, setActiveTab }) {
                             <DollarSign className="w-4 h-4" />
                         </div>
                     </div>
-                    <div className={`text-xl font-extrabold tracking-tight ${financeiro.saldo_mes >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    <div className={`text-lg sm:text-xl font-extrabold tracking-tight truncate ${financeiro.saldo_mes >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                         {formatCurrency(financeiro.saldo_mes)}
                     </div>
-                    <div className="mt-2 text-[11px] text-slate-400 flex items-center justify-between">
-                        <span className="text-emerald-400/90 font-medium">Rec: {formatCurrency(financeiro.receitas_mes)}</span>
-                        <span className="text-rose-400/90 font-medium">Desp: {formatCurrency(financeiro.despesas_mes)}</span>
+                    <div className="mt-2 text-[10px] sm:text-[11px] text-slate-400 flex items-center justify-between gap-1">
+                        <span className="text-emerald-400/90 font-medium truncate">Rec: {formatCurrency(financeiro.receitas_mes)}</span>
+                        <span className="text-rose-400/90 font-medium truncate">Desp: {formatCurrency(financeiro.despesas_mes)}</span>
                     </div>
                 </div>
 
                 {/* 3. Custo Médio por Animal */}
-                <div className="p-5 rounded-2xl bg-slate-800/80 border border-slate-700/60 shadow-sm">
-                    <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Custo Médio / Cab.</span>
+                <div className="p-4 sm:p-5 rounded-2xl bg-slate-800/80 border border-slate-700/60 shadow-sm">
+                    <div className="flex items-center justify-between mb-2 sm:mb-3">
+                        <span className="text-[11px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider truncate">Custo / Cab.</span>
                         <div className="w-8 h-8 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
                             <TrendingDown className="w-4 h-4" />
                         </div>
                     </div>
-                    <div className="text-xl font-extrabold text-white tracking-tight">
+                    <div className="text-lg sm:text-xl font-extrabold text-white tracking-tight truncate">
                         {formatCurrency(financeiro.custo_medio_por_animal)}
                     </div>
-                    <div className="mt-2 text-[11px] text-slate-400">
-                        Despesas ÷ {rebanho.total_ativos} ativos
+                    <div className="mt-2 text-[11px] text-slate-400 truncate">
+                        Desp. ÷ {rebanho.total_ativos} ativos
                     </div>
                 </div>
 
-                {/* 4. Total Gasto com Folha de Pagamento */}
+                {/* 4. Total Gasto com Folha */}
                 <div 
                     onClick={() => setActiveTab('rh')}
-                    className="p-5 rounded-2xl bg-slate-800/80 border border-slate-700/60 hover:border-slate-600 transition cursor-pointer group shadow-sm"
+                    className="p-4 sm:p-5 rounded-2xl bg-slate-800/80 border border-slate-700/60 hover:border-slate-600 transition cursor-pointer group shadow-sm"
                 >
-                    <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Folha do Mês</span>
+                    <div className="flex items-center justify-between mb-2 sm:mb-3">
+                        <span className="text-[11px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider truncate">
+                            Folha {tipoPeriodo === 'mes' ? 'do Mês' : 'Período'}
+                        </span>
                         <div className="w-8 h-8 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 group-hover:scale-110 transition">
                             <Users className="w-4 h-4" />
                         </div>
                     </div>
-                    <div className="text-xl font-extrabold text-purple-400 tracking-tight">
+                    <div className="text-lg sm:text-xl font-extrabold text-purple-400 tracking-tight truncate">
                         {formatCurrency(financeiro.gasto_folha_mes || 0)}
                     </div>
-                    <div className="mt-2 text-[11px] text-slate-400">
+                    <div className="mt-2 text-[11px] text-slate-400 truncate">
                         {rh?.total_colaboradores_ativos || 0} colaboradores ativos
                     </div>
                 </div>
@@ -254,17 +391,17 @@ export default function DashboardView({ mesAno, setActiveTab }) {
                 {/* 5. Produtividade Agrícola */}
                 <div 
                     onClick={() => setActiveTab('agricola')}
-                    className="p-5 rounded-2xl bg-slate-800/80 border border-slate-700/60 hover:border-slate-600 transition cursor-pointer group shadow-sm"
+                    className="p-4 sm:p-5 rounded-2xl bg-slate-800/80 border border-slate-700/60 hover:border-slate-600 transition cursor-pointer group shadow-sm"
                 >
-                    <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Produtividade</span>
+                    <div className="flex items-center justify-between mb-2 sm:mb-3">
+                        <span className="text-[11px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider truncate">Produtividade</span>
                         <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 group-hover:scale-110 transition">
                             <Sprout className="w-4 h-4" />
                         </div>
                     </div>
                     {agricola?.ultimas_produtividades && agricola.ultimas_produtividades.length > 0 ? (
                         <div>
-                            <div className="text-lg font-extrabold text-amber-400 tracking-tight">
+                            <div className="text-base sm:text-lg font-extrabold text-amber-400 tracking-tight truncate">
                                 {agricola.ultimas_produtividades[0].produtividade_ha}{' '}
                                 <span className="text-xs font-normal text-slate-400">
                                     {agricola.ultimas_produtividades[0].unidade_medida || 'sc'}/ha
@@ -276,10 +413,10 @@ export default function DashboardView({ mesAno, setActiveTab }) {
                         </div>
                     ) : (
                         <div>
-                            <div className="text-lg font-extrabold text-white tracking-tight">
+                            <div className="text-base sm:text-lg font-extrabold text-white tracking-tight">
                                 {agricola?.safras_ativas || 0} <span className="text-xs font-normal text-slate-400">ativas</span>
                             </div>
-                            <div className="mt-1 text-[11px] text-slate-400">
+                            <div className="mt-1 text-[11px] text-slate-400 truncate">
                                 {agricola?.total_talhoes || 0} talhões cadastrados
                             </div>
                         </div>
@@ -289,10 +426,10 @@ export default function DashboardView({ mesAno, setActiveTab }) {
                 {/* 6. Sanidade e Alertas */}
                 <div 
                     onClick={() => setActiveTab('sanidade')}
-                    className="p-5 rounded-2xl bg-slate-800/80 border border-slate-700/60 hover:border-slate-600 transition cursor-pointer group shadow-sm"
+                    className="p-4 sm:p-5 rounded-2xl bg-slate-800/80 border border-slate-700/60 hover:border-slate-600 transition cursor-pointer group shadow-sm"
                 >
-                    <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Sanidade</span>
+                    <div className="flex items-center justify-between mb-2 sm:mb-3">
+                        <span className="text-[11px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider truncate">Sanidade</span>
                         <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition group-hover:scale-110 ${
                             sanidade.atrasadas > 0 
                                 ? 'bg-rose-500/20 border border-rose-500/30 text-rose-400' 
@@ -303,17 +440,17 @@ export default function DashboardView({ mesAno, setActiveTab }) {
                             <ShieldAlert className="w-4 h-4" />
                         </div>
                     </div>
-                    <div className="text-xl font-extrabold text-white tracking-tight flex items-baseline gap-2">
+                    <div className="text-lg sm:text-xl font-extrabold text-white tracking-tight flex items-baseline gap-2">
                         <span>{sanidade.total_pendentes}</span>
                         <span className="text-xs font-normal text-slate-400">pendentes</span>
                     </div>
-                    <div className="mt-2 text-[11px] flex items-center gap-1.5">
+                    <div className="mt-2 text-[10px] sm:text-[11px] flex items-center gap-1.5 truncate">
                         {sanidade.atrasadas > 0 ? (
-                            <span className="px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-400 font-semibold border border-rose-500/30">
+                            <span className="px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-400 font-semibold border border-rose-500/30 truncate">
                                 {sanidade.atrasadas} atrasada(s)
                             </span>
                         ) : sanidade.vencendo_7dias > 0 ? (
-                            <span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 font-semibold border border-amber-500/30">
+                            <span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 font-semibold border border-amber-500/30 truncate">
                                 {sanidade.vencendo_7dias} a vencer
                             </span>
                         ) : (
@@ -420,7 +557,7 @@ export default function DashboardView({ mesAno, setActiveTab }) {
                     <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
                             <DollarSign className="w-4 h-4 text-emerald-400" />
-                            <h3 className="text-sm font-bold text-white tracking-tight">Composição das Despesas do Mês</h3>
+                            <h3 className="text-sm font-bold text-white tracking-tight">Composição das Despesas ({periodo?.label || 'Período'})</h3>
                         </div>
                         <span className="text-xs text-rose-400 font-semibold">
                             Total: {formatCurrency(financeiro.despesas_mes)}

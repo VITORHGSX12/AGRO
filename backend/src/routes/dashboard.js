@@ -7,8 +7,39 @@ const router = Router();
 router.get('/', (req, res) => {
     try {
         const today = new Date();
-        const currentYearMonth = req.query.mes_ano || today.toISOString().slice(0, 7); // 'YYYY-MM'
         const todayStr = today.toISOString().split('T')[0];
+        const currentYear = today.getFullYear();
+
+        // 0. Resolução central de limites de data (Mês, Safra ou Personalizado)
+        const tipoPeriodo = req.query.tipo_periodo || 'mes'; // 'mes' | 'safra' | 'personalizado'
+        let dataInicio = '';
+        let dataFim = '';
+        let labelPeriodo = '';
+
+        if (tipoPeriodo === 'safra') {
+            const anoSafra = req.query.ano_safra || (today.getMonth() >= 6 ? `${currentYear}/${currentYear + 1}` : `${currentYear - 1}/${currentYear}`);
+            const partes = anoSafra.split('/');
+            const ano1 = parseInt(partes[0], 10) || (currentYear - 1);
+            const ano2 = parseInt(partes[1], 10) || currentYear;
+            dataInicio = `${ano1}-07-01`;
+            dataFim = `${ano2}-06-30`;
+            labelPeriodo = `Safra ${anoSafra} (01/07/${ano1} a 30/06/${ano2})`;
+        } else if (tipoPeriodo === 'personalizado') {
+            dataInicio = req.query.data_inicio || `${currentYear}-01-01`;
+            dataFim = req.query.data_fim || todayStr;
+            labelPeriodo = `Personalizado (${dataInicio} a ${dataFim})`;
+        } else {
+            // Mês (padrão)
+            const currentYearMonth = req.query.mes_ano || todayStr.slice(0, 7); // 'YYYY-MM'
+            const [anoStr, mesStr] = currentYearMonth.split('-');
+            const anoNum = parseInt(anoStr, 10) || currentYear;
+            const mesNum = parseInt(mesStr, 10) || (today.getMonth() + 1);
+            const ultimoDia = new Date(anoNum, mesNum, 0).getDate();
+            const mesFormatado = String(mesNum).padStart(2, '0');
+            dataInicio = `${anoNum}-${mesFormatado}-01`;
+            dataFim = `${anoNum}-${mesFormatado}-${String(ultimoDia).padStart(2, '0')}`;
+            labelPeriodo = `Mês ${mesFormatado}/${anoNum}`;
+        }
 
         const in7DaysDate = new Date(today);
         in7DaysDate.setDate(today.getDate() + 7);
@@ -53,34 +84,34 @@ router.get('/', (req, res) => {
             GROUP BY sexo
         `).all();
 
-        // 4. Métricas Financeiras do Mês
-        const financeiroMes = db.prepare(`
+        // 4. Métricas Financeiras Centrais Calculadas pelo Período Unificado
+        const financeiroPeriodo = db.prepare(`
             SELECT 
                 COALESCE(SUM(CASE WHEN tipo = 'receita' THEN valor ELSE 0 END), 0) as receitas,
                 COALESCE(SUM(CASE WHEN tipo = 'despesa' THEN valor ELSE 0 END), 0) as despesas,
                 COALESCE(SUM(CASE WHEN categoria = 'salario' THEN valor ELSE 0 END), 0) as gasto_folha
             FROM financeiro
-            WHERE data LIKE ?
-        `).get(`${currentYearMonth}%`);
+            WHERE data >= ? AND data <= ?
+        `).get(dataInicio, dataFim);
 
-        const receitasMes = Number(financeiroMes.receitas || 0);
-        const despesasMes = Number(financeiroMes.despesas || 0);
-        const gastoFolhaMes = Number(financeiroMes.gasto_folha || 0);
-        const saldoMes = Number((receitasMes - despesasMes).toFixed(2));
+        const receitasPeriodo = Number(financeiroPeriodo.receitas || 0);
+        const despesasPeriodo = Number(financeiroPeriodo.despesas || 0);
+        const gastoFolhaPeriodo = Number(financeiroPeriodo.gasto_folha || 0);
+        const saldoPeriodo = Number((receitasPeriodo - despesasPeriodo).toFixed(2));
 
-        // 4.1 Despesas por Categoria no Mês
+        // 4.1 Despesas por Categoria no Período
         const despesasPorCategoria = db.prepare(`
             SELECT 
                 categoria,
                 SUM(valor) as total
             FROM financeiro
-            WHERE tipo = 'despesa' AND data LIKE ?
+            WHERE tipo = 'despesa' AND data >= ? AND data <= ?
             GROUP BY categoria
             ORDER BY total DESC
-        `).all(`${currentYearMonth}%`);
+        `).all(dataInicio, dataFim);
 
-        // 5. Custo Médio por Animal no Mês = Despesas do Mês / Total de Ativos
-        const custoMedioPorAnimal = totalAtivos > 0 ? Number((despesasMes / totalAtivos).toFixed(2)) : 0;
+        // 5. Custo Médio por Animal no Período = Despesas do Período / Total de Ativos
+        const custoMedioPorAnimal = totalAtivos > 0 ? Number((despesasPeriodo / totalAtivos).toFixed(2)) : 0;
 
         // 5.1 RH e Colaboradores
         const totalColaboradores = db.prepare(`SELECT COUNT(*) as count FROM funcionarios WHERE status = 'ativo'`).get()?.count || 0;
@@ -120,7 +151,7 @@ router.get('/', (req, res) => {
             LIMIT 5
         `).all();
 
-        // 8. Próximas Ações Sanitárias Críticas (Atrasadas ou Próximas)
+        // 8. Próximas Ações Sanitárias Críticas
         const proximasSanidades = db.prepare(`
             SELECT 
                 s.*,
@@ -192,17 +223,23 @@ router.get('/', (req, res) => {
         const safrasAtivas = db.prepare(`SELECT COUNT(*) as count FROM safras WHERE status != 'colhida'`).get()?.count || 0;
         const areaTotalTalhoes = db.prepare(`SELECT COALESCE(SUM(area_hectares), 0) as total FROM talhoes`).get()?.total || 0;
 
-        // 11. Métricas de Patrimônio e Maquinários
+        // 11. Métricas de Patrimônio e Maquinários no Período
         const totalMaquinas = db.prepare(`SELECT COUNT(*) as count FROM maquinas_equipamentos WHERE status = 'ativo'`).get()?.count || 0;
         const totalBenfeitorias = db.prepare(`SELECT COUNT(*) as count FROM benfeitorias`).get()?.count || 0;
-        const manutencoesMes = db.prepare(`
+        const manutencoesPeriodo = db.prepare(`
             SELECT COUNT(*) as count, COALESCE(SUM(valor), 0) as total_gasto 
             FROM manutencoes 
-            WHERE data LIKE ?
-        `).get(`${currentYearMonth}%`);
+            WHERE data >= ? AND data <= ?
+        `).get(dataInicio, dataFim);
 
         res.json({
-            mes_referencia: currentYearMonth,
+            periodo: {
+                tipo: tipoPeriodo,
+                data_inicio: dataInicio,
+                data_fim: dataFim,
+                label: labelPeriodo
+            },
+            mes_referencia: dataInicio.slice(0, 7),
             rebanho: {
                 total_ativos: totalAtivos,
                 total_vendidos: animaisStats.total_vendidos || 0,
@@ -213,11 +250,11 @@ router.get('/', (req, res) => {
                 distribuicao_sexo: distribuicaoSexo
             },
             financeiro: {
-                receitas_mes: receitasMes,
-                despesas_mes: despesasMes,
-                saldo_mes: saldoMes,
+                receitas_mes: receitasPeriodo,
+                despesas_mes: despesasPeriodo,
+                saldo_mes: saldoPeriodo,
                 custo_medio_por_animal: custoMedioPorAnimal,
-                gasto_folha_mes: gastoFolhaMes,
+                gasto_folha_mes: gastoFolhaPeriodo,
                 despesas_por_categoria: despesasPorCategoria
             },
             pastagens: {
@@ -238,8 +275,8 @@ router.get('/', (req, res) => {
             patrimonio: {
                 total_maquinas_ativas: totalMaquinas,
                 total_benfeitorias: totalBenfeitorias,
-                manutencoes_mes_count: manutencoesMes?.count || 0,
-                manutencoes_mes_gasto: manutencoesMes?.total_gasto || 0
+                manutencoes_mes_count: manutencoesPeriodo?.count || 0,
+                manutencoes_mes_gasto: manutencoesPeriodo?.total_gasto || 0
             },
             sanidade: {
                 atrasadas: sanidadeAlertas.atrasadas || 0,

@@ -12,62 +12,6 @@ export function setAuthToken(token) {
     }
 }
 
-// Mock Data para Modo Demonstração / Preview Online sem Backend
-const MOCK_DASHBOARD = {
-    rebanho: {
-        total_ativos: 6,
-        total_geral: 8,
-        total_vendidos: 1,
-        total_mortos: 1,
-        distribuicao_categorias: [
-            { categoria: 'vaca', quantidade: 1 },
-            { categoria: 'bezerro', quantidade: 1 },
-            { categoria: 'garrote', quantidade: 1 },
-            { categoria: 'boi_gordo', quantidade: 1 },
-            { categoria: 'novilha', quantidade: 1 },
-            { categoria: 'touro', quantidade: 1 }
-        ]
-    },
-    financeiro: {
-        saldo_mes: 15300,
-        receitas_mes: 24200,
-        despesas_mes: 8900,
-        custo_medio_por_animal: 1483.33,
-        gasto_folha_mes: 5200
-    },
-    sanidade: {
-        atrasadas: 1,
-        vencendo_7dias: 1,
-        total_pendentes: 2
-    },
-    rh: {
-        total_colaboradores_ativos: 4,
-        total_folha_mes: 5200
-    },
-    agricola: {
-        total_talhoes: 3,
-        safras_ativas: 2,
-        ultimas_produtividades: [
-            { cultura: 'Soja Safra 25/26', produtividade_ha: 68.5, unidade_medida: 'sc' }
-        ]
-    },
-    ocupacao_piquetes: [
-        { id: 1, nome: 'Pasto 01 - Maternidade (Brachiaria)', total_animais: 2, capacidade_suporte: 60 },
-        { id: 2, nome: 'Pasto 02 - Recria Novilhas (Mombaça)', total_animais: 2, capacidade_suporte: 110 },
-        { id: 3, nome: 'Pasto 03 - Engorda Bois (Piatã)', total_animais: 2, capacidade_suporte: 160 },
-        { id: 4, nome: 'Pasto 04 - Retiro Bezerros (Tifton)', total_animais: 0, capacidade_suporte: 50 }
-    ],
-    proximas_sanidades: [
-        { id: 1, nome_produto: 'Vacina Febre Aftosa Bivalente', animal_brinco: null, lote_ou_grupo: 'Todo o Rebanho', tipo: 'vacina', computed_status: 'atrasada', data_proxima_dose: '2026-09-01' },
-        { id: 2, nome_produto: 'Ivermectina 3.15%', animal_brinco: 'BR-1003', lote_ou_grupo: null, tipo: 'vermifugo', computed_status: 'alerta_vencendo', data_proxima_dose: '2026-09-14' }
-    ],
-    ultimas_movimentacoes: [
-        { id: 1, animal_brinco: 'BR-1007', tipo: 'venda', valor: 5200, data: '2026-09-02', observacao: 'Venda de novilha Nelore' },
-        { id: 2, animal_brinco: 'BR-1003', tipo: 'transferencia', valor: 0, data: '2026-08-28', piquete_origem_nome: 'Pasto 04', piquete_destino_nome: 'Pasto 03', observacao: 'Transferência de pasto para engorda' },
-        { id: 3, animal_brinco: 'BR-1001', tipo: 'compra', valor: 6500, data: '2026-08-15', observacao: 'Aquisição matriz Nelore PO' }
-    ]
-};
-
 export async function fetchJson(endpoint, options = {}) {
     const token = getAuthToken();
     const headers = {
@@ -76,108 +20,40 @@ export async function fetchJson(endpoint, options = {}) {
         ...(options.headers || {})
     };
 
-    try {
-        const res = await fetch(`${API_BASE}${endpoint}`, {
-            ...options,
-            headers
-        });
+    const res = await fetch(`${API_BASE}${endpoint}`, {
+        ...options,
+        headers
+    });
 
-        if (!res.ok) {
-            let errorMsg = 'Erro na requisição';
-            try {
-                const errData = await res.json();
-                errorMsg = errData.error || errorMsg;
-            } catch (e) {
-                errorMsg = res.statusText || errorMsg;
-            }
-            throw new Error(errorMsg);
+    if (!res.ok) {
+        let errorMsg = 'Erro na requisição';
+        try {
+            const errData = await res.json();
+            errorMsg = errData.error || errorMsg;
+        } catch (e) {
+            errorMsg = res.statusText || errorMsg;
         }
-
-        return await res.json();
-    } catch (err) {
-        // Fallbacks inteligentes para modo Demonstração / Preview
-        if (endpoint.startsWith('/dashboard')) {
-            return MOCK_DASHBOARD;
-        }
-        if (endpoint.startsWith('/fazenda')) {
-            return { id: 1, nome: 'Fazenda Santa Maria', area_hectares: 1250.0, localizacao: 'Mato Grosso do Sul - MS' };
-        }
-        if (endpoint.startsWith('/piquetes')) {
-            return MOCK_DASHBOARD.ocupacao_piquetes;
-        }
-        if (endpoint.startsWith('/auth/me')) {
-            const savedUser = localStorage.getItem('agro_mock_user');
-            if (savedUser) return JSON.parse(savedUser);
-            return { id: 1, nome: 'fazendagdapp', email: 'fazendagdapp@agro.com', papel: 'dono', fazenda_id: 1 };
-        }
-        throw err;
+        throw new Error(errorMsg);
     }
+
+    return res.json();
 }
 
 export const api = {
     // Autenticação
     login: async (credentials) => {
-        const { email, usuario, login: userLogin, senha } = credentials;
-        const userInput = (usuario || email || userLogin || '').trim().toLowerCase();
-
-        try {
-            const data = await fetchJson('/auth/login', {
-                method: 'POST',
-                body: JSON.stringify(credentials)
-            });
-            if (data.token) {
-                setAuthToken(data.token);
-            }
-            return data;
-        } catch (err) {
-            // Se o backend estiver offline (modo Preview Vercel), valida credenciais padrão
-            if (
-                (userInput === 'fazendagdapp' || userInput === 'fazendagdapp@agro.com') && 
-                senha === 'app2026@'
-            ) {
-                const mockUser = {
-                    id: 1,
-                    nome: 'Fazenda GD (Administrador)',
-                    email: 'fazendagdapp@agro.com',
-                    papel: 'dono',
-                    fazenda_id: 1
-                };
-                const mockToken = 'mock_jwt_token_fazendagdapp_2026';
-                localStorage.setItem('agro_mock_user', JSON.stringify(mockUser));
-                setAuthToken(mockToken);
-                return {
-                    message: 'Login realizado com sucesso (Modo Demonstração)',
-                    token: mockToken,
-                    user: mockUser
-                };
-            }
-
-            // Também aceita dono / 123456
-            if ((userInput === 'dono' || userInput === 'dono@agro.com') && senha === '123456') {
-                const mockUser = {
-                    id: 1,
-                    nome: 'Produtor Rural (Dono)',
-                    email: 'dono@agro.com',
-                    papel: 'dono',
-                    fazenda_id: 1
-                };
-                const mockToken = 'mock_jwt_token_dono_123456';
-                localStorage.setItem('agro_mock_user', JSON.stringify(mockUser));
-                setAuthToken(mockToken);
-                return {
-                    message: 'Login realizado com sucesso (Modo Demonstração)',
-                    token: mockToken,
-                    user: mockUser
-                };
-            }
-
-            throw new Error(err.message || 'Usuário ou senha inválidos');
+        const data = await fetchJson('/auth/login', {
+            method: 'POST',
+            body: JSON.stringify(credentials)
+        });
+        if (data.token) {
+            setAuthToken(data.token);
         }
+        return data;
     },
     getMe: () => fetchJson('/auth/me'),
     logout: () => {
         setAuthToken('');
-        localStorage.removeItem('agro_mock_user');
     },
 
     // Usuários (Gestão de Acessos - exclusivo Dono)

@@ -76,31 +76,63 @@ export default function DashboardView({ mesAno, setActiveTab }) {
     }
 
     const { 
-        rebanho = { total_ativos: 0, total_geral: 0, total_vendidos: 0, distribuicao_categorias: [] }, 
-        financeiro = { saldo_mes: 0, receitas_mes: 0, despesas_mes: 0, custo_medio_por_animal: 0, gasto_folha_mes: 0 }, 
-        sanidade = { atrasadas: 0, vencendo_7dias: 0, total_pendentes: 0 }, 
+        rebanho = { total_ativos: 0, total_geral: 0, total_vendidos: 0, total_mortos: 0, peso_medio_ativos: 0, distribuicao_categorias: [], distribuicao_sexo: [] }, 
+        financeiro = { saldo_mes: 0, receitas_mes: 0, despesas_mes: 0, custo_medio_por_animal: 0, gasto_folha_mes: 0, despesas_por_categoria: [] }, 
+        pastagens = { total_hectares: 0, taxa_lotacao_global_cab_ha: 0, ocupacao_piquetes: [] },
+        sanidade = { atrasadas: 0, vencendo_7dias: 0, total_pendentes: 0, total_aplicadas: 0 }, 
         ultimas_movimentacoes: ultimasMovimentacoes = [], 
         proximas_sanidades: proximasSanidades = [], 
         ocupacao_piquetes: ocupacaoPiquetes = [], 
-        rh = {}, 
-        agricola = {} 
+        rh = { total_colaboradores_ativos: 0, total_folha_prevista: 0 }, 
+        agricola = { total_talhoes: 0, area_total_hectares: 0, safras_ativas: 0, ultimas_produtividades: [] },
+        patrimonio = { total_maquinas_ativas: 0, total_benfeitorias: 0, manutencoes_mes_count: 0, manutencoes_mes_gasto: 0 }
     } = data;
 
     const formatCurrency = (val) => {
         return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
     };
 
+    const formatCategoriaNome = (cat) => {
+        if (!cat) return '';
+        const nomes = {
+            vaca: 'Vaca / Matriz',
+            novilha: 'Novilha',
+            bezerro: 'Bezerro(a)',
+            garrote: 'Garrote',
+            boi_gordo: 'Boi Gordo',
+            touro: 'Touro / Reprodutor'
+        };
+        return nomes[cat] || cat.charAt(0).toUpperCase() + cat.slice(1).replace('_', ' ');
+    };
+
+    const formatDespesaCategoria = (cat) => {
+        const nomes = {
+            insumo_agricola: 'Insumos Agrícolas',
+            vacina_medicamento: 'Sanidade & Vacinas',
+            nutricao_racao: 'Nutrição & Ração',
+            salario: 'Folha & Salários',
+            aluguel_pasto_pago: 'Arrendamento Pago',
+            manutencao_maquina: 'Manutenção Máquinas',
+            manutencao_infra: 'Manutenção Infra',
+            combustivel: 'Combustível & Lubrif.',
+            compra_animal: 'Aquisição de Animais',
+            servicos_terceiros: 'Serviços Terceirizados',
+            outros: 'Outros Custos'
+        };
+        return nomes[cat] || cat;
+    };
+
     return (
         <div className="space-y-6">
             {/* Top Welcome Banner */}
-            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-950/80 via-slate-900 to-slate-900 border border-emerald-500/20 p-6 shadow-xl">
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-950/90 via-slate-900 to-slate-900 border border-emerald-500/20 p-6 shadow-xl">
                 <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
                 <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <div className="flex items-center gap-2.5 mb-1.5">
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
                                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                                Sistema Operacional Ativo
+                                Sistema em Tempo Real
                             </span>
                             <span className="text-xs text-slate-400">• Safra & Manejo 2025/2026</span>
                         </div>
@@ -108,7 +140,7 @@ export default function DashboardView({ mesAno, setActiveTab }) {
                             Painel de Controle — Fazenda GD
                         </h2>
                         <p className="text-xs md:text-sm text-slate-300 mt-1 max-w-2xl">
-                            Acompanhe em tempo real os indicadores pecuários, agrícolas, sanitários e o fluxo financeiro da propriedade.
+                            Indicadores consolidados de pecuária, lavouras, custos operacionais e sanidade calculados diretamente do banco de dados.
                         </p>
                     </div>
 
@@ -154,10 +186,9 @@ export default function DashboardView({ mesAno, setActiveTab }) {
                     <div className="text-2xl font-extrabold text-white tracking-tight">
                         {rebanho.total_ativos} <span className="text-xs font-normal text-slate-400">cab.</span>
                     </div>
-                    <div className="mt-2 text-xs text-slate-400 flex items-center gap-1.5">
-                        <span>Total: {rebanho.total_geral}</span>
-                        <span className="text-slate-600">•</span>
-                        <span>{rebanho.total_vendidos} vend.</span>
+                    <div className="mt-2 text-xs text-slate-400 flex items-center justify-between">
+                        <span>Peso Médio:</span>
+                        <span className="text-emerald-400 font-semibold">{rebanho.peso_medio_ativos || 0} kg</span>
                     </div>
                 </div>
 
@@ -181,6 +212,7 @@ export default function DashboardView({ mesAno, setActiveTab }) {
                     </div>
                     <div className="mt-2 text-[11px] text-slate-400 flex items-center justify-between">
                         <span className="text-emerald-400/90 font-medium">Rec: {formatCurrency(financeiro.receitas_mes)}</span>
+                        <span className="text-rose-400/90 font-medium">Desp: {formatCurrency(financeiro.despesas_mes)}</span>
                     </div>
                 </div>
 
@@ -219,13 +251,13 @@ export default function DashboardView({ mesAno, setActiveTab }) {
                     </div>
                 </div>
 
-                {/* 5. Produtividade Agrícola da Última Safra (Card da Etapa 1) */}
+                {/* 5. Produtividade Agrícola */}
                 <div 
                     onClick={() => setActiveTab('agricola')}
                     className="p-5 rounded-2xl bg-slate-800/80 border border-slate-700/60 hover:border-slate-600 transition cursor-pointer group shadow-sm"
                 >
                     <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Produtividade Agrícola</span>
+                        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Produtividade</span>
                         <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 group-hover:scale-110 transition">
                             <Sprout className="w-4 h-4" />
                         </div>
@@ -235,11 +267,11 @@ export default function DashboardView({ mesAno, setActiveTab }) {
                             <div className="text-lg font-extrabold text-amber-400 tracking-tight">
                                 {agricola.ultimas_produtividades[0].produtividade_ha}{' '}
                                 <span className="text-xs font-normal text-slate-400">
-                                    {agricola.ultimas_produtividades[0].unidade_medida}/ha
+                                    {agricola.ultimas_produtividades[0].unidade_medida || 'sc'}/ha
                                 </span>
                             </div>
                             <div className="mt-1 text-[11px] text-slate-300 font-medium truncate">
-                                Última safra: {agricola.ultimas_produtividades[0].cultura}
+                                {agricola.ultimas_produtividades[0].cultura}
                             </div>
                         </div>
                     ) : (
@@ -280,6 +312,10 @@ export default function DashboardView({ mesAno, setActiveTab }) {
                             <span className="px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-400 font-semibold border border-rose-500/30">
                                 {sanidade.atrasadas} atrasada(s)
                             </span>
+                        ) : sanidade.vencendo_7dias > 0 ? (
+                            <span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 font-semibold border border-amber-500/30">
+                                {sanidade.vencendo_7dias} a vencer
+                            </span>
                         ) : (
                             <span className="text-emerald-400 font-medium">Rebanho em dia</span>
                         )}
@@ -294,27 +330,31 @@ export default function DashboardView({ mesAno, setActiveTab }) {
                     <div className="flex items-center justify-between mb-4">
                         <div>
                             <h3 className="text-sm font-bold text-white tracking-tight">Distribuição do Rebanho por Categoria</h3>
-                            <p className="text-xs text-slate-400">Animais atualmente ativos na propriedade</p>
+                            <p className="text-xs text-slate-400">Animais ativos e peso médio por lote</p>
                         </div>
                         <span className="text-xs text-emerald-400 font-semibold bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
-                            {rebanho.total_ativos} animais
+                            {rebanho.total_ativos} animais ativos
                         </span>
                     </div>
 
                     <div className="h-64 w-full">
-                        {rebanho.distribuicao_categorias.length > 0 ? (
+                        {rebanho.distribuicao_categorias && rebanho.distribuicao_categorias.length > 0 ? (
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={rebanho.distribuicao_categorias} margin={{ top: 10, right: 10, left: -20, bottom: 20 }}>
                                     <XAxis 
                                         dataKey="categoria" 
                                         stroke="#64748b" 
                                         fontSize={11} 
-                                        tickFormatter={(val) => val.charAt(0).toUpperCase() + val.slice(1).replace('_', ' ')}
+                                        tickFormatter={formatCategoriaNome}
                                     />
                                     <YAxis stroke="#64748b" fontSize={11} allowDecimals={false} />
                                     <Tooltip 
                                         contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '0.75rem', fontSize: '12px' }}
-                                        labelFormatter={(label) => `Categoria: ${label.charAt(0).toUpperCase() + label.slice(1)}`}
+                                        labelFormatter={(label) => `Categoria: ${formatCategoriaNome(label)}`}
+                                        formatter={(val, name, item) => [
+                                            `${val} animais (${item.payload.peso_medio > 0 ? item.payload.peso_medio + ' kg méd.' : 'sem peso'})`,
+                                            'Quantidade'
+                                        ]}
                                     />
                                     <Bar dataKey="quantidade" fill="#10b981" radius={[6, 6, 0, 0]} name="Animais" />
                                 </BarChart>
@@ -330,12 +370,17 @@ export default function DashboardView({ mesAno, setActiveTab }) {
                 {/* Balanço e Pastos */}
                 <div className="p-5 rounded-2xl bg-slate-800/80 border border-slate-700/60 shadow-sm flex flex-col justify-between">
                     <div>
-                        <h3 className="text-sm font-bold text-white tracking-tight mb-1">Ocupação dos Piquetes</h3>
-                        <p className="text-xs text-slate-400 mb-4">Lotação atual de cabeças por pasto</p>
+                        <div className="flex items-center justify-between mb-1">
+                            <h3 className="text-sm font-bold text-white tracking-tight">Ocupação dos Piquetes</h3>
+                            <span className="text-[11px] font-semibold text-slate-400">
+                                {pastagens.taxa_lotacao_global_cab_ha || 0} cab/ha
+                            </span>
+                        </div>
+                        <p className="text-xs text-slate-400 mb-4">Lotação em tempo real por pasto</p>
 
                         <div className="space-y-3">
                             {ocupacaoPiquetes.slice(0, 4).map((p) => {
-                                const taxa = p.capacidade_suporte > 0 ? Math.round((p.total_animais / p.capacidade_suporte) * 100) : 0;
+                                const taxa = p.taxa_ocupacao_pct || (p.capacidade_suporte > 0 ? Math.round((p.total_animais / p.capacidade_suporte) * 100) : 0);
                                 return (
                                     <div key={p.id} className="space-y-1">
                                         <div className="flex items-center justify-between text-xs">
@@ -361,13 +406,37 @@ export default function DashboardView({ mesAno, setActiveTab }) {
 
                     <button 
                         onClick={() => setActiveTab('piquetes')}
-                        className="mt-4 w-full py-2 bg-slate-700/50 hover:bg-slate-700 rounded-xl text-xs font-semibold text-slate-200 transition flex items-center justify-center gap-1.5"
+                        className="mt-4 w-full py-2 bg-slate-700/50 hover:bg-slate-700 rounded-xl text-xs font-semibold text-slate-200 transition flex items-center justify-center gap-1.5 cursor-pointer"
                     >
                         <span>Gerenciar Todos os Pastos</span>
                         <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                 </div>
             </div>
+
+            {/* Middle Section: Despesas do Mês & Patrimônio */}
+            {financeiro.despesas_por_categoria && financeiro.despesas_por_categoria.length > 0 && (
+                <div className="p-5 rounded-2xl bg-slate-800/80 border border-slate-700/60 shadow-sm">
+                    <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                            <DollarSign className="w-4 h-4 text-emerald-400" />
+                            <h3 className="text-sm font-bold text-white tracking-tight">Composição das Despesas do Mês</h3>
+                        </div>
+                        <span className="text-xs text-rose-400 font-semibold">
+                            Total: {formatCurrency(financeiro.despesas_mes)}
+                        </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 pt-2">
+                        {financeiro.despesas_por_categoria.map((item, idx) => (
+                            <div key={idx} className="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
+                                <div className="text-[11px] text-slate-400 truncate">{formatDespesaCategoria(item.categoria)}</div>
+                                <div className="text-sm font-bold text-slate-100 mt-0.5">{formatCurrency(item.total)}</div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* Bottom Tables: Alertas de Sanidade & Últimas Movimentações */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -380,7 +449,7 @@ export default function DashboardView({ mesAno, setActiveTab }) {
                         </div>
                         <button 
                             onClick={() => setActiveTab('sanidade')}
-                            className="text-xs text-emerald-400 hover:text-emerald-300 font-medium"
+                            className="text-xs text-emerald-400 hover:text-emerald-300 font-medium cursor-pointer"
                         >
                             Ver todos
                         </button>
@@ -399,7 +468,7 @@ export default function DashboardView({ mesAno, setActiveTab }) {
                                     <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${
                                         san.computed_status === 'atrasada'
                                             ? 'bg-rose-500/20 text-rose-300 border-rose-500/30'
-                                            : san.computed_status === 'alerta_vencendo'
+                                             : san.computed_status === 'alerta_vencendo'
                                             ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
                                             : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
                                     }`}>
@@ -426,7 +495,7 @@ export default function DashboardView({ mesAno, setActiveTab }) {
                         </div>
                         <button 
                             onClick={() => setActiveTab('movimentacoes')}
-                            className="text-xs text-emerald-400 hover:text-emerald-300 font-medium"
+                            className="text-xs text-emerald-400 hover:text-emerald-300 font-medium cursor-pointer"
                         >
                             Ver todas
                         </button>

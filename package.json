@@ -1,0 +1,14 @@
+{
+  "name": "agro-saas-mvp",
+  "version": "1.0.0",
+  "description": "Protótipo MVP SaaS de Gestão de Fazendas (Rebanho, Movimentações, Sanidade, Financeiro e Dashboard)",
+  "scripts": {
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "seed": "cd backend && npm run seed",
+    "test:backend": "cd backend && node src/test_api.js"
+  },
+  "keywords": ["agro", "pecuaria", "fazenda", "rebanho", "saas"],
+  "author": "",
+  "license": "ISC"
+}

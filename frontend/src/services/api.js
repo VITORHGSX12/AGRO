@@ -1,0 +1,356 @@
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
+
+export function getAuthToken() {
+    return localStorage.getItem('agro_auth_token') || '';
+}
+
+export function setAuthToken(token) {
+    if (token) {
+        localStorage.setItem('agro_auth_token', token);
+    } else {
+        localStorage.removeItem('agro_auth_token');
+    }
+}
+
+// Mock Data para Modo Demonstração / Preview Online sem Backend
+const MOCK_DASHBOARD = {
+    rebanho: {
+        total_ativos: 6,
+        total_geral: 8,
+        total_vendidos: 1,
+        total_mortos: 1,
+        distribuicao_categorias: [
+            { categoria: 'vaca', quantidade: 1 },
+            { categoria: 'bezerro', quantidade: 1 },
+            { categoria: 'garrote', quantidade: 1 },
+            { categoria: 'boi_gordo', quantidade: 1 },
+            { categoria: 'novilha', quantidade: 1 },
+            { categoria: 'touro', quantidade: 1 }
+        ]
+    },
+    financeiro: {
+        saldo_mes: 15300,
+        receitas_mes: 24200,
+        despesas_mes: 8900,
+        custo_medio_por_animal: 1483.33,
+        gasto_folha_mes: 5200
+    },
+    sanidade: {
+        atrasadas: 1,
+        vencendo_7dias: 1,
+        total_pendentes: 2
+    },
+    rh: {
+        total_colaboradores_ativos: 4,
+        total_folha_mes: 5200
+    },
+    agricola: {
+        total_talhoes: 3,
+        safras_ativas: 2,
+        ultimas_produtividades: [
+            { cultura: 'Soja Safra 25/26', produtividade_ha: 68.5, unidade_medida: 'sc' }
+        ]
+    },
+    ocupacao_piquetes: [
+        { id: 1, nome: 'Pasto 01 - Maternidade (Brachiaria)', total_animais: 2, capacidade_suporte: 60 },
+        { id: 2, nome: 'Pasto 02 - Recria Novilhas (Mombaça)', total_animais: 2, capacidade_suporte: 110 },
+        { id: 3, nome: 'Pasto 03 - Engorda Bois (Piatã)', total_animais: 2, capacidade_suporte: 160 },
+        { id: 4, nome: 'Pasto 04 - Retiro Bezerros (Tifton)', total_animais: 0, capacidade_suporte: 50 }
+    ],
+    proximas_sanidades: [
+        { id: 1, nome_produto: 'Vacina Febre Aftosa Bivalente', animal_brinco: null, lote_ou_grupo: 'Todo o Rebanho', tipo: 'vacina', computed_status: 'atrasada', data_proxima_dose: '2026-09-01' },
+        { id: 2, nome_produto: 'Ivermectina 3.15%', animal_brinco: 'BR-1003', lote_ou_grupo: null, tipo: 'vermifugo', computed_status: 'alerta_vencendo', data_proxima_dose: '2026-09-14' }
+    ],
+    ultimas_movimentacoes: [
+        { id: 1, animal_brinco: 'BR-1007', tipo: 'venda', valor: 5200, data: '2026-09-02', observacao: 'Venda de novilha Nelore' },
+        { id: 2, animal_brinco: 'BR-1003', tipo: 'transferencia', valor: 0, data: '2026-08-28', piquete_origem_nome: 'Pasto 04', piquete_destino_nome: 'Pasto 03', observacao: 'Transferência de pasto para engorda' },
+        { id: 3, animal_brinco: 'BR-1001', tipo: 'compra', valor: 6500, data: '2026-08-15', observacao: 'Aquisição matriz Nelore PO' }
+    ]
+};
+
+export async function fetchJson(endpoint, options = {}) {
+    const token = getAuthToken();
+    const headers = {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        ...(options.headers || {})
+    };
+
+    try {
+        const res = await fetch(`${API_BASE}${endpoint}`, {
+            ...options,
+            headers
+        });
+
+        if (!res.ok) {
+            let errorMsg = 'Erro na requisição';
+            try {
+                const errData = await res.json();
+                errorMsg = errData.error || errorMsg;
+            } catch (e) {
+                errorMsg = res.statusText || errorMsg;
+            }
+            throw new Error(errorMsg);
+        }
+
+        return await res.json();
+    } catch (err) {
+        // Fallbacks inteligentes para modo Demonstração / Preview
+        if (endpoint.startsWith('/dashboard')) {
+            return MOCK_DASHBOARD;
+        }
+        if (endpoint.startsWith('/fazenda')) {
+            return { id: 1, nome: 'Fazenda Santa Maria', area_hectares: 1250.0, localizacao: 'Mato Grosso do Sul - MS' };
+        }
+        if (endpoint.startsWith('/piquetes')) {
+            return MOCK_DASHBOARD.ocupacao_piquetes;
+        }
+        if (endpoint.startsWith('/auth/me')) {
+            const savedUser = localStorage.getItem('agro_mock_user');
+            if (savedUser) return JSON.parse(savedUser);
+            return { id: 1, nome: 'fazendagdapp', email: 'fazendagdapp@agro.com', papel: 'dono', fazenda_id: 1 };
+        }
+        throw err;
+    }
+}
+
+export const api = {
+    // Autenticação
+    login: async (credentials) => {
+        const { email, usuario, login: userLogin, senha } = credentials;
+        const userInput = (usuario || email || userLogin || '').trim().toLowerCase();
+
+        try {
+            const data = await fetchJson('/auth/login', {
+                method: 'POST',
+                body: JSON.stringify(credentials)
+            });
+            if (data.token) {
+                setAuthToken(data.token);
+            }
+            return data;
+        } catch (err) {
+            // Se o backend estiver offline (modo Preview Vercel), valida credenciais padrão
+            if (
+                (userInput === 'fazendagdapp' || userInput === 'fazendagdapp@agro.com') && 
+                senha === 'app2026@'
+            ) {
+                const mockUser = {
+                    id: 1,
+                    nome: 'Fazenda GD (Administrador)',
+                    email: 'fazendagdapp@agro.com',
+                    papel: 'dono',
+                    fazenda_id: 1
+                };
+                const mockToken = 'mock_jwt_token_fazendagdapp_2026';
+                localStorage.setItem('agro_mock_user', JSON.stringify(mockUser));
+                setAuthToken(mockToken);
+                return {
+                    message: 'Login realizado com sucesso (Modo Demonstração)',
+                    token: mockToken,
+                    user: mockUser
+                };
+            }
+
+            // Também aceita dono / 123456
+            if ((userInput === 'dono' || userInput === 'dono@agro.com') && senha === '123456') {
+                const mockUser = {
+                    id: 1,
+                    nome: 'Produtor Rural (Dono)',
+                    email: 'dono@agro.com',
+                    papel: 'dono',
+                    fazenda_id: 1
+                };
+                const mockToken = 'mock_jwt_token_dono_123456';
+                localStorage.setItem('agro_mock_user', JSON.stringify(mockUser));
+                setAuthToken(mockToken);
+                return {
+                    message: 'Login realizado com sucesso (Modo Demonstração)',
+                    token: mockToken,
+                    user: mockUser
+                };
+            }
+
+            throw new Error(err.message || 'Usuário ou senha inválidos');
+        }
+    },
+    getMe: () => fetchJson('/auth/me'),
+    logout: () => {
+        setAuthToken('');
+        localStorage.removeItem('agro_mock_user');
+    },
+
+    // Usuários (Gestão de Acessos - exclusivo Dono)
+    getUsuarios: () => fetchJson('/usuarios'),
+    createUsuario: (data) => fetchJson('/usuarios', { method: 'POST', body: JSON.stringify(data) }),
+    updateUsuario: (id, data) => fetchJson(`/usuarios/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    deleteUsuario: (id) => fetchJson(`/usuarios/${id}`, { method: 'DELETE' }),
+
+    // Fazenda
+    getFazenda: () => fetchJson('/fazenda'),
+    updateFazenda: (data) => fetchJson('/fazenda', { method: 'PUT', body: JSON.stringify(data) }),
+
+    // Piquetes
+    getPiquetes: () => fetchJson('/piquetes'),
+    getPiqueteRotacao: (id) => fetchJson(`/piquetes/${id}/rotacao`),
+    createPiquete: (data) => fetchJson('/piquetes', { method: 'POST', body: JSON.stringify(data) }),
+    updatePiquete: (id, data) => fetchJson(`/piquetes/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    deletePiquete: (id) => fetchJson(`/piquetes/${id}`, { method: 'DELETE' }),
+
+    // Arrendamentos
+    getArrendamentos: (params = {}) => {
+        const q = new URLSearchParams();
+        if (params.tipo) q.append('tipo', params.tipo);
+        if (params.status) q.append('status', params.status);
+        const query = q.toString() ? `?${q.toString()}` : '';
+        return fetchJson(`/arrendamentos${query}`);
+    },
+    createArrendamento: (data) => fetchJson('/arrendamentos', { method: 'POST', body: JSON.stringify(data) }),
+    lancarPagamentoArrendamento: (id, data = {}) => fetchJson(`/arrendamentos/${id}/lancar-pagamento`, { method: 'POST', body: JSON.stringify(data) }),
+    deleteArrendamento: (id) => fetchJson(`/arrendamentos/${id}`, { method: 'DELETE' }),
+
+    // Animais
+    getAnimais: (params = {}) => {
+        const q = new URLSearchParams();
+        if (params.status) q.append('status', params.status);
+        if (params.categoria) q.append('categoria', params.categoria);
+        if (params.piquete_id) q.append('piquete_id', params.piquete_id);
+        if (params.busca) q.append('busca', params.busca);
+        const query = q.toString() ? `?${q.toString()}` : '';
+        return fetchJson(`/animais${query}`);
+    },
+    getAnimalById: (id) => fetchJson(`/animais/${id}`),
+    createAnimal: (data) => fetchJson('/animais', { method: 'POST', body: JSON.stringify(data) }),
+    updateAnimal: (id, data) => fetchJson(`/animais/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    deleteAnimal: (id) => fetchJson(`/animais/${id}`, { method: 'DELETE' }),
+
+    // Movimentações
+    getMovimentacoes: (params = {}) => {
+        const q = new URLSearchParams();
+        if (params.tipo) q.append('tipo', params.tipo);
+        if (params.animal_id) q.append('animal_id', params.animal_id);
+        const query = q.toString() ? `?${q.toString()}` : '';
+        return fetchJson(`/movimentacoes${query}`);
+    },
+    createMovimentacao: (data) => fetchJson('/movimentacoes', { method: 'POST', body: JSON.stringify(data) }),
+
+    // Sanidade
+    getSanidade: (params = {}) => {
+        const q = new URLSearchParams();
+        if (params.tipo) q.append('tipo', params.tipo);
+        if (params.status_filtro) q.append('status_filtro', params.status_filtro);
+        const query = q.toString() ? `?${q.toString()}` : '';
+        return fetchJson(`/sanidade${query}`);
+    },
+    createSanidade: (data) => fetchJson('/sanidade', { method: 'POST', body: JSON.stringify(data) }),
+    concluirSanidade: (id, data = {}) => fetchJson(`/sanidade/${id}/concluir`, { method: 'PUT', body: JSON.stringify(data) }),
+    deleteSanidade: (id) => fetchJson(`/sanidade/${id}`, { method: 'DELETE' }),
+
+    // Financeiro
+    getFinanceiro: (params = {}) => {
+        const q = new URLSearchParams();
+        if (params.tipo) q.append('tipo', params.tipo);
+        if (params.categoria) q.append('categoria', params.categoria);
+        if (params.mes_ano) q.append('mes_ano', params.mes_ano);
+        const query = q.toString() ? `?${q.toString()}` : '';
+        return fetchJson(`/financeiro${query}`);
+    },
+    getResumoFinanceiro: (params = {}) => {
+        const q = new URLSearchParams();
+        if (params.mes_ano) q.append('mes_ano', params.mes_ano);
+        const query = q.toString() ? `?${q.toString()}` : '';
+        return fetchJson(`/financeiro/resumo${query}`);
+    },
+    createFinanceiro: (data) => fetchJson('/financeiro', { method: 'POST', body: JSON.stringify(data) }),
+    deleteFinanceiro: (id) => fetchJson(`/financeiro/${id}`, { method: 'DELETE' }),
+
+    // Dashboard
+    getDashboard: (params = {}) => {
+        const q = new URLSearchParams();
+        if (params.mes_ano) q.append('mes_ano', params.mes_ano);
+        const query = q.toString() ? `?${q.toString()}` : '';
+        return fetchJson(`/dashboard${query}`);
+    },
+
+    // Funcionários (RH)
+    getFuncionarios: (params = {}) => {
+        const q = new URLSearchParams();
+        if (params.status) q.append('status', params.status);
+        if (params.tipo_contratacao) q.append('tipo_contratacao', params.tipo_contratacao);
+        const query = q.toString() ? `?${q.toString()}` : '';
+        return fetchJson(`/funcionarios${query}`);
+    },
+    createFuncionario: (data) => fetchJson('/funcionarios', { method: 'POST', body: JSON.stringify(data) }),
+    updateFuncionario: (id, data) => fetchJson(`/funcionarios/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    deleteFuncionario: (id) => fetchJson(`/funcionarios/${id}`, { method: 'DELETE' }),
+
+    // Folha de Pagamento
+    getFolha: (mesReferencia) => {
+        const query = mesReferencia ? `?mes_referencia=${mesReferencia}` : '';
+        return fetchJson(`/folha${query}`);
+    },
+    updateFolhaItem: (id, data) => fetchJson(`/folha/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    pagarFolhaItem: (id, data = {}) => fetchJson(`/folha/${id}/pagar`, { method: 'POST', body: JSON.stringify(data) }),
+    pagarTodasFolhas: (data) => fetchJson('/folha/pagar-todas', { method: 'POST', body: JSON.stringify(data) }),
+
+    // Módulo Agrícola (Talhões, Safras, Insumos)
+    getTalhoes: () => fetchJson('/agricola/talhoes'),
+    createTalhao: (data) => fetchJson('/agricola/talhoes', { method: 'POST', body: JSON.stringify(data) }),
+    updateTalhao: (id, data) => fetchJson(`/agricola/talhoes/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    deleteTalhao: (id) => fetchJson(`/agricola/talhoes/${id}`, { method: 'DELETE' }),
+
+    getSafras: (params = {}) => {
+        const q = new URLSearchParams();
+        if (params.status) q.append('status', params.status);
+        if (params.talhao_id) q.append('talhao_id', params.talhao_id);
+        const query = q.toString() ? `?${q.toString()}` : '';
+        return fetchJson(`/agricola/safras${query}`);
+    },
+    getSafraById: (id) => fetchJson(`/agricola/safras/${id}`),
+    createSafra: (data) => fetchJson('/agricola/safras', { method: 'POST', body: JSON.stringify(data) }),
+    colherSafra: (id, data) => fetchJson(`/agricola/safras/${id}/colher`, { method: 'POST', body: JSON.stringify(data) }),
+    deleteSafra: (id) => fetchJson(`/agricola/safras/${id}`, { method: 'DELETE' }),
+
+    getInsumos: (params = {}) => {
+        const q = new URLSearchParams();
+        if (params.safra_id) q.append('safra_id', params.safra_id);
+        const query = q.toString() ? `?${q.toString()}` : '';
+        return fetchJson(`/agricola/insumos${query}`);
+    },
+    createInsumo: (data) => fetchJson('/agricola/insumos', { method: 'POST', body: JSON.stringify(data) }),
+    deleteInsumo: (id) => fetchJson(`/agricola/insumos/${id}`, { method: 'DELETE' }),
+
+    // Módulo Patrimônio & Maquinário
+    getPatrimonioResumo: () => fetchJson('/patrimonio/resumo'),
+
+    getBenfeitorias: (params = {}) => {
+        const q = new URLSearchParams();
+        if (params.tipo) q.append('tipo', params.tipo);
+        const query = q.toString() ? `?${q.toString()}` : '';
+        return fetchJson(`/patrimonio/benfeitorias${query}`);
+    },
+    createBenfeitoria: (data) => fetchJson('/patrimonio/benfeitorias', { method: 'POST', body: JSON.stringify(data) }),
+    updateBenfeitoria: (id, data) => fetchJson(`/patrimonio/benfeitorias/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    deleteBenfeitoria: (id) => fetchJson(`/patrimonio/benfeitorias/${id}`, { method: 'DELETE' }),
+
+    getMaquinas: (params = {}) => {
+        const q = new URLSearchParams();
+        if (params.status) q.append('status', params.status);
+        if (params.tipo) q.append('tipo', params.tipo);
+        const query = q.toString() ? `?${q.toString()}` : '';
+        return fetchJson(`/patrimonio/maquinas${query}`);
+    },
+    getMaquinaById: (id) => fetchJson(`/patrimonio/maquinas/${id}`),
+    createMaquina: (data) => fetchJson('/patrimonio/maquinas', { method: 'POST', body: JSON.stringify(data) }),
+    updateMaquina: (id, data) => fetchJson(`/patrimonio/maquinas/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    deleteMaquina: (id) => fetchJson(`/patrimonio/maquinas/${id}`, { method: 'DELETE' }),
+
+    getManutencoes: (params = {}) => {
+        const q = new URLSearchParams();
+        if (params.maquina_id) q.append('maquina_id', params.maquina_id);
+        const query = q.toString() ? `?${q.toString()}` : '';
+        return fetchJson(`/patrimonio/manutencoes${query}`);
+    },
+    createManutencao: (data) => fetchJson('/patrimonio/manutencoes', { method: 'POST', body: JSON.stringify(data) }),
+    deleteManutencao: (id) => fetchJson(`/patrimonio/manutencoes/${id}`, { method: 'DELETE' })
+};

@@ -15,12 +15,16 @@ import {
     Calendar,
     Clock,
     AlertCircle,
-    CheckCircle2
+    CheckCircle2,
+    Layers,
+    Beef,
+    Compass,
+    Activity
 } from 'lucide-react';
 import { api } from '../services/api';
 
-export default function FazendaView({ fazenda, onReloadFazenda, piquetes, onReloadPiquetes, triggerNewModal, onResetTrigger }) {
-    const [subTab, setSubTab] = useState('piquetes'); // 'piquetes' | 'arrendamentos' | 'propriedade'
+export default function FazendaView({ fazenda, onReloadFazenda, piquetes = [], onReloadPiquetes, triggerNewModal, onResetTrigger }) {
+    const [activeTab, setActiveTab] = useState('piquetes'); // 'piquetes' | 'rotacao' | 'arrendamentos' | 'propriedade'
 
     // Form Fazenda
     const [fazendaForm, setFazendaForm] = useState({
@@ -38,10 +42,23 @@ export default function FazendaView({ fazenda, onReloadFazenda, piquetes, onRelo
     const [savingPiquete, setSavingPiquete] = useState(false);
     const [errorPiquete, setErrorPiquete] = useState('');
 
-    // Modal Rotação de Pastagem
+    // Modal / Ver Animais do Piquete
+    const [selectedPiqueteAnimais, setSelectedPiqueteAnimais] = useState(null);
+
+    // Modal Nova Rotação
     const [modalRotacaoOpen, setModalRotacaoOpen] = useState(false);
-    const [selectedPiqueteRotacao, setSelectedPiqueteRotacao] = useState(null);
-    const [rotacaoHistorico, setRotacaoHistorico] = useState([]);
+    const [rotacaoForm, setRotacaoForm] = useState({
+        piquete_id: '',
+        data_entrada: new Date().toISOString().split('T')[0],
+        data_saida: '',
+        quantidade_animais: '1',
+        observacao: ''
+    });
+    const [savingRotacao, setSavingRotacao] = useState(false);
+    const [errorRotacao, setErrorRotacao] = useState('');
+
+    // Rotação Histórico Geral
+    const [rotacaoTimeline, setRotacaoTimeline] = useState([]);
     const [loadingRotacao, setLoadingRotacao] = useState(false);
 
     // Arrendamentos State
@@ -67,11 +84,33 @@ export default function FazendaView({ fazenda, onReloadFazenda, piquetes, onRelo
         try {
             setLoadingArrendamentos(true);
             const data = await api.getArrendamentos();
-            setArrendamentos(data);
+            setArrendamentos(data || []);
         } catch (err) {
             console.error('Erro ao carregar arrendamentos:', err);
         } finally {
             setLoadingArrendamentos(false);
+        }
+    };
+
+    const loadRotacaoTimeline = async () => {
+        try {
+            setLoadingRotacao(true);
+            // Agrega o histórico de todos os piquetes
+            const promessas = piquetes.map(p => api.getPiqueteRotacao(p.id).catch(() => []));
+            const resultados = await Promise.all(promessas);
+            const merged = [];
+            resultados.forEach((list, idx) => {
+                const piq = piquetes[idx];
+                list.forEach(item => {
+                    merged.push({ ...item, piquete_nome: piq?.nome });
+                });
+            });
+            merged.sort((a, b) => (b.data_entrada > a.data_entrada ? 1 : -1));
+            setRotacaoTimeline(merged);
+        } catch (err) {
+            console.error('Erro ao carregar linha do tempo:', err);
+        } finally {
+            setLoadingRotacao(false);
         }
     };
 
@@ -80,31 +119,17 @@ export default function FazendaView({ fazenda, onReloadFazenda, piquetes, onRelo
     }, []);
 
     useEffect(() => {
+        if (activeTab === 'rotacao') {
+            loadRotacaoTimeline();
+        }
+    }, [activeTab, piquetes]);
+
+    useEffect(() => {
         if (triggerNewModal) {
             handleOpenNewPiquete();
             onResetTrigger();
         }
     }, [triggerNewModal]);
-
-    const handleSaveFazenda = async (e) => {
-        e.preventDefault();
-        setSavingFazenda(true);
-        setMsgFazenda('');
-
-        try {
-            await api.updateFazenda({
-                nome: fazendaForm.nome,
-                area_hectares: Number(fazendaForm.area_hectares) || 0,
-                localizacao: fazendaForm.localizacao
-            });
-            setMsgFazenda('Informações da propriedade salvas com sucesso!');
-            if (onReloadFazenda) onReloadFazenda();
-        } catch (err) {
-            setMsgFazenda('Erro ao salvar: ' + err.message);
-        } finally {
-            setSavingFazenda(false);
-        }
-    };
 
     const handleOpenNewPiquete = () => {
         setEditingPiquete(null);
@@ -113,7 +138,8 @@ export default function FazendaView({ fazenda, onReloadFazenda, piquetes, onRelo
         setModalPiqueteOpen(true);
     };
 
-    const handleOpenEditPiquete = (p) => {
+    const handleOpenEditPiquete = (p, e) => {
+        if (e) e.stopPropagation();
         setEditingPiquete(p);
         setPiqueteForm({
             nome: p.nome,
@@ -126,12 +152,13 @@ export default function FazendaView({ fazenda, onReloadFazenda, piquetes, onRelo
 
     const handleSavePiquete = async (e) => {
         e.preventDefault();
-        setSavingPiquete(true);
         setErrorPiquete('');
+        setSavingPiquete(true);
 
         try {
+            if (!piqueteForm.nome.trim()) throw new Error('Nome do piquete é obrigatório');
             const payload = {
-                nome: piqueteForm.nome,
+                nome: piqueteForm.nome.trim(),
                 tamanho_hectares: Number(piqueteForm.tamanho_hectares) || 0,
                 capacidade_suporte: Number(piqueteForm.capacidade_suporte) || 0
             };
@@ -145,93 +172,130 @@ export default function FazendaView({ fazenda, onReloadFazenda, piquetes, onRelo
             setModalPiqueteOpen(false);
             if (onReloadPiquetes) onReloadPiquetes();
         } catch (err) {
-            setErrorPiquete(err.message);
+            setErrorPiquete(err.message || 'Erro ao salvar piquete');
         } finally {
             setSavingPiquete(false);
         }
     };
 
-    const handleDeletePiquete = async (id, nome) => {
-        if (!confirm(`Deseja excluir o piquete "${nome}"? (Animais associados ficarão marcados como sem pasto)`)) return;
+    const handleDeletePiquete = async (id, e) => {
+        if (e) e.stopPropagation();
+        if (!window.confirm('Tem certeza que deseja excluir este piquete? Os animais alocados ficarão sem pasto.')) return;
         try {
             await api.deletePiquete(id);
             if (onReloadPiquetes) onReloadPiquetes();
+            if (selectedPiqueteAnimais && selectedPiqueteAnimais.id === id) {
+                setSelectedPiqueteAnimais(null);
+            }
         } catch (err) {
-            alert('Erro ao excluir: ' + err.message);
+            alert(err.message || 'Erro ao excluir piquete');
         }
     };
 
-    // Abre linha do tempo da rotação de um piquete
-    const handleVerRotacao = async (p) => {
-        setSelectedPiqueteRotacao(p);
-        setModalRotacaoOpen(true);
-        setLoadingRotacao(true);
-        try {
-            const historico = await api.getPiqueteRotacao(p.id);
-            setRotacaoHistorico(historico);
-        } catch (err) {
-            console.error('Erro ao buscar rotação:', err);
-        } finally {
-            setLoadingRotacao(false);
-        }
-    };
-
-    // Arrendamentos actions
-    const handleOpenNewArrendamento = () => {
-        setArrendamentoForm({
-            tipo: 'pago',
-            contraparte_nome: '',
-            piquete_id: piquetes.length > 0 ? String(piquetes[0].id) : '',
-            valor: '',
-            unidade_cobranca: 'por_hectare_mes',
-            data_inicio: new Date().toISOString().split('T')[0],
-            data_fim: '',
-            status: 'ativo',
-            observacoes: ''
+    // Rotação Modal
+    const handleOpenNovaRotacao = (piqueteId = '') => {
+        setRotacaoForm({
+            piquete_id: piqueteId ? String(piqueteId) : (piquetes[0]?.id ? String(piquetes[0].id) : ''),
+            data_entrada: new Date().toISOString().split('T')[0],
+            data_saida: '',
+            quantidade_animais: '1',
+            observacao: ''
         });
-        setErrorArrendamento('');
-        setModalArrendamentoOpen(true);
+        setErrorRotacao('');
+        setModalRotacaoOpen(true);
     };
 
+    const handleSaveRotacao = async (e) => {
+        e.preventDefault();
+        setErrorRotacao('');
+        setSavingRotacao(true);
+
+        try {
+            if (!rotacaoForm.piquete_id) throw new Error('Selecione um piquete');
+            if (!rotacaoForm.data_entrada) throw new Error('Data de entrada é obrigatória');
+
+            await api.createRotacaoPiquete(rotacaoForm.piquete_id, {
+                data_entrada: rotacaoForm.data_entrada,
+                data_saida: rotacaoForm.data_saida || null,
+                quantidade_animais: Number(rotacaoForm.quantidade_animais) || 1,
+                observacao: rotacaoForm.observacao
+            });
+
+            setModalRotacaoOpen(false);
+            loadRotacaoTimeline();
+        } catch (err) {
+            setErrorRotacao(err.message || 'Erro ao salvar rotação');
+        } finally {
+            setSavingRotacao(false);
+        }
+    };
+
+    // Arrendamentos
     const handleSaveArrendamento = async (e) => {
         e.preventDefault();
-        setSavingArrendamento(true);
         setErrorArrendamento('');
+        setSavingArrendamento(true);
 
         try {
+            if (!arrendamentoForm.contraparte_nome.trim()) throw new Error('Informe o nome da contraparte');
+            if (!arrendamentoForm.valor || Number(arrendamentoForm.valor) <= 0) throw new Error('Informe um valor válido maior que zero');
+
             await api.createArrendamento({
                 ...arrendamentoForm,
-                valor: Number(arrendamentoForm.valor),
-                piquete_id: arrendamentoForm.piquete_id ? Number(arrendamentoForm.piquete_id) : null
+                piquete_id: arrendamentoForm.piquete_id ? Number(arrendamentoForm.piquete_id) : null,
+                valor: Number(arrendamentoForm.valor)
             });
+
             setModalArrendamentoOpen(false);
             loadArrendamentos();
         } catch (err) {
-            setErrorArrendamento(err.message);
+            setErrorArrendamento(err.message || 'Erro ao salvar contrato');
         } finally {
             setSavingArrendamento(false);
         }
     };
 
     const handleLancarPagamentoArrendamento = async (contrato) => {
-        if (!confirm(`Deseja gerar o lançamento financeiro automático para o contrato com "${contrato.contraparte_nome}" no valor de R$ ${contrato.valor_calculado_mes.toFixed(2)}?`)) return;
+        if (!window.confirm(`Deseja lançar a quitação do contrato "${contrato.contraparte_nome}" no fluxo financeiro?`)) return;
         try {
             const res = await api.lancarPagamentoArrendamento(contrato.id);
-            setFeedbackArrendamento(res.message);
-            setTimeout(() => setFeedbackArrendamento(''), 5000);
+            setFeedbackArrendamento(res.message || 'Lançamento gerado no financeiro com sucesso!');
+            setTimeout(() => setFeedbackArrendamento(''), 4000);
             loadArrendamentos();
         } catch (err) {
-            alert('Erro ao lançar pagamento: ' + err.message);
+            alert(err.message || 'Erro ao lançar quitação do arrendamento');
         }
     };
 
     const handleDeleteArrendamento = async (id) => {
-        if (!confirm('Deseja excluir este contrato de arrendamento?')) return;
+        if (!window.confirm('Tem certeza que deseja excluir este contrato de arrendamento?')) return;
         try {
             await api.deleteArrendamento(id);
             loadArrendamentos();
         } catch (err) {
-            alert('Erro ao excluir: ' + err.message);
+            alert(err.message || 'Erro ao excluir contrato');
+        }
+    };
+
+    // Salvar Fazenda
+    const handleSaveFazenda = async (e) => {
+        e.preventDefault();
+        setSavingFazenda(true);
+        setMsgFazenda('');
+
+        try {
+            await api.updateFazenda({
+                nome: fazendaForm.nome,
+                area_hectares: Number(fazendaForm.area_hectares) || 0,
+                localizacao: fazendaForm.localizacao
+            });
+            setMsgFazenda('Informações da fazenda salvas com sucesso!');
+            if (onReloadFazenda) onReloadFazenda();
+            setTimeout(() => setMsgFazenda(''), 3000);
+        } catch (err) {
+            alert(err.message || 'Erro ao salvar fazenda');
+        } finally {
+            setSavingFazenda(false);
         }
     };
 
@@ -241,106 +305,145 @@ export default function FazendaView({ fazenda, onReloadFazenda, piquetes, onRelo
 
     return (
         <div className="space-y-6">
-            {/* Sub-Navigation Tabs */}
-            <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
-                <button
-                    onClick={() => setSubTab('piquetes')}
-                    className={`px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 ${
-                        subTab === 'piquetes' 
-                            ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20' 
-                            : 'bg-slate-800 text-slate-400 hover:text-white'
-                    }`}
-                >
-                    <Fence className="w-4 h-4" />
-                    <span>Pastos & Piquetes ({piquetes.length})</span>
-                </button>
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+                        <Fence className="w-5 h-5 text-emerald-400" />
+                        Pastagens, Manejo & Arrendamentos
+                    </h2>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                        Capacidade de suporte, taxa de lotação dos piquetes, rotação de pastos e contratos rurais.
+                    </p>
+                </div>
 
-                <button
-                    onClick={() => setSubTab('arrendamentos')}
-                    className={`px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 ${
-                        subTab === 'arrendamentos' 
-                            ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20' 
-                            : 'bg-slate-800 text-slate-400 hover:text-white'
-                    }`}
-                >
-                    <FileText className="w-4 h-4" />
-                    <span>Arrendamentos de Pastagem ({arrendamentos.length})</span>
-                </button>
-
-                <button
-                    onClick={() => setSubTab('propriedade')}
-                    className={`px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 ${
-                        subTab === 'propriedade' 
-                            ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20' 
-                            : 'bg-slate-800 text-slate-400 hover:text-white'
-                    }`}
-                >
-                    <Building2 className="w-4 h-4" />
-                    <span>Dados da Propriedade</span>
-                </button>
-            </div>
-
-            {/* TAB 1: PIQUETES & PASTOS */}
-            {subTab === 'piquetes' && (
-                <div className="space-y-4">
-                    <div className="flex items-center justify-between p-4 bg-slate-800/80 border border-slate-700/60 rounded-2xl shadow-sm">
-                        <div>
-                            <h3 className="font-bold text-sm text-white">Pastos e Divisões da Fazenda</h3>
-                            <p className="text-xs text-slate-400">Controle de taxa de lotação e histórico de rotação</p>
-                        </div>
+                <div className="flex items-center gap-2">
+                    {activeTab === 'piquetes' && (
                         <button
                             onClick={handleOpenNewPiquete}
-                            className="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold text-xs px-3.5 py-2 rounded-xl transition shadow-md shadow-emerald-500/20"
+                            className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center gap-2 cursor-pointer"
                         >
                             <Plus className="w-4 h-4" />
                             <span>Novo Piquete</span>
                         </button>
-                    </div>
+                    )}
+                    {activeTab === 'rotacao' && (
+                        <button
+                            onClick={() => handleOpenNovaRotacao()}
+                            className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center gap-2 cursor-pointer"
+                        >
+                            <Plus className="w-4 h-4" />
+                            <span>Registrar Rotação</span>
+                        </button>
+                    )}
+                    {activeTab === 'arrendamentos' && (
+                        <button
+                            onClick={() => setModalArrendamentoOpen(true)}
+                            className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center gap-2 cursor-pointer"
+                        >
+                            <Plus className="w-4 h-4" />
+                            <span>Novo Contrato</span>
+                        </button>
+                    )}
+                </div>
+            </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Navigation Tabs */}
+            <div className="flex border-b border-slate-800 bg-slate-900/60 rounded-2xl p-1.5 gap-1 shadow-sm">
+                <button
+                    onClick={() => setActiveTab('piquetes')}
+                    className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
+                        activeTab === 'piquetes' ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                    }`}
+                >
+                    <Fence className="w-4 h-4" />
+                    <span>Piquetes & Pastos ({piquetes.length})</span>
+                </button>
+                <button
+                    onClick={() => setActiveTab('rotacao')}
+                    className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
+                        activeTab === 'rotacao' ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                    }`}
+                >
+                    <History className="w-4 h-4" />
+                    <span>Linha do Tempo de Rotação</span>
+                </button>
+                <button
+                    onClick={() => setActiveTab('arrendamentos')}
+                    className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
+                        activeTab === 'arrendamentos' ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                    }`}
+                >
+                    <FileText className="w-4 h-4" />
+                    <span>Contratos de Arrendamento ({arrendamentos.length})</span>
+                </button>
+                <button
+                    onClick={() => setActiveTab('propriedade')}
+                    className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
+                        activeTab === 'propriedade' ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                    }`}
+                >
+                    <Building2 className="w-4 h-4" />
+                    <span>Dados da Fazenda</span>
+                </button>
+            </div>
+
+            {/* ABA 1: PIQUETES & PASTOS */}
+            {activeTab === 'piquetes' && (
+                <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                         {piquetes.map((p) => {
-                            const taxa = p.capacidade_suporte > 0 ? Math.round((p.total_animais_ativos / p.capacidade_suporte) * 100) : 0;
+                            const total = p.total_animais_ativos || 0;
+                            const cap = p.capacidade_suporte || 0;
+                            const taxa = p.taxa_ocupacao_pct || (cap > 0 ? Math.round((total / cap) * 100) : 0);
+                            const densidade = p.densidade_cab_ha || (p.tamanho_hectares > 0 ? (total / p.tamanho_hectares).toFixed(2) : 0);
+
                             return (
-                                <div key={p.id} className="p-5 rounded-2xl bg-slate-800/80 border border-slate-700/60 shadow-sm flex flex-col justify-between hover:border-slate-600 transition">
+                                <div 
+                                    key={p.id}
+                                    onClick={() => setSelectedPiqueteAnimais(p)}
+                                    className="p-5 rounded-3xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 transition shadow-lg flex flex-col justify-between cursor-pointer group space-y-4"
+                                >
                                     <div>
-                                        <div className="flex items-center justify-between mb-2">
-                                            <h4 className="font-bold text-sm text-white">{p.nome}</h4>
-                                            <div className="flex items-center gap-1">
+                                        <div className="flex items-start justify-between gap-2 mb-2">
+                                            <div>
+                                                <h3 className="text-sm font-bold text-white group-hover:text-emerald-400 transition flex items-center gap-1.5">
+                                                    <Fence className="w-4 h-4 text-emerald-400" />
+                                                    {p.nome}
+                                                </h3>
+                                                <div className="text-[11px] text-slate-400 mt-0.5">
+                                                    {p.tamanho_hectares ? `${p.tamanho_hectares} hectares` : 'Área não definida'} • {densidade} cab/ha
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                                                 <button
-                                                    onClick={() => handleOpenEditPiquete(p)}
-                                                    className="p-1 text-slate-400 hover:text-white"
-                                                    title="Editar Piquete"
+                                                    onClick={(e) => handleOpenEditPiquete(p, e)}
+                                                    className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition"
                                                 >
                                                     <Edit className="w-3.5 h-3.5" />
                                                 </button>
                                                 <button
-                                                    onClick={() => handleDeletePiquete(p.id, p.nome)}
-                                                    className="p-1 text-slate-400 hover:text-rose-400"
-                                                    title="Excluir Piquete"
+                                                    onClick={(e) => handleDeletePiquete(p.id, e)}
+                                                    className="p-1.5 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-rose-500/10 transition"
                                                 >
                                                     <Trash2 className="w-3.5 h-3.5" />
                                                 </button>
                                             </div>
                                         </div>
 
-                                        <div className="text-xs text-slate-400 mb-3 flex items-center gap-3">
-                                            <span>{p.tamanho_hectares || 0} hectares</span>
-                                            <span>•</span>
-                                            <span>Capacidade: {p.capacidade_suporte || 0} cab</span>
-                                        </div>
-
-                                        {/* Lotação Bar */}
-                                        <div className="space-y-1 mb-4">
-                                            <div className="flex items-center justify-between text-xs font-semibold">
-                                                <span className="text-slate-300">Ocupação Atual:</span>
-                                                <span className={taxa > 100 ? 'text-rose-400' : 'text-emerald-400'}>
-                                                    {p.total_animais_ativos || 0} animais ({taxa}%)
+                                        {/* Barra de Lotação */}
+                                        <div className="space-y-1.5 mt-3">
+                                            <div className="flex items-center justify-between text-xs">
+                                                <span className="text-slate-400 font-medium">Lotação Atual</span>
+                                                <span className="font-bold text-slate-200">
+                                                    {total} / {cap || '-'} cabeças ({taxa}%)
                                                 </span>
                                             </div>
-                                            <div className="w-full bg-slate-900 rounded-full h-2 overflow-hidden">
+                                            <div className="w-full bg-slate-950 rounded-full h-2.5 overflow-hidden border border-slate-800/80">
                                                 <div
-                                                    className={`h-full rounded-full transition-all ${
-                                                        taxa > 100 ? 'bg-rose-500' : taxa > 80 ? 'bg-amber-500' : 'bg-emerald-500'
+                                                    className={`h-full rounded-full transition-all duration-300 ${
+                                                        taxa > 100 ? 'bg-rose-500' : taxa >= 80 ? 'bg-amber-500' : 'bg-emerald-500'
                                                     }`}
                                                     style={{ width: `${Math.min(taxa, 100)}%` }}
                                                 ></div>
@@ -348,314 +451,371 @@ export default function FazendaView({ fazenda, onReloadFazenda, piquetes, onRelo
                                         </div>
                                     </div>
 
-                                    {/* Botão para ver Linha do Tempo da Rotação */}
-                                    <button
-                                        onClick={() => handleVerRotacao(p)}
-                                        className="w-full py-2 bg-slate-700/50 hover:bg-slate-700 rounded-xl text-xs font-semibold text-slate-200 transition flex items-center justify-center gap-1.5"
-                                    >
-                                        <History className="w-3.5 h-3.5 text-emerald-400" />
-                                        <span>Linha do Tempo de Rotação</span>
-                                    </button>
+                                    <div className="flex items-center justify-between pt-3 border-t border-slate-800/60 text-xs">
+                                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                                            taxa > 100 ? 'bg-rose-500/20 text-rose-300 border-rose-500/30' :
+                                            taxa >= 80 ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' :
+                                            'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                                        }`}>
+                                            {taxa > 100 ? 'Superlotado' : taxa >= 80 ? 'Alerta Lotação' : 'Manejo Normal'}
+                                        </span>
+
+                                        <span className="text-emerald-400 text-[11px] font-semibold flex items-center gap-1 group-hover:underline">
+                                            <span>Ver animais ({p.animais?.length || total})</span>
+                                            <ArrowRight className="w-3 h-3" />
+                                        </span>
+                                    </div>
                                 </div>
                             );
                         })}
+                    </div>
 
-                        {piquetes.length === 0 && (
-                            <div className="sm:col-span-3 py-16 text-center text-xs text-slate-500 bg-slate-800/40 border border-slate-700/60 rounded-2xl">
-                                Nenhum piquete cadastrado ainda.
-                            </div>
+                    {piquetes.length === 0 && (
+                        <div className="p-12 text-center text-slate-500 bg-slate-900/60 border border-slate-800 rounded-3xl">
+                            Nenhum piquete cadastrado ainda. Clique em "Novo Piquete" para cadastrar os pastos da fazenda.
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* ABA 2: LINHA DO TEMPO DE ROTAÇÃO */}
+            {activeTab === 'rotacao' && (
+                <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
+                    <div className="flex items-center justify-between mb-2">
+                        <div>
+                            <h3 className="text-sm font-bold text-white">Linha do Tempo de Rotação de Pastagens</h3>
+                            <p className="text-xs text-slate-400">Histórico de entrada, saída e dias de descanso de cada piquete</p>
+                        </div>
+                        <button
+                            onClick={() => handleOpenNovaRotacao()}
+                            className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs rounded-xl transition flex items-center gap-1.5 cursor-pointer"
+                        >
+                            <Plus className="w-3.5 h-3.5" />
+                            <span>Nova Rotação</span>
+                        </button>
+                    </div>
+
+                    <div className="divide-y divide-slate-800">
+                        {loadingRotacao ? (
+                            <div className="p-8 text-center text-slate-400">Carregando histórico de rotação...</div>
+                        ) : rotacaoTimeline.length === 0 ? (
+                            <div className="p-8 text-center text-slate-500">Nenhum evento de rotação de pasto registrado.</div>
+                        ) : (
+                            rotacaoTimeline.map((item) => (
+                                <div key={item.id} className="py-4 flex items-center justify-between first:pt-0 last:pb-0">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                                            <History className="w-4 h-4" />
+                                        </div>
+                                        <div>
+                                            <div className="font-bold text-xs text-slate-200">
+                                                {item.piquete_nome || `Piquete #${item.piquete_id}`}
+                                            </div>
+                                            <div className="text-[11px] text-slate-400 mt-0.5">
+                                                Lote com {item.quantidade_animais} cabeças • Entrada: {item.data_entrada} {item.data_saida ? `• Saída: ${item.data_saida}` : '• Em pastejo ativo'}
+                                            </div>
+                                            {item.observacao && (
+                                                <div className="text-[11px] text-slate-500 italic mt-0.5">{item.observacao}</div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${
+                                        item.data_saida ? 'bg-slate-800 text-slate-400 border-slate-700' : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                                    }`}>
+                                        {item.data_saida ? 'Concluído' : 'Pastejo Ativo'}
+                                    </span>
+                                </div>
+                            ))
                         )}
                     </div>
                 </div>
             )}
 
-            {/* TAB 2: ARRENDAMENTOS DE PASTAGEM */}
-            {subTab === 'arrendamentos' && (
+            {/* ABA 3: CONTRATOS DE ARRENDAMENTO */}
+            {activeTab === 'arrendamentos' && (
                 <div className="space-y-4">
-                    <div className="flex items-center justify-between p-4 bg-slate-800/80 border border-slate-700/60 rounded-2xl shadow-sm">
-                        <div>
-                            <h3 className="font-bold text-sm text-white">Contratos de Arrendamento de Pastagem</h3>
-                            <p className="text-xs text-slate-400">Gerencie pastos arrendados de terceiros (despesa) ou cedidos a parceiros (receita)</p>
-                        </div>
-                        <button
-                            onClick={handleOpenNewArrendamento}
-                            className="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold text-xs px-3.5 py-2 rounded-xl transition shadow-md shadow-emerald-500/20"
-                        >
-                            <Plus className="w-4 h-4" />
-                            <span>Novo Contrato</span>
-                        </button>
-                    </div>
-
                     {feedbackArrendamento && (
-                        <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400 text-xs flex items-center gap-2">
+                        <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 rounded-2xl text-xs flex items-center gap-2">
                             <CheckCircle2 className="w-4 h-4 shrink-0" />
                             <span>{feedbackArrendamento}</span>
                         </div>
                     )}
 
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                        {arrendamentos.map((c) => (
-                            <div key={c.id} className="p-5 rounded-2xl bg-slate-800/80 border border-slate-700/60 shadow-sm flex flex-col justify-between">
-                                <div>
-                                    <div className="flex items-center justify-between mb-3">
-                                        <div className="flex items-center gap-2">
-                                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1 ${
-                                                c.tipo === 'pago' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                                            }`}>
-                                                {c.tipo === 'pago' ? <ArrowUpRight className="w-3.5 h-3.5 text-rose-400" /> : <ArrowDownLeft className="w-3.5 h-3.5 text-emerald-400" />}
-                                                {c.tipo === 'pago' ? 'Arrendamento Pago (Despesa)' : 'Arrendamento Recebido (Receita)'}
-                                            </span>
-                                            <span className="text-[11px] px-2 py-0.5 rounded bg-slate-900 text-slate-400 border border-slate-700">
-                                                {c.status}
-                                            </span>
-                                        </div>
-                                        <button
-                                            onClick={() => handleDeleteArrendamento(c.id)}
-                                            className="p-1 text-slate-400 hover:text-rose-400 transition"
-                                            title="Excluir Contrato"
-                                        >
-                                            <Trash2 className="w-3.5 h-3.5" />
-                                        </button>
-                                    </div>
+                    <div className="bg-slate-900/90 border border-slate-800 rounded-3xl overflow-hidden shadow-xl">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left text-xs">
+                                <thead>
+                                    <tr className="border-b border-slate-800 text-[11px] font-bold text-slate-400 uppercase tracking-wider bg-slate-950/40">
+                                        <th className="p-4 pl-6">Tipo & Contraparte</th>
+                                        <th className="p-4">Pasto / Área</th>
+                                        <th className="p-4">Unidade de Cobrança</th>
+                                        <th className="p-4">Valor Mensal Estimado</th>
+                                        <th className="p-4">Período</th>
+                                        <th className="p-4">Status</th>
+                                        <th className="p-4 pr-6 text-right">Quitação & Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-800/60">
+                                    {loadingArrendamentos ? (
+                                        <tr><td colSpan="7" className="p-8 text-center text-slate-400">Carregando contratos...</td></tr>
+                                    ) : arrendamentos.length === 0 ? (
+                                        <tr><td colSpan="7" className="p-8 text-center text-slate-500">Nenhum contrato de arrendamento ativo.</td></tr>
+                                    ) : (
+                                        arrendamentos.map((c) => (
+                                            <tr key={c.id} className="hover:bg-slate-800/30">
+                                                <td className="p-4 pl-6">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase ${
+                                                            c.tipo === 'pago' ? 'bg-rose-500/20 text-rose-300' : 'bg-emerald-500/20 text-emerald-300'
+                                                        }`}>
+                                                            {c.tipo === 'pago' ? 'Pago (Despesa)' : 'Recebido (Receita)'}
+                                                        </span>
+                                                    </div>
+                                                    <div className="font-bold text-sm text-white mt-1">
+                                                        {c.contraparte_nome}
+                                                    </div>
+                                                </td>
 
-                                    <h4 className="font-bold text-base text-white mb-1">{c.contraparte_nome}</h4>
-                                    <div className="text-xs text-slate-400 mb-3">
-                                        Pasto Vinculado: <span className="text-slate-200 font-semibold">{c.piquete_nome || 'Área Externa'}</span>
-                                    </div>
+                                                <td className="p-4 font-medium text-slate-300">
+                                                    {c.piquete_nome ? `${c.piquete_nome} (${c.piquete_tamanho_hectares} ha)` : 'Área Geral / Confinamento'}
+                                                </td>
 
-                                    <div className="p-3 bg-slate-900/80 border border-slate-700/60 rounded-xl space-y-1.5 mb-4">
-                                        <div className="flex items-center justify-between text-xs">
-                                            <span className="text-slate-400">Base Contratual:</span>
-                                            <span className="font-medium text-slate-200">
-                                                {formatCurrency(c.valor)} / {c.unidade_cobranca.replace(/_/g, ' ')}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center justify-between text-xs">
-                                            <span className="text-slate-400">Vigência:</span>
-                                            <span className="text-slate-300">
-                                                {c.data_inicio} {c.data_fim ? `até ${c.data_fim}` : '(Indeterminado)'}
-                                            </span>
-                                        </div>
-                                        <div className="pt-1.5 border-t border-slate-800 flex items-center justify-between text-xs font-bold">
-                                            <span className="text-slate-300">Total Calculado / Mês:</span>
-                                            <span className={c.tipo === 'pago' ? 'text-rose-400 text-sm' : 'text-emerald-400 text-sm'}>
-                                                {formatCurrency(c.valor_calculado_mes)}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
+                                                <td className="p-4 text-slate-400">
+                                                    {c.unidade_cobranca === 'por_hectare_mes' ? `${formatCurrency(c.valor)} / hectare / mês` :
+                                                     c.unidade_cobranca === 'por_cabeca_mes' ? `${formatCurrency(c.valor)} / cabeça / mês` :
+                                                     'Valor Fixo Mensal'}
+                                                </td>
 
-                                <button
-                                    onClick={() => handleLancarPagamentoArrendamento(c)}
-                                    className="w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/20"
-                                >
-                                    <DollarSign className="w-3.5 h-3.5" />
-                                    <span>Lançar Pagamento do Mês no Financeiro</span>
-                                </button>
-                            </div>
-                        ))}
+                                                <td className="p-4 font-bold text-slate-100 text-sm">
+                                                    {formatCurrency(c.valor_calculado_mes || c.valor)}
+                                                </td>
 
-                        {arrendamentos.length === 0 && !loadingArrendamentos && (
-                            <div className="lg:col-span-2 py-16 text-center text-xs text-slate-500 bg-slate-800/40 border border-slate-700/60 rounded-2xl">
-                                Nenhum contrato de arrendamento cadastrado. Clique no botão acima para registrar.
-                            </div>
-                        )}
+                                                <td className="p-4 text-slate-400 text-[11px]">
+                                                    De {c.data_inicio} {c.data_fim ? `até ${c.data_fim}` : '• Indeterminado'}
+                                                </td>
+
+                                                <td className="p-4">
+                                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                                                        c.status === 'ativo' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : 'bg-slate-800 text-slate-400'
+                                                    }`}>
+                                                        {c.status?.toUpperCase()}
+                                                    </span>
+                                                </td>
+
+                                                <td className="p-4 pr-6 text-right">
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <button
+                                                            onClick={() => handleLancarPagamentoArrendamento(c)}
+                                                            className="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded-xl font-bold text-[11px] transition flex items-center gap-1 cursor-pointer"
+                                                        >
+                                                            <DollarSign className="w-3 h-3" />
+                                                            <span>Lançar no Caixa</span>
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteArrendamento(c.id)}
+                                                            className="p-1.5 text-slate-500 hover:text-rose-400 rounded-lg hover:bg-rose-500/10 transition"
+                                                        >
+                                                            <Trash2 className="w-3.5 h-3.5" />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             )}
 
-            {/* TAB 3: PROPRIEDADE */}
-            {subTab === 'propriedade' && (
-                <div className="max-w-xl bg-slate-800/80 border border-slate-700/60 rounded-2xl p-6 shadow-sm">
-                    <div className="flex items-center gap-2 mb-4">
+            {/* ABA 4: DADOS DA PROPRIEDADE */}
+            {activeTab === 'propriedade' && (
+                <div className="max-w-2xl bg-slate-900/90 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
+                    <div className="flex items-center gap-2 mb-2">
                         <Building2 className="w-5 h-5 text-emerald-400" />
-                        <h2 className="font-bold text-sm text-white">Dados Gerais da Propriedade</h2>
+                        <h3 className="text-base font-bold text-white">Configurações da Propriedade</h3>
                     </div>
+
+                    {msgFazenda && (
+                        <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 rounded-xl text-xs">
+                            {msgFazenda}
+                        </div>
+                    )}
 
                     <form onSubmit={handleSaveFazenda} className="space-y-4">
                         <div>
-                            <label className="block text-xs font-semibold text-slate-300 mb-1">Nome da Fazenda / Sítio *</label>
+                            <label className="block text-xs font-semibold text-slate-300 mb-1">Nome da Fazenda / Propriedade *</label>
                             <input
                                 type="text"
                                 required
                                 value={fazendaForm.nome}
                                 onChange={(e) => setFazendaForm({ ...fazendaForm, nome: e.target.value })}
-                                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-emerald-500"
                             />
                         </div>
 
                         <div>
-                            <label className="block text-xs font-semibold text-slate-300 mb-1">Área Total (Hectares)</label>
+                            <label className="block text-xs font-semibold text-slate-300 mb-1">Área Total (Hectares) *</label>
                             <input
                                 type="number"
                                 step="0.1"
+                                required
                                 value={fazendaForm.area_hectares}
                                 onChange={(e) => setFazendaForm({ ...fazendaForm, area_hectares: e.target.value })}
-                                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-emerald-500"
                             />
                         </div>
 
                         <div>
-                            <label className="block text-xs font-semibold text-slate-300 mb-1">Localização / Município</label>
+                            <label className="block text-xs font-semibold text-slate-300 mb-1">Localização / Município - UF</label>
                             <input
                                 type="text"
+                                placeholder="Ex: Rio Verde - GO"
                                 value={fazendaForm.localizacao}
                                 onChange={(e) => setFazendaForm({ ...fazendaForm, localizacao: e.target.value })}
-                                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-emerald-500"
                             />
                         </div>
-
-                        {msgFazenda && (
-                            <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400 text-xs">
-                                {msgFazenda}
-                            </div>
-                        )}
 
                         <button
                             type="submit"
                             disabled={savingFazenda}
-                            className="w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white font-semibold text-xs rounded-xl transition flex items-center justify-center gap-2 shadow-md shadow-emerald-500/20"
+                            className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs rounded-xl shadow-lg shadow-emerald-500/20 transition cursor-pointer"
                         >
-                            <Check className="w-4 h-4" />
-                            <span>{savingFazenda ? 'Salvando...' : 'Salvar Alterações'}</span>
+                            {savingFazenda ? 'Salvando...' : 'Salvar Alterações'}
                         </button>
                     </form>
                 </div>
             )}
 
-            {/* Modal: Linha do Tempo da Rotação de Pastagem */}
-            {modalRotacaoOpen && selectedPiqueteRotacao && (
-                <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-150">
-                        <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <History className="w-5 h-5 text-emerald-400" />
-                                <div>
-                                    <h3 className="font-bold text-sm text-white">Linha do Tempo de Rotação</h3>
-                                    <p className="text-[11px] text-slate-400">{selectedPiqueteRotacao.nome}</p>
-                                </div>
+            {/* Modal: Ver Animais no Piquete */}
+            {selectedPiqueteAnimais && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
+                    <div className="w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl p-6 space-y-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                                    <Fence className="w-5 h-5 text-emerald-400" />
+                                    Animais em {selectedPiqueteAnimais.nome}
+                                </h3>
+                                <p className="text-xs text-slate-400">
+                                    Total de {selectedPiqueteAnimais.animais?.length || selectedPiqueteAnimais.total_animais_ativos} cabeça(s) alocada(s)
+                                </p>
                             </div>
-                            <button onClick={() => setModalRotacaoOpen(false)} className="text-slate-400 hover:text-white">
+                            <button onClick={() => setSelectedPiqueteAnimais(null)} className="text-slate-400 hover:text-white">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
 
-                        <div className="p-6 max-h-96 overflow-y-auto space-y-4">
-                            {loadingRotacao ? (
-                                <div className="py-8 text-center text-xs text-slate-400">Carregando histórico...</div>
-                            ) : rotacaoHistorico.length > 0 ? (
-                                <div className="relative pl-6 space-y-6 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-[2px] before:bg-slate-800">
-                                    {rotacaoHistorico.map((r) => (
-                                        <div key={r.id} className="relative">
-                                            <div className={`absolute -left-6 top-1 w-3.5 h-3.5 rounded-full border-2 border-slate-900 ${
-                                                !r.data_saida ? 'bg-emerald-500 ring-4 ring-emerald-500/20' : 'bg-slate-600'
-                                            }`}></div>
-                                            <div className="bg-slate-800/80 border border-slate-700/60 rounded-xl p-3 text-xs space-y-1">
-                                                <div className="flex items-center justify-between font-bold">
-                                                    <span className={!r.data_saida ? 'text-emerald-400' : 'text-slate-200'}>
-                                                        {!r.data_saida ? 'Lote em Pastoreio Ativo' : 'Período Concluído'}
-                                                    </span>
-                                                    <span className="text-slate-400 text-[11px] font-normal">
-                                                        {r.quantidade_animais} cabeças
-                                                    </span>
-                                                </div>
-                                                <div className="text-[11px] text-slate-300">
-                                                    Entrada: <span className="font-medium text-white">{r.data_entrada}</span>
-                                                    {r.data_saida ? ` • Saída: ${r.data_saida}` : ' • Ainda no pasto'}
-                                                </div>
-                                                {r.observacao && (
-                                                    <div className="text-[11px] text-slate-400 pt-1 border-t border-slate-700/40">
-                                                        {r.observacao}
-                                                    </div>
-                                                )}
+                        <div className="max-h-80 overflow-y-auto divide-y divide-slate-800 bg-slate-950/40 rounded-2xl border border-slate-800/80">
+                            {selectedPiqueteAnimais.animais && selectedPiqueteAnimais.animais.length > 0 ? (
+                                selectedPiqueteAnimais.animais.map((a) => (
+                                    <div key={a.id} className="p-3.5 flex items-center justify-between">
+                                        <div className="flex items-center gap-2.5">
+                                            <div className="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold text-xs">
+                                                <Beef className="w-3.5 h-3.5" />
+                                            </div>
+                                            <div>
+                                                <div className="font-bold text-xs text-white">Brinco {a.identificacao}</div>
+                                                <div className="text-[11px] text-slate-400">{a.categoria} • {a.raca || 'Nelore'} • {a.sexo === 'M' ? 'Macho' : 'Fêmea'}</div>
                                             </div>
                                         </div>
-                                    ))}
-                                </div>
+                                        <div className="text-xs font-semibold text-slate-200">
+                                            {a.peso_atual ? `${a.peso_atual} kg` : '-'}
+                                        </div>
+                                    </div>
+                                ))
                             ) : (
-                                <div className="py-12 text-center text-xs text-slate-500">
-                                    Nenhum histórico de rotação registrado para este pasto ainda.
+                                <div className="p-6 text-center text-xs text-slate-500">
+                                    Nenhum animal alocado neste pasto no momento.
                                 </div>
                             )}
+                        </div>
+
+                        <div className="flex justify-end">
+                            <button
+                                onClick={() => setSelectedPiqueteAnimais(null)}
+                                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold"
+                            >
+                                Fechar
+                            </button>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* Modal: Cadastro de Piquete */}
+            {/* Modal: Novo / Editar Piquete */}
             {modalPiqueteOpen && (
-                <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-150">
-                        <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <Fence className="w-5 h-5 text-emerald-400" />
-                                <h3 className="font-bold text-sm text-white">
-                                    {editingPiquete ? 'Editar Piquete' : 'Novo Piquete / Pasto'}
-                                </h3>
-                            </div>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
+                    <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl p-6 space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-base font-bold text-white">
+                                {editingPiquete ? 'Editar Piquete' : 'Novo Piquete / Pasto'}
+                            </h3>
                             <button onClick={() => setModalPiqueteOpen(false)} className="text-slate-400 hover:text-white">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
 
-                        <form onSubmit={handleSavePiquete} className="p-6 space-y-4">
-                            {errorPiquete && (
-                                <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-400 text-xs">
-                                    {errorPiquete}
-                                </div>
-                            )}
+                        {errorPiquete && (
+                            <div className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-300 rounded-xl text-xs">
+                                {errorPiquete}
+                            </div>
+                        )}
 
+                        <form onSubmit={handleSavePiquete} className="space-y-3">
                             <div>
-                                <label className="block text-xs font-semibold text-slate-300 mb-1">Nome do Pasto *</label>
+                                <label className="block text-[11px] font-bold text-slate-300 mb-1">Nome do Pasto / Piquete *</label>
                                 <input
                                     type="text"
                                     required
-                                    placeholder="Ex: Pasto 04 - Rotacionado"
+                                    placeholder="Ex: Pasto 05 - Engorda Mombaça"
                                     value={piqueteForm.nome}
                                     onChange={(e) => setPiqueteForm({ ...piqueteForm, nome: e.target.value })}
-                                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-emerald-500"
                                 />
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-xs font-semibold text-slate-300 mb-1">Tamanho (ha)</label>
+                                    <label className="block text-[11px] font-bold text-slate-300 mb-1">Tamanho (Hectares)</label>
                                     <input
                                         type="number"
                                         step="0.1"
-                                        placeholder="Ex: 40"
+                                        placeholder="Ex: 45.0"
                                         value={piqueteForm.tamanho_hectares}
                                         onChange={(e) => setPiqueteForm({ ...piqueteForm, tamanho_hectares: e.target.value })}
-                                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-emerald-500"
                                     />
                                 </div>
+
                                 <div>
-                                    <label className="block text-xs font-semibold text-slate-300 mb-1">Capacidade (cab)</label>
+                                    <label className="block text-[11px] font-bold text-slate-300 mb-1">Capacidade (Cabeças)</label>
                                     <input
                                         type="number"
-                                        placeholder="Ex: 60"
+                                        placeholder="Ex: 80"
                                         value={piqueteForm.capacidade_suporte}
                                         onChange={(e) => setPiqueteForm({ ...piqueteForm, capacidade_suporte: e.target.value })}
-                                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-emerald-500"
                                     />
                                 </div>
                             </div>
 
-                            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+                            <div className="pt-2 flex justify-end gap-2">
                                 <button
                                     type="button"
                                     onClick={() => setModalPiqueteOpen(false)}
-                                    className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:bg-slate-800 transition"
+                                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={savingPiquete}
-                                    className="px-5 py-2 rounded-xl text-xs font-semibold bg-emerald-500 hover:bg-emerald-600 text-white transition flex items-center gap-1.5 shadow-md shadow-emerald-500/20"
+                                    className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold transition"
                                 >
-                                    <Check className="w-4 h-4" />
-                                    <span>{savingPiquete ? 'Salvando...' : 'Salvar Piquete'}</span>
+                                    {savingPiquete ? 'Salvando...' : 'Salvar Piquete'}
                                 </button>
                             </div>
                         </form>
@@ -663,145 +823,227 @@ export default function FazendaView({ fazenda, onReloadFazenda, piquetes, onRelo
                 </div>
             )}
 
-            {/* Modal: Cadastro de Contrato de Arrendamento */}
-            {modalArrendamentoOpen && (
-                <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-150">
-                        <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <FileText className="w-5 h-5 text-emerald-400" />
-                                <h3 className="font-bold text-sm text-white">Novo Contrato de Arrendamento</h3>
+            {/* Modal: Nova Rotação */}
+            {modalRotacaoOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
+                    <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl p-6 space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-base font-bold text-white">Registrar Evento de Rotação</h3>
+                            <button onClick={() => setModalRotacaoOpen(false)} className="text-slate-400 hover:text-white">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {errorRotacao && (
+                            <div className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-300 rounded-xl text-xs">
+                                {errorRotacao}
                             </div>
+                        )}
+
+                        <form onSubmit={handleSaveRotacao} className="space-y-3">
+                            <div>
+                                <label className="block text-[11px] font-bold text-slate-300 mb-1">Pasto / Piquete *</label>
+                                <select
+                                    value={rotacaoForm.piquete_id}
+                                    onChange={(e) => setRotacaoForm({ ...rotacaoForm, piquete_id: e.target.value })}
+                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
+                                >
+                                    <option value="">Selecione o piquete...</option>
+                                    {piquetes.map(p => (
+                                        <option key={p.id} value={p.id}>{p.nome}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-[11px] font-bold text-slate-300 mb-1">Data de Entrada *</label>
+                                    <input
+                                        type="date"
+                                        required
+                                        value={rotacaoForm.data_entrada}
+                                        onChange={(e) => setRotacaoForm({ ...rotacaoForm, data_entrada: e.target.value })}
+                                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-emerald-500"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[11px] font-bold text-slate-300 mb-1">Data de Saída</label>
+                                    <input
+                                        type="date"
+                                        value={rotacaoForm.data_saida}
+                                        onChange={(e) => setRotacaoForm({ ...rotacaoForm, data_saida: e.target.value })}
+                                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-emerald-500"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-[11px] font-bold text-slate-300 mb-1">Quantidade de Animais no Lote</label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    value={rotacaoForm.quantidade_animais}
+                                    onChange={(e) => setRotacaoForm({ ...rotacaoForm, quantidade_animais: e.target.value })}
+                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-emerald-500"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-[11px] font-bold text-slate-300 mb-1">Observações do Manejo</label>
+                                <input
+                                    type="text"
+                                    placeholder="Ex: Entrada de garrotes após 25 dias de descanso"
+                                    value={rotacaoForm.observacao}
+                                    onChange={(e) => setRotacaoForm({ ...rotacaoForm, observacao: e.target.value })}
+                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-emerald-500"
+                                />
+                            </div>
+
+                            <div className="pt-2 flex justify-end gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setModalRotacaoOpen(false)}
+                                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={savingRotacao}
+                                    className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold transition"
+                                >
+                                    {savingRotacao ? 'Salvando...' : 'Salvar Rotação'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal: Novo Arrendamento */}
+            {modalArrendamentoOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
+                    <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl p-6 space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-base font-bold text-white">Novo Contrato de Arrendamento Rural</h3>
                             <button onClick={() => setModalArrendamentoOpen(false)} className="text-slate-400 hover:text-white">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
 
-                        <form onSubmit={handleSaveArrendamento} className="p-6 space-y-4">
-                            {errorArrendamento && (
-                                <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-400 text-xs">
-                                    {errorArrendamento}
-                                </div>
-                            )}
-
-                            <div>
-                                <label className="block text-xs font-semibold text-slate-300 mb-1.5">Tipo de Arrendamento *</label>
-                                <div className="grid grid-cols-2 gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => setArrendamentoForm({ ...arrendamentoForm, tipo: 'pago' })}
-                                        className={`py-2 rounded-xl border text-xs font-semibold transition ${
-                                            arrendamentoForm.tipo === 'pago'
-                                                ? 'bg-rose-500/20 border-rose-500 text-rose-300'
-                                                : 'bg-slate-800 border-slate-700 text-slate-400'
-                                        }`}
-                                    >
-                                        Arrendo de Terceiro (Pago)
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setArrendamentoForm({ ...arrendamentoForm, tipo: 'recebido' })}
-                                        className={`py-2 rounded-xl border text-xs font-semibold transition ${
-                                            arrendamentoForm.tipo === 'recebido'
-                                                ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300'
-                                                : 'bg-slate-800 border-slate-700 text-slate-400'
-                                        }`}
-                                    >
-                                        Cedo Meu Pasto (Recebido)
-                                    </button>
-                                </div>
+                        {errorArrendamento && (
+                            <div className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-300 rounded-xl text-xs">
+                                {errorArrendamento}
                             </div>
+                        )}
 
-                            <div>
-                                <label className="block text-xs font-semibold text-slate-300 mb-1">Contraparte (Proprietário / Locatário) *</label>
-                                <input
-                                    type="text"
-                                    required
-                                    placeholder="Ex: João da Silva (Fazenda Boa Esperança)"
-                                    value={arrendamentoForm.contraparte_nome}
-                                    onChange={(e) => setArrendamentoForm({ ...arrendamentoForm, contraparte_nome: e.target.value })}
-                                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-semibold text-slate-300 mb-1">Pasto / Piquete Associado</label>
-                                <select
-                                    value={arrendamentoForm.piquete_id}
-                                    onChange={(e) => setArrendamentoForm({ ...arrendamentoForm, piquete_id: e.target.value })}
-                                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
-                                >
-                                    <option value="">Área externa / Geral</option>
-                                    {piquetes.map((p) => (
-                                        <option key={p.id} value={p.id}>{p.nome} ({p.tamanho_hectares} ha)</option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
+                        <form onSubmit={handleSaveArrendamento} className="space-y-3">
+                            <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-xs font-semibold text-slate-300 mb-1">Valor Unitário (R$) *</label>
+                                    <label className="block text-[11px] font-bold text-slate-300 mb-1">Tipo de Contrato *</label>
+                                    <select
+                                        value={arrendamentoForm.tipo}
+                                        onChange={(e) => setArrendamentoForm({ ...arrendamentoForm, tipo: e.target.value })}
+                                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
+                                    >
+                                        <option value="pago">Arrendo Pago (Despesa)</option>
+                                        <option value="recebido">Arrendo Recebido (Receita)</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-[11px] font-bold text-slate-300 mb-1">Contraparte (Pessoa/Empresa) *</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        placeholder="Ex: Agropecuária Boi Gordo Ltda"
+                                        value={arrendamentoForm.contraparte_nome}
+                                        onChange={(e) => setArrendamentoForm({ ...arrendamentoForm, contraparte_nome: e.target.value })}
+                                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-emerald-500"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-[11px] font-bold text-slate-300 mb-1">Unidade de Cobrança *</label>
+                                    <select
+                                        value={arrendamentoForm.unidade_cobranca}
+                                        onChange={(e) => setArrendamentoForm({ ...arrendamentoForm, unidade_cobranca: e.target.value })}
+                                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
+                                    >
+                                        <option value="por_hectare_mes">Por Hectare / Mês (R$/ha)</option>
+                                        <option value="por_cabeca_mes">Por Cabeça / Mês (R$/cab)</option>
+                                        <option value="valor_fixo_mes">Valor Fixo Mensal (R$)</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-[11px] font-bold text-slate-300 mb-1">Valor Unitário (R$) *</label>
                                     <input
                                         type="number"
                                         step="0.01"
                                         required
-                                        placeholder="Ex: 85.00"
+                                        placeholder="Ex: 65.00"
                                         value={arrendamentoForm.valor}
                                         onChange={(e) => setArrendamentoForm({ ...arrendamentoForm, valor: e.target.value })}
-                                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-emerald-500"
                                     />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-semibold text-slate-300 mb-1">Unidade de Cobrança *</label>
-                                    <select
-                                        value={arrendamentoForm.unidade_cobranca}
-                                        onChange={(e) => setArrendamentoForm({ ...arrendamentoForm, unidade_cobranca: e.target.value })}
-                                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
-                                    >
-                                        <option value="por_hectare_mes">Por Hectare / Mês</option>
-                                        <option value="por_cabeca_mes">Por Cabeça / Mês</option>
-                                        <option value="valor_fixo_mes">Valor Fixo / Mês</option>
-                                    </select>
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-xs font-semibold text-slate-300 mb-1">Data Início *</label>
+                                    <label className="block text-[11px] font-bold text-slate-300 mb-1">Pasto / Piquete Vinculado</label>
+                                    <select
+                                        value={arrendamentoForm.piquete_id}
+                                        onChange={(e) => setArrendamentoForm({ ...arrendamentoForm, piquete_id: e.target.value })}
+                                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
+                                    >
+                                        <option value="">Área Geral / Sem piquete</option>
+                                        {piquetes.map(p => (
+                                            <option key={p.id} value={p.id}>{p.nome} ({p.tamanho_hectares} ha)</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-[11px] font-bold text-slate-300 mb-1">Data Início *</label>
                                     <input
                                         type="date"
                                         required
                                         value={arrendamentoForm.data_inicio}
                                         onChange={(e) => setArrendamentoForm({ ...arrendamentoForm, data_inicio: e.target.value })}
-                                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-semibold text-slate-300 mb-1">Data Fim (Opcional)</label>
-                                    <input
-                                        type="date"
-                                        value={arrendamentoForm.data_fim}
-                                        onChange={(e) => setArrendamentoForm({ ...arrendamentoForm, data_fim: e.target.value })}
-                                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-emerald-500"
                                     />
                                 </div>
                             </div>
 
-                            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+                            <div>
+                                <label className="block text-[11px] font-bold text-slate-300 mb-1">Observações do Contrato</label>
+                                <textarea
+                                    rows="2"
+                                    placeholder="Cláusulas, vencimento, reajuste..."
+                                    value={arrendamentoForm.observacoes}
+                                    onChange={(e) => setArrendamentoForm({ ...arrendamentoForm, observacoes: e.target.value })}
+                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-emerald-500"
+                                ></textarea>
+                            </div>
+
+                            <div className="pt-2 flex justify-end gap-2">
                                 <button
                                     type="button"
                                     onClick={() => setModalArrendamentoOpen(false)}
-                                    className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:bg-slate-800 transition"
+                                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={savingArrendamento}
-                                    className="px-5 py-2 rounded-xl text-xs font-semibold bg-emerald-500 hover:bg-emerald-600 text-white transition flex items-center gap-1.5 shadow-md shadow-emerald-500/20"
+                                    className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold transition"
                                 >
-                                    <Check className="w-4 h-4" />
-                                    <span>{savingArrendamento ? 'Salvando...' : 'Criar Contrato'}</span>
+                                    {savingArrendamento ? 'Salvando...' : 'Salvar Contrato'}
                                 </button>
                             </div>
                         </form>

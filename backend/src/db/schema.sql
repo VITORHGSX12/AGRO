@@ -38,6 +38,18 @@ CREATE TABLE IF NOT EXISTS animais (
     UNIQUE(fazenda_id, identificacao)
 );
 
+-- 3.1 Histórico de Pesagens e Ganho Médio Diário (GMD)
+CREATE TABLE IF NOT EXISTS pesagens (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    animal_id INTEGER NOT NULL REFERENCES animais(id) ON DELETE CASCADE,
+    data_pesagem TEXT NOT NULL,
+    peso REAL NOT NULL,
+    ganho_peso_kg REAL DEFAULT 0,
+    gmd_kg_dia REAL DEFAULT 0,
+    observacoes TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 -- 4. Movimentações de Animais com Snapshot Textual de Nomes de Piquetes
 CREATE TABLE IF NOT EXISTS movimentacoes_animais (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

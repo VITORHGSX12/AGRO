@@ -70,6 +70,7 @@ export const api = {
     getPiquetes: () => fetchJson('/piquetes'),
     getPiqueteRotacao: (id) => fetchJson(`/piquetes/${id}/rotacao`),
     createPiquete: (data) => fetchJson('/piquetes', { method: 'POST', body: JSON.stringify(data) }),
+    createRotacaoPiquete: (id, data) => fetchJson(`/piquetes/${id}/rotacao`, { method: 'POST', body: JSON.stringify(data) }),
     updatePiquete: (id, data) => fetchJson(`/piquetes/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
     deletePiquete: (id) => fetchJson(`/piquetes/${id}`, { method: 'DELETE' }),
 
@@ -90,6 +91,7 @@ export const api = {
         const q = new URLSearchParams();
         if (params.status) q.append('status', params.status);
         if (params.categoria) q.append('categoria', params.categoria);
+        if (params.sexo) q.append('sexo', params.sexo);
         if (params.piquete_id) q.append('piquete_id', params.piquete_id);
         if (params.busca) q.append('busca', params.busca);
         const query = q.toString() ? `?${q.toString()}` : '';
@@ -99,6 +101,9 @@ export const api = {
     createAnimal: (data) => fetchJson('/animais', { method: 'POST', body: JSON.stringify(data) }),
     updateAnimal: (id, data) => fetchJson(`/animais/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
     deleteAnimal: (id) => fetchJson(`/animais/${id}`, { method: 'DELETE' }),
+    getPesagens: (animalId) => fetchJson(`/animais/${animalId}/pesagens`),
+    createPesagem: (animalId, data) => fetchJson(`/animais/${animalId}/pesagens`, { method: 'POST', body: JSON.stringify(data) }),
+    deletePesagem: (animalId, pesagemId) => fetchJson(`/animais/${animalId}/pesagens/${pesagemId}`, { method: 'DELETE' }),
 
     // Movimentações
     getMovimentacoes: (params = {}) => {

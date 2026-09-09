@@ -48,6 +48,18 @@ CREATE TABLE IF NOT EXISTS animais (
     CONSTRAINT uq_animais_fazenda_brinco UNIQUE (fazenda_id, identificacao)
 );
 
+-- 3.1 Tabela: HISTÓRICO DE PESAGENS & GMD
+CREATE TABLE IF NOT EXISTS pesagens (
+    id SERIAL PRIMARY KEY,
+    animal_id INTEGER NOT NULL REFERENCES animais(id) ON DELETE CASCADE,
+    data_pesagem DATE NOT NULL,
+    peso DECIMAL(8,2) NOT NULL,
+    ganho_peso_kg DECIMAL(8,2) DEFAULT 0,
+    gmd_kg_dia DECIMAL(6,3) DEFAULT 0,
+    observacoes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- 4. Tabela: MOVIMENTAÇÕES DE ANIMAIS
 CREATE TABLE IF NOT EXISTS movimentacoes_animais (
     id SERIAL PRIMARY KEY,

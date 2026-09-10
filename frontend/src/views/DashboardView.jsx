@@ -551,6 +551,51 @@ export default function DashboardView({ mesAno, setActiveTab }) {
                 </div>
             </div>
 
+            {/* Resultado Financeiro por Atividade */}
+            {financeiro.resultado_por_atividade && (
+                <div className="p-5 rounded-2xl bg-slate-800/80 border border-slate-700/60 shadow-sm">
+                    <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                            <Layers className="w-4 h-4 text-emerald-400" />
+                            <h3 className="text-sm font-bold text-white tracking-tight">Resultado por Atividade ({periodo?.label || 'Período'})</h3>
+                        </div>
+                        <button
+                            onClick={() => setActiveTab('financeiro')}
+                            className="text-xs text-emerald-400 hover:text-emerald-300 font-medium cursor-pointer"
+                        >
+                            Ver detalhes no Financeiro →
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+                        {[
+                            { key: 'pecuaria', label: 'Pecuária', icon: '🐄', border: 'border-amber-500/20 bg-amber-500/5' },
+                            { key: 'agricola', label: 'Agrícola', icon: '🌾', border: 'border-emerald-500/20 bg-emerald-500/5' },
+                            { key: 'rh', label: 'Equipe & RH', icon: '👥', border: 'border-purple-500/20 bg-purple-500/5' },
+                            { key: 'geral', label: 'Geral & Infra', icon: '⚙️', border: 'border-blue-500/20 bg-blue-500/5' },
+                        ].map(({ key, label, icon, border }) => {
+                            const resAtiv = financeiro.resultado_por_atividade[key] || { receitas: 0, despesas: 0, saldo: 0 };
+                            return (
+                                <div key={key} className={`p-3.5 rounded-xl border ${border}`}>
+                                    <div className="flex items-center justify-between mb-1">
+                                        <span className="text-xs font-bold text-slate-300 flex items-center gap-1">
+                                            <span>{icon}</span> {label}
+                                        </span>
+                                        <span className={`text-[11px] font-bold ${resAtiv.saldo >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                            {resAtiv.saldo >= 0 ? '+ ' : ''}{formatCurrency(resAtiv.saldo)}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1.5 border-t border-slate-700/50">
+                                        <span>Rec: <strong className="text-emerald-400">{formatCurrency(resAtiv.receitas)}</strong></span>
+                                        <span>Desp: <strong className="text-rose-400">{formatCurrency(resAtiv.despesas)}</strong></span>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+
             {/* Middle Section: Despesas do Mês & Patrimônio */}
             {financeiro.despesas_por_categoria && financeiro.despesas_por_categoria.length > 0 && (
                 <div className="p-5 rounded-2xl bg-slate-800/80 border border-slate-700/60 shadow-sm">

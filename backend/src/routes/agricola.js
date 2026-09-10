@@ -378,8 +378,8 @@ router.post('/safras/:id/colher', (req, res) => {
             if (gerar_receita_financeira && Number(valor_venda_total) > 0) {
                 const desc = `Venda Agrícola - ${safra.cultura} (${quantidade_colhida} ${unidade_medida}, Talhão: ${safra.talhao_nome})`;
                 const insertFin = db.prepare(`
-                    INSERT INTO financeiro (fazenda_id, tipo, categoria, valor, data, descricao)
-                    VALUES (?, 'receita', 'venda_agricola', ?, ?, ?)
+                    INSERT INTO financeiro (fazenda_id, tipo, categoria, atividade, valor, data, descricao)
+                    VALUES (?, 'receita', 'venda_agricola', 'agricola', ?, ?, ?)
                 `).run(
                     safra.fazenda_id,
                     Number(valor_venda_total),
@@ -515,8 +515,8 @@ router.post('/insumos', (req, res) => {
             if (gerar_despesa_financeira) {
                 const desc = `Insumo Agrícola (${tipo}) - ${descricao.trim()} (Safra ${safra.cultura}, Talhão: ${safra.talhao_nome})`;
                 const insertFin = db.prepare(`
-                    INSERT INTO financeiro (fazenda_id, tipo, categoria, valor, data, descricao)
-                    VALUES (?, 'despesa', 'insumo_agricola', ?, ?, ?)
+                    INSERT INTO financeiro (fazenda_id, tipo, categoria, atividade, valor, data, descricao)
+                    VALUES (?, 'despesa', 'insumo_agricola', 'agricola', ?, ?, ?)
                 `).run(
                     safra.fazenda_id,
                     Number(valor),

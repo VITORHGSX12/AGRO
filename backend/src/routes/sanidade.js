@@ -227,8 +227,8 @@ router.post('/', (req, res) => {
             }
 
             db.prepare(`
-                INSERT INTO financeiro (fazenda_id, tipo, categoria, valor, data, descricao, animal_id)
-                VALUES (?, 'despesa', 'vacina_medicamento', ?, ?, ?, ?)
+                INSERT INTO financeiro (fazenda_id, tipo, categoria, atividade, valor, data, descricao, animal_id)
+                VALUES (?, 'despesa', 'vacina_medicamento', 'pecuaria', ?, ?, ?, ?)
             `).run(fazenda_id, custoNum, data_aplicacao, desc, animal_id ? Number(animal_id) : null);
         }
 
@@ -290,8 +290,8 @@ router.put('/:id/concluir', (req, res) => {
             }
 
             db.prepare(`
-                INSERT INTO financeiro (fazenda_id, tipo, categoria, valor, data, descricao, animal_id)
-                VALUES (?, 'despesa', 'vacina_medicamento', ?, ?, ?, ?)
+                INSERT INTO financeiro (fazenda_id, tipo, categoria, atividade, valor, data, descricao, animal_id)
+                VALUES (?, 'despesa', 'vacina_medicamento', 'pecuaria', ?, ?, ?, ?)
             `).run(reg.fazenda_id || 1, custoFinal, data_aplicacao, desc, reg.animal_id || null);
         }
 

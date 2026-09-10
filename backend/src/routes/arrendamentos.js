@@ -171,8 +171,8 @@ router.post('/:id/lancar-pagamento', (req, res) => {
         const descCompleta = `${prefixoDesc} - ${contrato.contraparte_nome} (${detalheCalculo})`;
 
         const insertFin = db.prepare(`
-            INSERT INTO financeiro (fazenda_id, tipo, categoria, valor, data, descricao)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO financeiro (fazenda_id, tipo, categoria, atividade, valor, data, descricao)
+            VALUES (?, ?, ?, 'pecuaria', ?, ?, ?)
         `).run(
             contrato.fazenda_id,
             tipoFin,

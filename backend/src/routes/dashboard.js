@@ -110,6 +110,33 @@ router.get('/', (req, res) => {
             ORDER BY total DESC
         `).all(dataInicio, dataFim);
 
+        // 4.2 Resultado Consolidado por Atividade no Período
+        const resultadoPorAtividadeRaw = db.prepare(`
+            SELECT 
+                COALESCE(atividade, 'geral') as atividade,
+                COALESCE(SUM(CASE WHEN tipo = 'receita' THEN valor ELSE 0 END), 0) as receitas,
+                COALESCE(SUM(CASE WHEN tipo = 'despesa' THEN valor ELSE 0 END), 0) as despesas
+            FROM financeiro
+            WHERE data >= ? AND data <= ?
+            GROUP BY atividade
+        `).all(dataInicio, dataFim);
+
+        const resultadoPorAtividade = {
+            pecuaria: { receitas: 0, despesas: 0, saldo: 0 },
+            agricola: { receitas: 0, despesas: 0, saldo: 0 },
+            rh: { receitas: 0, despesas: 0, saldo: 0 },
+            geral: { receitas: 0, despesas: 0, saldo: 0 }
+        };
+
+        resultadoPorAtividadeRaw.forEach(r => {
+            const ativ = r.atividade || 'geral';
+            if (resultadoPorAtividade[ativ]) {
+                resultadoPorAtividade[ativ].receitas = Number(r.receitas.toFixed(2));
+                resultadoPorAtividade[ativ].despesas = Number(r.despesas.toFixed(2));
+                resultadoPorAtividade[ativ].saldo = Number((r.receitas - r.despesas).toFixed(2));
+            }
+        });
+
         // 5. Custo Médio por Animal no Período = Despesas do Período / Total de Ativos
         const custoMedioPorAnimal = totalAtivos > 0 ? Number((despesasPeriodo / totalAtivos).toFixed(2)) : 0;
 
@@ -255,7 +282,8 @@ router.get('/', (req, res) => {
                 saldo_mes: saldoPeriodo,
                 custo_medio_por_animal: custoMedioPorAnimal,
                 gasto_folha_mes: gastoFolhaPeriodo,
-                despesas_por_categoria: despesasPorCategoria
+                despesas_por_categoria: despesasPorCategoria,
+                resultado_por_atividade: resultadoPorAtividade
             },
             pastagens: {
                 total_hectares: totalHectaresPastos,

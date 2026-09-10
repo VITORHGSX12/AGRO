@@ -11,36 +11,60 @@ import {
     PieChart as PieIcon,
     Filter,
     Download,
-    RefreshCw
+    RefreshCw,
+    Layers,
+    Beef,
+    Sprout,
+    Users,
+    Wrench
 } from 'lucide-react';
 import { api } from '../services/api';
 import { exportToCSV } from '../utils/csvExporter';
 import Pagination from '../components/Pagination';
 
-const CATEGORIAS_CONFIG = [
-    { value: 'venda_animal', label: 'Venda de Animais / Boi', tipoPadrao: 'receita' },
-    { value: 'compra_animal', label: 'Compra de Animais / Reposição', tipoPadrao: 'despesa' },
-    { value: 'venda_agricola', label: 'Venda Agrícola / Colheita', tipoPadrao: 'receita' },
-    { value: 'insumo_agricola', label: 'Insumos Agrícolas / Adubo / Semente', tipoPadrao: 'despesa' },
-    { value: 'vacina_medicamento', label: 'Vacinas & Medicamentos', tipoPadrao: 'despesa' },
-    { value: 'nutricao_racao', label: 'Nutrição & Sal Mineral', tipoPadrao: 'despesa' },
-    { value: 'salario', label: 'Salários & Folha de Pagamento', tipoPadrao: 'despesa' },
-    { value: 'aluguel_pasto', label: 'Aluguel de Pastagem / Arrendamento', tipoPadrao: 'despesa' },
-    { value: 'aluguel_pasto_pago', label: 'Arrendamento Pago (Pastagem)', tipoPadrao: 'despesa' },
-    { value: 'aluguel_pasto_recebido', label: 'Arrendamento Recebido (Pastagem)', tipoPadrao: 'receita' },
-    { value: 'manutencao_infra', label: 'Manutenção de Cercas & Infra', tipoPadrao: 'despesa' },
-    { value: 'manutencao_maquina', label: 'Manutenção de Máquinas & Veículos', tipoPadrao: 'despesa' },
-    { value: 'combustivel', label: 'Combustível & Lubrificantes', tipoPadrao: 'despesa' },
-    { value: 'servicos_terceiros', label: 'Serviços de Terceiros & Frete', tipoPadrao: 'despesa' },
-    { value: 'outros', label: 'Outras Receitas / Despesas', tipoPadrao: 'despesa' }
+export const ATIVIDADES_CONFIG = [
+    { value: 'pecuaria', label: 'Pecuária', icon: Beef, color: 'text-amber-400 bg-amber-500/10 border-amber-500/20' },
+    { value: 'agricola', label: 'Agrícola', icon: Sprout, color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
+    { value: 'rh', label: 'Equipe & RH', icon: Users, color: 'text-purple-400 bg-purple-500/10 border-purple-500/20' },
+    { value: 'geral', label: 'Geral / Infra', icon: Wrench, color: 'text-blue-400 bg-blue-500/10 border-blue-500/20' },
+];
+
+export const CATEGORIAS_CONFIG = [
+    { value: 'venda_animal', label: 'Venda de Animais / Boi', tipoPadrao: 'receita', atividadePadrao: 'pecuaria' },
+    { value: 'compra_animal', label: 'Compra de Animais / Reposição', tipoPadrao: 'despesa', atividadePadrao: 'pecuaria' },
+    { value: 'venda_agricola', label: 'Venda Agrícola / Colheita', tipoPadrao: 'receita', atividadePadrao: 'agricola' },
+    { value: 'insumo_agricola', label: 'Insumos Agrícolas / Adubo / Semente', tipoPadrao: 'despesa', atividadePadrao: 'agricola' },
+    { value: 'vacina_medicamento', label: 'Vacinas & Medicamentos', tipoPadrao: 'despesa', atividadePadrao: 'pecuaria' },
+    { value: 'nutricao_racao', label: 'Nutrição & Sal Mineral', tipoPadrao: 'despesa', atividadePadrao: 'pecuaria' },
+    { value: 'salario', label: 'Salários & Folha de Pagamento', tipoPadrao: 'despesa', atividadePadrao: 'rh' },
+    { value: 'aluguel_pasto', label: 'Aluguel de Pastagem / Arrendamento', tipoPadrao: 'despesa', atividadePadrao: 'pecuaria' },
+    { value: 'aluguel_pasto_pago', label: 'Arrendamento Pago (Pastagem)', tipoPadrao: 'despesa', atividadePadrao: 'pecuaria' },
+    { value: 'aluguel_pasto_recebido', label: 'Arrendamento Recebido (Pastagem)', tipoPadrao: 'receita', atividadePadrao: 'pecuaria' },
+    { value: 'manutencao_infra', label: 'Manutenção de Cercas & Infra', tipoPadrao: 'despesa', atividadePadrao: 'geral' },
+    { value: 'manutencao_maquina', label: 'Manutenção de Máquinas & Veículos', tipoPadrao: 'despesa', atividadePadrao: 'geral' },
+    { value: 'combustivel', label: 'Combustível & Lubrificantes', tipoPadrao: 'despesa', atividadePadrao: 'geral' },
+    { value: 'servicos_terceiros', label: 'Serviços de Terceiros & Frete', tipoPadrao: 'despesa', atividadePadrao: 'geral' },
+    { value: 'outros', label: 'Outras Receitas / Despesas', tipoPadrao: 'despesa', atividadePadrao: 'geral' }
 ];
 
 export default function FinanceiroView({ mesAno, onReloadDashboard, triggerNewModal, onResetTrigger }) {
     const [lancamentos, setLancamentos] = useState([]);
-    const [resumo, setResumo] = useState({ total_receitas: 0, total_despesas: 0, saldo: 0, detalhe_categorias: [] });
+    const [resumo, setResumo] = useState({ 
+        total_receitas: 0, 
+        total_despesas: 0, 
+        saldo: 0, 
+        detalhe_categorias: [],
+        por_atividade: {
+            pecuaria: { receitas: 0, despesas: 0, saldo: 0 },
+            agricola: { receitas: 0, despesas: 0, saldo: 0 },
+            rh: { receitas: 0, despesas: 0, saldo: 0 },
+            geral: { receitas: 0, despesas: 0, saldo: 0 }
+        }
+    });
     const [loading, setLoading] = useState(true);
     const [filtroTipo, setFiltroTipo] = useState('');
     const [filtroCategoria, setFiltroCategoria] = useState('');
+    const [filtroAtividade, setFiltroAtividade] = useState('');
     const [dataInicio, setDataInicio] = useState('');
     const [dataFim, setDataFim] = useState('');
 
@@ -53,6 +77,7 @@ export default function FinanceiroView({ mesAno, onReloadDashboard, triggerNewMo
     const [formData, setFormData] = useState({
         tipo: 'despesa',
         categoria: 'nutricao_racao',
+        atividade: 'pecuaria',
         valor: '',
         data: new Date().toISOString().split('T')[0],
         descricao: ''
@@ -66,6 +91,7 @@ export default function FinanceiroView({ mesAno, onReloadDashboard, triggerNewMo
             const queryParams = {
                 tipo: filtroTipo || undefined,
                 categoria: filtroCategoria || undefined,
+                atividade: filtroAtividade || undefined,
                 data_inicio: dataInicio || undefined,
                 data_fim: dataFim || undefined
             };
@@ -91,7 +117,7 @@ export default function FinanceiroView({ mesAno, onReloadDashboard, triggerNewMo
 
     useEffect(() => {
         loadData();
-    }, [mesAno, filtroTipo, filtroCategoria, dataInicio, dataFim]);
+    }, [mesAno, filtroTipo, filtroCategoria, filtroAtividade, dataInicio, dataFim]);
 
     useEffect(() => {
         if (triggerNewModal) {
@@ -104,12 +130,23 @@ export default function FinanceiroView({ mesAno, onReloadDashboard, triggerNewMo
         setFormData({
             tipo: 'despesa',
             categoria: 'nutricao_racao',
+            atividade: 'pecuaria',
             valor: '',
             data: new Date().toISOString().split('T')[0],
             descricao: ''
         });
         setErrorMsg('');
         setModalOpen(true);
+    };
+
+    const handleCategoryChange = (catValue) => {
+        const catConfig = CATEGORIAS_CONFIG.find(c => c.value === catValue);
+        setFormData(prev => ({
+            ...prev,
+            categoria: catValue,
+            tipo: catConfig?.tipoPadrao || prev.tipo,
+            atividade: catConfig?.atividadePadrao || prev.atividade
+        }));
     };
 
     const handleSave = async (e) => {
@@ -148,6 +185,7 @@ export default function FinanceiroView({ mesAno, onReloadDashboard, triggerNewMo
             { header: 'ID', accessor: (row) => row.id },
             { header: 'Data', accessor: (row) => row.data },
             { header: 'Tipo', accessor: (row) => row.tipo === 'receita' ? 'Receita' : 'Despesa' },
+            { header: 'Atividade', accessor: (row) => ATIVIDADES_CONFIG.find(a => a.value === row.atividade)?.label || row.atividade || 'Geral' },
             { header: 'Categoria', accessor: (row) => CATEGORIAS_CONFIG.find(c => c.value === row.categoria)?.label || row.categoria },
             { header: 'Descrição', accessor: (row) => row.descricao || '' },
             { header: 'Brinco Animal', accessor: (row) => row.animal_brinco || '' },
@@ -161,6 +199,7 @@ export default function FinanceiroView({ mesAno, onReloadDashboard, triggerNewMo
     const handleClearFilters = () => {
         setFiltroTipo('');
         setFiltroCategoria('');
+        setFiltroAtividade('');
         setDataInicio('');
         setDataFim('');
     };
@@ -170,6 +209,12 @@ export default function FinanceiroView({ mesAno, onReloadDashboard, triggerNewMo
     };
 
     const despesasCategorias = resumo.detalhe_categorias?.filter(c => c.tipo === 'despesa') || [];
+    const porAtividade = resumo.por_atividade || {
+        pecuaria: { receitas: 0, despesas: 0, saldo: 0 },
+        agricola: { receitas: 0, despesas: 0, saldo: 0 },
+        rh: { receitas: 0, despesas: 0, saldo: 0 },
+        geral: { receitas: 0, despesas: 0, saldo: 0 }
+    };
 
     // Paginação slice
     const totalItems = lancamentos.length;
@@ -217,10 +262,57 @@ export default function FinanceiroView({ mesAno, onReloadDashboard, triggerNewMo
                 </div>
             </div>
 
+            {/* Resultado por Atividade */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {ATIVIDADES_CONFIG.map((ativ) => {
+                    const dadosAtiv = porAtividade[ativ.value] || { receitas: 0, despesas: 0, saldo: 0 };
+                    const Icon = ativ.icon;
+                    const isSelected = filtroAtividade === ativ.value;
+
+                    return (
+                        <button
+                            key={ativ.value}
+                            onClick={() => setFiltroAtividade(isSelected ? '' : ativ.value)}
+                            className={`text-left p-4 rounded-2xl border transition-all ${
+                                isSelected 
+                                    ? 'bg-slate-800/95 border-emerald-500 ring-2 ring-emerald-500/30 shadow-lg' 
+                                    : 'bg-slate-900/60 border-slate-800/80 hover:border-slate-700'
+                            }`}
+                        >
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                                    <Icon className="w-3.5 h-3.5 text-slate-300" />
+                                    {ativ.label}
+                                </span>
+                                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${ativ.color}`}>
+                                    {dadosAtiv.saldo >= 0 ? '+ ' : ''}{formatCurrency(dadosAtiv.saldo)}
+                                </span>
+                            </div>
+                            <div className="flex items-center justify-between text-[11px] text-slate-400 mt-2 pt-2 border-t border-slate-800/60">
+                                <span>Rec: <strong className="text-emerald-400">{formatCurrency(dadosAtiv.receitas)}</strong></span>
+                                <span>Desp: <strong className="text-rose-400">{formatCurrency(dadosAtiv.despesas)}</strong></span>
+                            </div>
+                        </button>
+                    );
+                })}
+            </div>
+
             {/* Filter and Action Bar */}
             <div className="p-4 rounded-2xl bg-slate-800/80 border border-slate-700/60 space-y-3 shadow-sm">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex flex-wrap items-center gap-2.5">
+                        {/* Atividade Filter */}
+                        <select
+                            value={filtroAtividade}
+                            onChange={(e) => setFiltroAtividade(e.target.value)}
+                            className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
+                        >
+                            <option value="">Todas as Atividades</option>
+                            {ATIVIDADES_CONFIG.map((a) => (
+                                <option key={a.value} value={a.value}>{a.label}</option>
+                            ))}
+                        </select>
+
                         {/* Tipo Filter */}
                         <select
                             value={filtroTipo}
@@ -262,7 +354,7 @@ export default function FinanceiroView({ mesAno, onReloadDashboard, triggerNewMo
                             />
                         </div>
 
-                        {(filtroTipo || filtroCategoria || dataInicio || dataFim) && (
+                        {(filtroTipo || filtroCategoria || filtroAtividade || dataInicio || dataFim) && (
                             <button
                                 onClick={handleClearFilters}
                                 className="px-2.5 py-1.5 rounded-xl bg-slate-700/60 hover:bg-slate-700 text-[11px] text-slate-300 transition"
@@ -304,47 +396,56 @@ export default function FinanceiroView({ mesAno, onReloadDashboard, triggerNewMo
                         <table className="w-full text-left text-xs">
                             <thead className="bg-slate-900/60 text-slate-400 font-semibold border-b border-slate-700/60">
                                 <tr>
-                                    <th className="px-5 py-3.5">Data</th>
+                                    <th className="px-4 py-3.5">Data</th>
+                                    <th className="px-4 py-3.5">Atividade</th>
                                     <th className="px-4 py-3.5">Descrição</th>
                                     <th className="px-4 py-3.5">Categoria</th>
                                     <th className="px-4 py-3.5 text-right">Valor</th>
-                                    <th className="px-5 py-3.5 text-right">Ação</th>
+                                    <th className="px-4 py-3.5 text-right">Ação</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-700/40">
-                                {currentLancamentos.map((l) => (
-                                    <tr key={l.id} className="hover:bg-slate-700/30 transition">
-                                        <td className="px-5 py-3.5 text-slate-300 font-medium whitespace-nowrap">
-                                            {l.data}
-                                        </td>
-                                        <td className="px-4 py-3.5 text-slate-100 font-semibold">
-                                            <div>{l.descricao || 'Sem descrição'}</div>
-                                            {l.animal_brinco && (
-                                                <div className="text-[11px] text-slate-400 font-normal">Animal: Brinco {l.animal_brinco}</div>
-                                            )}
-                                        </td>
-                                        <td className="px-4 py-3.5">
-                                            <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-900 text-slate-300 border border-slate-700">
-                                                {CATEGORIAS_CONFIG.find(c => c.value === l.categoria)?.label || l.categoria}
-                                            </span>
-                                        </td>
-                                        <td className={`px-4 py-3.5 text-right font-bold ${
-                                            l.tipo === 'receita' ? 'text-emerald-400' : 'text-rose-400'
-                                        }`}>
-                                            {l.tipo === 'receita' ? '+ ' : '- '}
-                                            {formatCurrency(l.valor)}
-                                        </td>
-                                        <td className="px-5 py-3.5 text-right">
-                                            <button
-                                                onClick={() => handleDelete(l.id)}
-                                                className="p-1.5 rounded-lg bg-slate-700/60 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 transition"
-                                                title="Excluir Lançamento"
-                                            >
-                                                <Trash2 className="w-3.5 h-3.5" />
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
+                                {currentLancamentos.map((l) => {
+                                    const ativObj = ATIVIDADES_CONFIG.find(a => a.value === l.atividade);
+                                    return (
+                                        <tr key={l.id} className="hover:bg-slate-700/30 transition">
+                                            <td className="px-4 py-3.5 text-slate-300 font-medium whitespace-nowrap">
+                                                {l.data}
+                                            </td>
+                                            <td className="px-4 py-3.5 whitespace-nowrap">
+                                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${ativObj?.color || 'text-slate-400 bg-slate-800 border-slate-700'}`}>
+                                                    {ativObj?.label || l.atividade || 'Geral'}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-3.5 text-slate-100 font-semibold">
+                                                <div>{l.descricao || 'Sem descrição'}</div>
+                                                {l.animal_brinco && (
+                                                    <div className="text-[11px] text-slate-400 font-normal">Animal: Brinco {l.animal_brinco}</div>
+                                                )}
+                                            </td>
+                                            <td className="px-4 py-3.5">
+                                                <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-900 text-slate-300 border border-slate-700">
+                                                    {CATEGORIAS_CONFIG.find(c => c.value === l.categoria)?.label || l.categoria}
+                                                </span>
+                                            </td>
+                                            <td className={`px-4 py-3.5 text-right font-bold whitespace-nowrap ${
+                                                l.tipo === 'receita' ? 'text-emerald-400' : 'text-rose-400'
+                                            }`}>
+                                                {l.tipo === 'receita' ? '+ ' : '- '}
+                                                {formatCurrency(l.valor)}
+                                            </td>
+                                            <td className="px-4 py-3.5 text-right">
+                                                <button
+                                                    onClick={() => handleDelete(l.id)}
+                                                    className="p-1.5 rounded-lg bg-slate-700/60 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 transition"
+                                                    title="Excluir Lançamento"
+                                                >
+                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
 
@@ -435,7 +536,7 @@ export default function FinanceiroView({ mesAno, onReloadDashboard, triggerNewMo
                                 <div className="grid grid-cols-2 gap-2">
                                     <button
                                         type="button"
-                                        onClick={() => setFormData({ ...formData, tipo: 'receita', categoria: 'venda_animal' })}
+                                        onClick={() => setFormData({ ...formData, tipo: 'receita', categoria: 'venda_animal', atividade: 'pecuaria' })}
                                         className={`py-2 rounded-xl border text-xs font-semibold transition ${
                                             formData.tipo === 'receita'
                                                 ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300'
@@ -446,7 +547,7 @@ export default function FinanceiroView({ mesAno, onReloadDashboard, triggerNewMo
                                     </button>
                                     <button
                                         type="button"
-                                        onClick={() => setFormData({ ...formData, tipo: 'despesa', categoria: 'nutricao_racao' })}
+                                        onClick={() => setFormData({ ...formData, tipo: 'despesa', categoria: 'nutricao_racao', atividade: 'pecuaria' })}
                                         className={`py-2 rounded-xl border text-xs font-semibold transition ${
                                             formData.tipo === 'despesa'
                                                 ? 'bg-rose-500/20 border-rose-500 text-rose-300'
@@ -458,19 +559,35 @@ export default function FinanceiroView({ mesAno, onReloadDashboard, triggerNewMo
                                 </div>
                             </div>
 
-                            {/* Categoria Obrigatória */}
-                            <div>
-                                <label className="block text-xs font-semibold text-slate-300 mb-1">Categoria *</label>
-                                <select
-                                    required
-                                    value={formData.categoria}
-                                    onChange={(e) => setFormData({ ...formData, categoria: e.target.value })}
-                                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
-                                >
-                                    {CATEGORIAS_CONFIG.map((c) => (
-                                        <option key={c.value} value={c.value}>{c.label}</option>
-                                    ))}
-                                </select>
+                            {/* Atividade e Categoria */}
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-300 mb-1">Atividade *</label>
+                                    <select
+                                        required
+                                        value={formData.atividade}
+                                        onChange={(e) => setFormData({ ...formData, atividade: e.target.value })}
+                                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                                    >
+                                        {ATIVIDADES_CONFIG.map((a) => (
+                                            <option key={a.value} value={a.value}>{a.label}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-300 mb-1">Categoria *</label>
+                                    <select
+                                        required
+                                        value={formData.categoria}
+                                        onChange={(e) => handleCategoryChange(e.target.value)}
+                                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                                    >
+                                        {CATEGORIAS_CONFIG.map((c) => (
+                                            <option key={c.value} value={c.value}>{c.label}</option>
+                                        ))}
+                                    </select>
+                                </div>
                             </div>
 
                             {/* Valor e Data */}

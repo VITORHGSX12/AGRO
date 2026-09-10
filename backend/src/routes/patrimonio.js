@@ -535,8 +535,8 @@ router.post('/manutencoes', (req, res) => {
             if (gerar_despesa_financeira) {
                 const descFin = `Manutenção de ${maquina.tipo}: ${maquina.nome} - ${descricao.trim()}`;
                 const insertFin = db.prepare(`
-                    INSERT INTO financeiro (fazenda_id, tipo, categoria, valor, data, descricao)
-                    VALUES (?, 'despesa', 'manutencao_maquina', ?, ?, ?)
+                    INSERT INTO financeiro (fazenda_id, tipo, categoria, atividade, valor, data, descricao)
+                    VALUES (?, 'despesa', 'manutencao_maquina', 'geral', ?, ?, ?)
                 `).run(
                     maquina.fazenda_id,
                     Number(valor),

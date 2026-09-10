@@ -42,6 +42,29 @@ try {
     db.exec(`ALTER TABLE sanidade ADD COLUMN custo REAL DEFAULT 0;`);
 } catch (e) {}
 
+try {
+    db.exec(`ALTER TABLE financeiro ADD COLUMN atividade TEXT DEFAULT 'geral';`);
+} catch (e) {}
+
+try {
+    db.exec(`
+        UPDATE financeiro 
+        SET atividade = 'pecuaria' 
+        WHERE categoria IN ('venda_animal', 'compra_animal', 'vacina_medicamento', 'nutricao_racao', 'aluguel_pasto', 'aluguel_pasto_pago', 'aluguel_pasto_recebido') 
+          AND (atividade IS NULL OR atividade = 'geral');
+
+        UPDATE financeiro 
+        SET atividade = 'agricola' 
+        WHERE categoria IN ('venda_agricola', 'insumo_agricola') 
+          AND (atividade IS NULL OR atividade = 'geral');
+
+        UPDATE financeiro 
+        SET atividade = 'rh' 
+        WHERE categoria IN ('salario') 
+          AND (atividade IS NULL OR atividade = 'geral');
+    `);
+} catch (e) {}
+
 // Seed automático de usuários e fazenda inicial
 try {
     let fazenda = db.prepare('SELECT id FROM fazenda LIMIT 1').get();

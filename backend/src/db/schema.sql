@@ -109,6 +109,7 @@ CREATE TABLE IF NOT EXISTS financeiro (
     data TEXT NOT NULL,
     descricao TEXT,
     animal_id INTEGER REFERENCES animais(id) ON DELETE SET NULL,
+    atividade TEXT CHECK(atividade IN ('pecuaria', 'agricola', 'rh', 'geral')) DEFAULT 'geral',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 

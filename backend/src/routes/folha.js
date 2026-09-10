@@ -146,8 +146,8 @@ router.post('/:id/pagar', (req, res) => {
             // 2. Gera lançamento financeiro de despesa (categoria 'salario')
             const desc = `Salário - ${folha.funcionario_nome} (Ref: ${folha.mes_referencia})`;
             const insertFin = db.prepare(`
-                INSERT INTO financeiro (fazenda_id, tipo, categoria, valor, data, descricao)
-                VALUES (?, 'despesa', 'salario', ?, ?, ?)
+                INSERT INTO financeiro (fazenda_id, tipo, categoria, atividade, valor, data, descricao)
+                VALUES (?, 'despesa', 'salario', 'rh', ?, ?, ?)
             `).run(
                 folha.fazenda_id,
                 folha.valor_liquido,
@@ -203,8 +203,8 @@ router.post('/pagar-todas', (req, res) => {
 
                 const desc = `Salário - ${item.funcionario_nome} (Ref: ${item.mes_referencia})`;
                 db.prepare(`
-                    INSERT INTO financeiro (fazenda_id, tipo, categoria, valor, data, descricao)
-                    VALUES (?, 'despesa', 'salario', ?, ?, ?)
+                    INSERT INTO financeiro (fazenda_id, tipo, categoria, atividade, valor, data, descricao)
+                    VALUES (?, 'despesa', 'salario', 'rh', ?, ?, ?)
                 `).run(
                     item.fazenda_id,
                     item.valor_liquido,

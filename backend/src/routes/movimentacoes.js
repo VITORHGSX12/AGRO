@@ -163,8 +163,8 @@ router.post('/', (req, res) => {
                 // Gera receita se valor > 0
                 if (gerar_lancamento_financeiro && Number(valor) > 0) {
                     db.prepare(`
-                        INSERT INTO financeiro (fazenda_id, tipo, categoria, valor, data, descricao, animal_id)
-                        VALUES (?, 'receita', 'venda_animal', ?, ?, ?, ?)
+                        INSERT INTO financeiro (fazenda_id, tipo, categoria, atividade, valor, data, descricao, animal_id)
+                        VALUES (?, 'receita', 'venda_animal', 'pecuaria', ?, ?, ?, ?)
                     `).run(
                         animal.fazenda_id,
                         Number(valor),
@@ -221,8 +221,8 @@ router.post('/', (req, res) => {
                 // Gera despesa se valor > 0
                 if (gerar_lancamento_financeiro && Number(valor) > 0) {
                     db.prepare(`
-                        INSERT INTO financeiro (fazenda_id, tipo, categoria, valor, data, descricao, animal_id)
-                        VALUES (?, 'despesa', 'compra_animal', ?, ?, ?, ?)
+                        INSERT INTO financeiro (fazenda_id, tipo, categoria, atividade, valor, data, descricao, animal_id)
+                        VALUES (?, 'despesa', 'compra_animal', 'pecuaria', ?, ?, ?, ?)
                     `).run(
                         animal.fazenda_id,
                         Number(valor),

@@ -3,6 +3,8 @@ import db from '../db/database.js';
 
 const router = Router();
 
+export const ATIVIDADES_VALIDAS = ['pecuaria', 'agricola', 'rh', 'geral'];
+
 export const CATEGORIAS_VALIDAS = [
     'venda_animal',
     'compra_animal',
@@ -21,10 +23,23 @@ export const CATEGORIAS_VALIDAS = [
     'outros'
 ];
 
+export function inferAtividade(categoria) {
+    if (['venda_animal', 'compra_animal', 'vacina_medicamento', 'nutricao_racao', 'aluguel_pasto', 'aluguel_pasto_pago', 'aluguel_pasto_recebido'].includes(categoria)) {
+        return 'pecuaria';
+    }
+    if (['venda_agricola', 'insumo_agricola'].includes(categoria)) {
+        return 'agricola';
+    }
+    if (['salario'].includes(categoria)) {
+        return 'rh';
+    }
+    return 'geral';
+}
+
 // GET /api/financeiro - Lista lançamentos com filtros
 router.get('/', (req, res) => {
     try {
-        const { tipo, categoria, mes_ano, data_inicio, data_fim } = req.query;
+        const { tipo, categoria, atividade, mes_ano, data_inicio, data_fim } = req.query;
 
         let query = `
             SELECT 
@@ -44,6 +59,11 @@ router.get('/', (req, res) => {
         if (categoria) {
             query += ` AND f.categoria = ?`;
             params.push(categoria);
+        }
+
+        if (atividade) {
+            query += ` AND f.atividade = ?`;
+            params.push(atividade);
         }
 
         if (mes_ano) {
@@ -75,13 +95,28 @@ router.get('/', (req, res) => {
 // GET /api/financeiro/resumo - Resumo consolidado de receitas, despesas e saldo
 router.get('/resumo', (req, res) => {
     try {
-        const { mes_ano } = req.query;
+        const { mes_ano, atividade, data_inicio, data_fim } = req.query;
         let whereClause = 'WHERE 1=1';
         const params = [];
 
         if (mes_ano) {
             whereClause += ' AND data LIKE ?';
             params.push(`${mes_ano}%`);
+        }
+
+        if (data_inicio) {
+            whereClause += ' AND data >= ?';
+            params.push(data_inicio);
+        }
+
+        if (data_fim) {
+            whereClause += ' AND data <= ?';
+            params.push(data_fim);
+        }
+
+        if (atividade) {
+            whereClause += ' AND atividade = ?';
+            params.push(atividade);
         }
 
         const stats = db.prepare(`
@@ -101,18 +136,47 @@ router.get('/resumo', (req, res) => {
             SELECT 
                 categoria,
                 tipo,
+                atividade,
                 SUM(valor) as total
             FROM financeiro
             ${whereClause}
-            GROUP BY categoria, tipo
+            GROUP BY categoria, tipo, atividade
             ORDER BY total DESC
         `).all(...params);
+
+        // Resumo por Atividade (pecuaria, agricola, rh, geral)
+        const porAtividadeRaw = db.prepare(`
+            SELECT 
+                COALESCE(atividade, 'geral') as atividade,
+                COALESCE(SUM(CASE WHEN tipo = 'receita' THEN valor ELSE 0 END), 0) as receitas,
+                COALESCE(SUM(CASE WHEN tipo = 'despesa' THEN valor ELSE 0 END), 0) as despesas
+            FROM financeiro
+            ${whereClause}
+            GROUP BY atividade
+        `).all(...params);
+
+        const porAtividade = {
+            pecuaria: { receitas: 0, despesas: 0, saldo: 0 },
+            agricola: { receitas: 0, despesas: 0, saldo: 0 },
+            rh: { receitas: 0, despesas: 0, saldo: 0 },
+            geral: { receitas: 0, despesas: 0, saldo: 0 }
+        };
+
+        porAtividadeRaw.forEach(row => {
+            const ativ = row.atividade || 'geral';
+            if (porAtividade[ativ]) {
+                porAtividade[ativ].receitas = row.receitas;
+                porAtividade[ativ].despesas = row.despesas;
+                porAtividade[ativ].saldo = row.receitas - row.despesas;
+            }
+        });
 
         res.json({
             total_receitas: totalReceitas,
             total_despesas: totalDespesas,
             saldo: saldo,
-            detalhe_categorias: porCategoria
+            detalhe_categorias: porCategoria,
+            por_atividade: porAtividade
         });
     } catch (error) {
         console.error('Erro ao buscar resumo financeiro:', error);
@@ -127,6 +191,7 @@ router.post('/', (req, res) => {
             fazenda_id = 1,
             tipo,
             categoria,
+            atividade,
             valor,
             data,
             descricao = '',
@@ -143,6 +208,10 @@ router.post('/', (req, res) => {
             });
         }
 
+        const finalAtividade = (atividade && ATIVIDADES_VALIDAS.includes(atividade)) 
+            ? atividade 
+            : inferAtividade(categoria);
+
         if (valor === undefined || valor === null || Number(valor) <= 0) {
             return res.status(400).json({ error: 'Valor deve ser um número positivo maior que zero' });
         }
@@ -152,12 +221,13 @@ router.post('/', (req, res) => {
         }
 
         const insert = db.prepare(`
-            INSERT INTO financeiro (fazenda_id, tipo, categoria, valor, data, descricao, animal_id)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO financeiro (fazenda_id, tipo, categoria, atividade, valor, data, descricao, animal_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         `).run(
             fazenda_id,
             tipo,
             categoria,
+            finalAtividade,
             Number(valor),
             data,
             descricao ? descricao.trim() : null,

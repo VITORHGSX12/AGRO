@@ -17,10 +17,12 @@ import {
     Sprout,
     Users,
     Wrench,
-    ArrowLeft
+    ArrowLeft,
+    Printer
 } from 'lucide-react';
 import { api } from '../services/api';
 import { exportToCSV } from '../utils/csvExporter';
+import { printReport } from '../utils/reportPrinter';
 import Pagination from '../components/Pagination';
 
 export const ATIVIDADES_CONFIG = [
@@ -194,6 +196,39 @@ export default function FinanceiroView({ mesAno, onReloadDashboard, triggerNewMo
 
         const filename = `relatorio_financeiro_${mesAno || 'periodo'}_${new Date().toISOString().split('T')[0]}`;
         exportToCSV(lancamentos, columns, filename);
+    };
+
+    const handlePrintPDF = () => {
+        const columns = [
+            { key: 'data', label: 'Data', format: (val) => val ? new Date(val + 'T00:00:00').toLocaleDateString('pt-BR') : '-' },
+            { key: 'tipo', label: 'Tipo', format: (val) => val === 'receita' ? 'Receita (+)' : 'Despesa (-)' },
+            { key: 'atividade', label: 'Atividade', format: (val) => ATIVIDADES_CONFIG.find(a => a.value === val)?.label || val || 'Geral' },
+            { key: 'categoria', label: 'Categoria', format: (val) => CATEGORIAS_CONFIG.find(c => c.value === val)?.label || val },
+            { key: 'descricao', label: 'Descrição' },
+            { key: 'animal_brinco', label: 'Brinco' },
+            { 
+                key: 'valor', 
+                label: 'Valor (R$)', 
+                align: 'right', 
+                format: (val, row) => (row.tipo === 'receita' ? '+ ' : '- ') + formatCurrency(val) 
+            }
+        ];
+
+        const summaryCards = [
+            { label: 'Total Receitas', value: formatCurrency(resumo.total_receitas), colorClass: 'text-green' },
+            { label: 'Total Despesas', value: formatCurrency(resumo.total_despesas), colorClass: 'text-red' },
+            { label: 'Saldo Líquido', value: formatCurrency(resumo.saldo), colorClass: resumo.saldo >= 0 ? 'text-green' : 'text-red' },
+            { label: 'Total Lançamentos', value: String(lancamentos.length), colorClass: 'text-blue' }
+        ];
+
+        printReport({
+            title: `Extrato Financeiro & Fluxo de Caixa (${mesAno || 'Geral'})`,
+            subtitle: 'Demonstrativo de Receitas e Despesas Operacionais',
+            summaryCards,
+            columns,
+            data: lancamentos,
+            notes: 'Relatório gerado automaticamente pelo Sistema AGRO - Fazenda GD.'
+        });
     };
 
     const handleClearFilters = () => {
@@ -375,11 +410,22 @@ export default function FinanceiroView({ mesAno, onReloadDashboard, triggerNewMo
                     </div>
 
                     <div className="flex items-center gap-2">
+                        {/* Imprimir PDF Button */}
+                        <button
+                            onClick={handlePrintPDF}
+                            disabled={lancamentos.length === 0}
+                            className="flex items-center gap-1.5 bg-white hover:bg-slate-50 border border-[#E6EBE8] text-[#172033] text-xs font-semibold px-3.5 py-2 rounded-xl transition disabled:opacity-40 disabled:cursor-not-allowed shadow-sm cursor-pointer"
+                            title="Visualizar e Imprimir Relatório em PDF"
+                        >
+                            <Printer className="w-3.5 h-3.5 text-[#087F5B]" strokeWidth={2} />
+                            <span>Imprimir PDF</span>
+                        </button>
+
                         {/* Export CSV Button */}
                         <button
                             onClick={handleExportCSV}
                             disabled={lancamentos.length === 0}
-                            className="flex items-center gap-1.5 bg-white hover:bg-slate-50 border border-[#E6EBE8] text-[#172033] text-xs font-semibold px-3.5 py-2 rounded-xl transition disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
+                            className="flex items-center gap-1.5 bg-white hover:bg-slate-50 border border-[#E6EBE8] text-[#172033] text-xs font-semibold px-3.5 py-2 rounded-xl transition disabled:opacity-40 disabled:cursor-not-allowed shadow-sm cursor-pointer"
                             title="Exportar dados filtrados para arquivo CSV (compatível com Excel)"
                         >
                             <Download className="w-3.5 h-3.5 text-[#087F5B]" strokeWidth={2} />

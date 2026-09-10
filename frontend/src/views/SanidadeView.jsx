@@ -14,10 +14,14 @@ import {
     Shield,
     AlertCircle,
     Users,
-    ArrowLeft
+    ArrowLeft,
+    Printer,
+    Download
 } from 'lucide-react';
 import { api } from '../services/api';
 import Pagination from '../components/Pagination';
+import { printReport } from '../utils/reportPrinter';
+import { exportToCSV } from '../utils/csvExporter';
 
 export default function SanidadeView({ onReloadDashboard, triggerNewModal, onResetTrigger }) {
     const [kpis, setKpis] = useState(null);
@@ -193,6 +197,53 @@ export default function SanidadeView({ onReloadDashboard, triggerNewModal, onRes
         }
     };
 
+    const handleExportCSV = () => {
+        const columns = [
+            { header: 'ID', accessor: (r) => r.id },
+            { header: 'Alvo / Animal', accessor: (r) => r.animal_brinco ? `Brinco ${r.animal_brinco}` : (r.lote_ou_grupo || 'Coletivo') },
+            { header: 'Tipo', accessor: (r) => r.tipo },
+            { header: 'Produto / Medicamento', accessor: (r) => r.nome_produto },
+            { header: 'Data Aplicação', accessor: (r) => r.data_aplicacao || '-' },
+            { header: 'Próxima Dose', accessor: (r) => r.data_proxima_dose || '-' },
+            { header: 'Dias Carência', accessor: (r) => r.dias_carencia || '0' },
+            { header: 'Data Fim Carência', accessor: (r) => r.data_fim_carencia || '-' },
+            { header: 'Status', accessor: (r) => r.status },
+            { header: 'Custo (R$)', accessor: (r) => r.custo ? Number(r.custo).toFixed(2) : '0,00' },
+            { header: 'Observações', accessor: (r) => r.observacoes || '' }
+        ];
+        const filename = `laudo_sanitario_${new Date().toISOString().split('T')[0]}`;
+        exportToCSV(sanidades, columns, filename);
+    };
+
+    const handlePrintLaudoSanitario = () => {
+        const columns = [
+            { key: 'alvo', label: 'Animal / Lote', format: (_, r) => r.animal_brinco ? `Brinco ${r.animal_brinco}` : (r.lote_ou_grupo || 'Coletivo') },
+            { key: 'tipo', label: 'Tipo', format: (val) => val ? val.toUpperCase() : '-' },
+            { key: 'nome_produto', label: 'Produto / Vacina' },
+            { key: 'data_aplicacao', label: 'Aplicação', format: (v) => v ? new Date(v + 'T00:00:00').toLocaleDateString('pt-BR') : '-' },
+            { key: 'data_proxima_dose', label: 'Próx. Dose', format: (v) => v ? new Date(v + 'T00:00:00').toLocaleDateString('pt-BR') : '-' },
+            { key: 'data_fim_carencia', label: 'Carência até', format: (v, r) => r.sob_carencia ? `🚫 ${new Date(v + 'T00:00:00').toLocaleDateString('pt-BR')}` : (v ? new Date(v + 'T00:00:00').toLocaleDateString('pt-BR') : 'Livre') },
+            { key: 'status', label: 'Status', format: (val) => val ? val.toUpperCase() : '-' }
+        ];
+
+        const summaryCards = [
+            { label: 'Total Registros', value: String(kpis?.total || sanidades.length), colorClass: 'text-blue' },
+            { label: 'Doses Aplicadas', value: String(kpis?.aplicadas || 0), colorClass: 'text-green' },
+            { label: 'Atrasadas', value: String(kpis?.atrasadas || 0), colorClass: 'text-red' },
+            { label: 'Vencendo (7d)', value: String(kpis?.alerta_vencendo || 0), colorClass: 'text-yellow' },
+            { label: 'Sob Carência', value: String(kpis?.sob_carencia || 0), colorClass: 'text-purple' }
+        ];
+
+        printReport({
+            title: 'Laudo Sanitário & Controle de Carências',
+            subtitle: 'Registro de Vacinações, Vermifugações e Períodos de Carência de Abate/Leite',
+            summaryCards,
+            columns,
+            data: sanidades,
+            notes: 'Atenção: Animais sinalizados com carência ativa não podem ser encaminhados para abate frigorífico antes do vencimento do prazo.'
+        });
+    };
+
     // Pagination calculations
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -221,13 +272,35 @@ export default function SanidadeView({ onReloadDashboard, triggerNewModal, onRes
                     </p>
                 </div>
 
-                <button
-                    onClick={handleOpenNew}
-                    className="flex items-center gap-2 bg-[#087F5B] hover:bg-[#159A70] text-white px-4 py-2.5 rounded-xl font-semibold shadow-xs transition text-xs cursor-pointer self-start sm:self-auto"
-                >
-                    <Plus className="w-4 h-4" strokeWidth={2} />
-                    <span>Nova Aplicação / Protocolo</span>
-                </button>
+                <div className="flex flex-wrap items-center gap-2">
+                    <button
+                        onClick={handlePrintLaudoSanitario}
+                        disabled={sanidades.length === 0}
+                        className="px-3.5 py-2 bg-white hover:bg-slate-50 text-[#172033] border border-[#E6EBE8] font-semibold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer disabled:opacity-40"
+                        title="Imprimir Laudo Sanitário em PDF"
+                    >
+                        <Printer className="w-3.5 h-3.5 text-[#087F5B]" strokeWidth={2} />
+                        <span>Imprimir Laudo PDF</span>
+                    </button>
+
+                    <button
+                        onClick={handleExportCSV}
+                        disabled={sanidades.length === 0}
+                        className="px-3.5 py-2 bg-white hover:bg-slate-50 text-[#172033] border border-[#E6EBE8] font-semibold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer disabled:opacity-40"
+                        title="Exportar registros sanitários para Planilha CSV"
+                    >
+                        <Download className="w-3.5 h-3.5 text-[#087F5B]" strokeWidth={2} />
+                        <span>Exportar CSV</span>
+                    </button>
+
+                    <button
+                        onClick={handleOpenNew}
+                        className="flex items-center gap-2 bg-[#087F5B] hover:bg-[#159A70] text-white px-4 py-2 rounded-xl font-semibold shadow-xs transition text-xs cursor-pointer shadow-sm hover:shadow-md"
+                    >
+                        <Plus className="w-4 h-4" strokeWidth={2.5} />
+                        <span>Nova Aplicação</span>
+                    </button>
+                </div>
             </div>
 
             {/* Top KPIs */}

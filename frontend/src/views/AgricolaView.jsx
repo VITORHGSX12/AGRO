@@ -21,9 +21,13 @@ import {
     Filter,
     ChevronRight,
     BarChart3,
-    ArrowLeft
+    ArrowLeft,
+    Printer,
+    Download
 } from 'lucide-react';
 import { api } from '../services/api';
+import { printReport } from '../utils/reportPrinter';
+import { exportToCSV } from '../utils/csvExporter';
 
 const CULTURAS_COMUNS = [
     { value: 'Soja', label: 'Soja' },
@@ -367,6 +371,66 @@ export default function AgricolaView({ onReloadDashboard, triggerNewModal, onRes
         return Number(val || 0).toLocaleString('pt-BR', { maximumFractionDigits: 2 });
     };
 
+    const handleExportCSV = () => {
+        if (subTab === 'safras') {
+            const columns = [
+                { header: 'ID', accessor: (r) => r.id },
+                { header: 'Cultura', accessor: (r) => r.cultura },
+                { header: 'Variedade', accessor: (r) => r.variedade || '' },
+                { header: 'Ano Safra', accessor: (r) => r.ano_safra || '' },
+                { header: 'Talhão', accessor: (r) => r.talhao_nome || '' },
+                { header: 'Área (ha)', accessor: (r) => r.area_hectares || 0 },
+                { header: 'Estágio', accessor: (r) => r.estagio || '' },
+                { header: 'Data Plantio', accessor: (r) => r.data_plantio || '' },
+                { header: 'Custo Insumos (R$)', accessor: (r) => r.total_insumos ? Number(r.total_insumos).toFixed(2) : '0,00' },
+                { header: 'Custo/ha (R$)', accessor: (r) => r.custo_por_ha ? Number(r.custo_por_ha).toFixed(2) : '0,00' },
+                { header: 'Produtividade (sc/ha)', accessor: (r) => r.produtividade_sc_ha ? Number(r.produtividade_sc_ha).toFixed(1) : '-' },
+                { header: 'Lucro Líquido (R$)', accessor: (r) => r.lucro_liquido ? Number(r.lucro_liquido).toFixed(2) : '-' }
+            ];
+            const filename = `relatorio_safras_${new Date().toISOString().split('T')[0]}`;
+            exportToCSV(safras, columns, filename);
+        } else {
+            const columns = [
+                { header: 'ID', accessor: (r) => r.id },
+                { header: 'Talhão / Área', accessor: (r) => r.nome },
+                { header: 'Área (Hectares)', accessor: (r) => r.area_hectares },
+                { header: 'Tipo de Solo', accessor: (r) => r.tipo_solo || '-' },
+                { header: 'Safra Atual', accessor: (r) => r.safra_atual || 'Sem plantio ativo' }
+            ];
+            const filename = `relatorio_talhoes_${new Date().toISOString().split('T')[0]}`;
+            exportToCSV(talhoes, columns, filename);
+        }
+    };
+
+    const handlePrintRelatorioAgricola = () => {
+        const columns = [
+            { key: 'cultura', label: 'Cultura / Variedade', format: (val, r) => `${val}${r.variedade ? ` (${r.variedade})` : ''}` },
+            { key: 'ano_safra', label: 'Safra' },
+            { key: 'talhao_nome', label: 'Talhão' },
+            { key: 'area_hectares', label: 'Área', align: 'right', format: (v) => `${v} ha` },
+            { key: 'estagio', label: 'Estágio', format: (v) => v ? v.toUpperCase().replace('_', ' ') : '-' },
+            { key: 'total_insumos', label: 'Insumos (R$)', align: 'right', format: (v) => formatCurrency(v) },
+            { key: 'produtividade_sc_ha', label: 'Produtividade', align: 'right', format: (v) => v ? `${Number(v).toFixed(1)} sc/ha` : '-' },
+            { key: 'lucro_liquido', label: 'Lucro Líq.', align: 'right', format: (v) => v ? formatCurrency(v) : '-' }
+        ];
+
+        const summaryCards = [
+            { label: 'Área Cultivada', value: `${kpis?.total_area_hectares || 0} ha`, colorClass: 'text-yellow' },
+            { label: 'Safras Ativas', value: String(kpis?.total_safras_ativas || 0), colorClass: 'text-green' },
+            { label: 'Insumos Investidos', value: formatCurrency(kpis?.custo_total_insumos_ativo), colorClass: 'text-blue' },
+            { label: 'Total Talhões', value: String(talhoes.length) }
+        ];
+
+        printReport({
+            title: 'Relatório Agrícola & Fechamento de Safras',
+            subtitle: 'Desempenho de Lavouras, Rateio de Insumos e Produtividade Operacional',
+            summaryCards,
+            columns,
+            data: safras,
+            notes: 'Relatório consolidado de safras e talhões emitido pelo Sistema AGRO - Fazenda GD.'
+        });
+    };
+
     return (
         <div className="space-y-6">
             {/* Toast Feedback */}
@@ -395,36 +459,55 @@ export default function AgricolaView({ onReloadDashboard, triggerNewModal, onRes
                     </div>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-2.5">
                     <div className="flex bg-[#F7F9F8] p-1 rounded-xl border border-[#E6EBE8]">
                         <button
                             onClick={() => setSubTab('safras')}
-                            className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all flex items-center gap-2 cursor-pointer ${
+                            className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
                                 subTab === 'safras'
                                     ? 'bg-[#087F5B] text-white shadow-sm'
                                     : 'text-[#64748B] hover:text-[#172033]'
                             }`}
                         >
-                            <Sprout className="w-4 h-4" strokeWidth={1.75} />
-                            Safras & Ciclos
+                            <Sprout className="w-3.5 h-3.5" strokeWidth={1.75} />
+                            Safras
                         </button>
                         <button
                             onClick={() => setSubTab('talhoes')}
-                            className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all flex items-center gap-2 cursor-pointer ${
+                            className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
                                 subTab === 'talhoes'
                                     ? 'bg-[#087F5B] text-white shadow-sm'
                                     : 'text-[#64748B] hover:text-[#172033]'
                             }`}
                         >
-                            <Layers className="w-4 h-4" strokeWidth={1.75} />
-                            Talhões & Áreas
+                            <Layers className="w-3.5 h-3.5" strokeWidth={1.75} />
+                            Talhões
                         </button>
                     </div>
+
+                    <button
+                        onClick={handlePrintRelatorioAgricola}
+                        disabled={safras.length === 0}
+                        className="px-3.5 py-2 bg-white hover:bg-slate-50 text-[#172033] border border-[#E6EBE8] font-semibold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer disabled:opacity-40"
+                        title="Imprimir Relatório Agrícola em PDF"
+                    >
+                        <Printer className="w-3.5 h-3.5 text-[#087F5B]" strokeWidth={2} />
+                        <span>Imprimir PDF</span>
+                    </button>
+
+                    <button
+                        onClick={handleExportCSV}
+                        className="px-3.5 py-2 bg-white hover:bg-slate-50 text-[#172033] border border-[#E6EBE8] font-semibold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                        title="Exportar dados agrícolas para Planilha CSV"
+                    >
+                        <Download className="w-3.5 h-3.5 text-[#087F5B]" strokeWidth={2} />
+                        <span>Exportar CSV</span>
+                    </button>
 
                     {subTab === 'safras' ? (
                         <button
                             onClick={handleOpenNewSafra}
-                            className="flex items-center gap-2 bg-[#087F5B] hover:bg-[#159A70] text-white px-4 py-2.5 rounded-xl font-semibold shadow-sm hover:shadow-md transition-all text-xs cursor-pointer"
+                            className="flex items-center gap-2 bg-[#087F5B] hover:bg-[#159A70] text-white px-4 py-2 rounded-xl font-semibold shadow-sm hover:shadow-md transition-all text-xs cursor-pointer"
                         >
                             <Plus className="w-4 h-4" strokeWidth={2.5} />
                             Iniciar Safra
@@ -432,7 +515,7 @@ export default function AgricolaView({ onReloadDashboard, triggerNewModal, onRes
                     ) : (
                         <button
                             onClick={handleOpenNewTalhao}
-                            className="flex items-center gap-2 bg-[#087F5B] hover:bg-[#159A70] text-white px-4 py-2.5 rounded-xl font-semibold shadow-sm hover:shadow-md transition-all text-xs cursor-pointer"
+                            className="flex items-center gap-2 bg-[#087F5B] hover:bg-[#159A70] text-white px-4 py-2 rounded-xl font-semibold shadow-sm hover:shadow-md transition-all text-xs cursor-pointer"
                         >
                             <Plus className="w-4 h-4" strokeWidth={2.5} />
                             Novo Talhão

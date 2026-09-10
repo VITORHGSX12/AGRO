@@ -11,10 +11,18 @@ import {
     Activity, 
     ShieldAlert, 
     AlertCircle,
-    ArrowLeft
+    ArrowLeft,
+    Download,
+    Upload,
+    Printer,
+    FileSpreadsheet,
+    CheckCircle2
 } from 'lucide-react';
 import { api } from '../services/api';
 import Pagination from '../components/Pagination';
+import { exportToCSV } from '../utils/csvExporter';
+import { printReport } from '../utils/reportPrinter';
+import { parseCSVToAnimals, generateSampleCSV } from '../utils/batchImporter';
 
 const CATEGORIAS = [
     { value: 'bezerro', label: 'Bezerro' },
@@ -74,6 +82,16 @@ export default function RebanhoView({ piquetes = [], onReloadPiquetes, triggerNe
     });
     const [savingPesagem, setSavingPesagem] = useState(false);
     const [errorPesagem, setErrorPesagem] = useState('');
+
+    // Modal Importação em Lote via Planilha CSV
+    const [batchModalOpen, setBatchModalOpen] = useState(false);
+    const [batchText, setBatchText] = useState('');
+    const [batchParsed, setBatchParsed] = useState([]);
+    const [batchErrors, setBatchErrors] = useState([]);
+    const [batchPiquetePadrao, setBatchPiquetePadrao] = useState('');
+    const [batchProcessing, setBatchProcessing] = useState(false);
+    const [batchProgress, setBatchProgress] = useState({ current: 0, total: 0, success: 0, failed: 0 });
+    const [batchResultMsg, setBatchResultMsg] = useState('');
 
     const loadAnimais = async () => {
         try {
@@ -281,6 +299,127 @@ export default function RebanhoView({ piquetes = [], onReloadPiquetes, triggerNe
         return item ? item.label : cat;
     };
 
+    const handleExportCSV = () => {
+        const columns = [
+            { header: 'Brinco', accessor: (r) => r.identificacao },
+            { header: 'Sexo', accessor: (r) => r.sexo === 'M' ? 'Macho' : 'Fêmea' },
+            { header: 'Categoria', accessor: (r) => formatCategoriaLabel(r.categoria) },
+            { header: 'Raça', accessor: (r) => r.raca || 'Nelore' },
+            { header: 'Peso Atual (kg)', accessor: (r) => r.peso_atual ? Number(r.peso_atual).toFixed(1) : '-' },
+            { header: 'Pasto / Piquete', accessor: (r) => r.piquete_nome || 'Sem Pasto' },
+            { header: 'GMD Médio (kg/dia)', accessor: (r) => r.gmd_medio ? `${Number(r.gmd_medio).toFixed(2)}` : '-' },
+            { header: 'Status', accessor: (r) => r.status },
+            { header: 'Data Nascimento', accessor: (r) => r.data_nascimento || '' },
+            { header: 'Observações', accessor: (r) => r.observacoes || '' }
+        ];
+        const filename = `relatorio_rebanho_${new Date().toISOString().split('T')[0]}`;
+        exportToCSV(animais, columns, filename);
+    };
+
+    const handlePrintPDF = () => {
+        const columns = [
+            { key: 'identificacao', label: 'Brinco / Tag' },
+            { key: 'sexo', label: 'Sexo', format: (val) => val === 'M' ? 'Macho' : 'Fêmea' },
+            { key: 'categoria', label: 'Categoria', format: (val) => formatCategoriaLabel(val) },
+            { key: 'raca', label: 'Raça' },
+            { key: 'peso_atual', label: 'Peso Atual', align: 'right', format: (val) => val ? `${Number(val).toFixed(1)} kg` : '-' },
+            { key: 'piquete_nome', label: 'Piquete', format: (val) => val || 'Sem Piquete' },
+            { key: 'gmd_medio', label: 'GMD', align: 'right', format: (val) => val ? `${Number(val).toFixed(2)} kg/d` : '-' },
+            { key: 'status', label: 'Status' }
+        ];
+
+        const totalAtivos = animais.filter(a => a.status === 'ativo').length;
+        const totalMachos = animais.filter(a => a.status === 'ativo' && a.sexo === 'M').length;
+        const totalFemeas = animais.filter(a => a.status === 'ativo' && a.sexo === 'F').length;
+        const pesosValidos = animais.filter(a => a.status === 'ativo' && Number(a.peso_atual) > 0).map(a => Number(a.peso_atual));
+        const mediaPeso = pesosValidos.length > 0 ? (pesosValidos.reduce((a, b) => a + b, 0) / pesosValidos.length).toFixed(1) : '0';
+
+        const summaryCards = [
+            { label: 'Total de Animais', value: String(animais.length), colorClass: 'text-blue' },
+            { label: 'Ativos na Fazenda', value: String(totalAtivos), colorClass: 'text-green' },
+            { label: 'Machos / Fêmeas', value: `${totalMachos}M / ${totalFemeas}F` },
+            { label: 'Média de Peso', value: `${mediaPeso} kg` }
+        ];
+
+        printReport({
+            title: 'Ficha Zootécnica & Manejo do Rebanho',
+            subtitle: 'Inventário e Desempenho Ponderal do Efetivo Pecuário',
+            summaryCards,
+            columns,
+            data: animais,
+            notes: 'Relatório gerado automaticamente pelo Sistema AGRO - Fazenda GD.'
+        });
+    };
+
+    const handleOpenBatchModal = () => {
+        setBatchModalOpen(true);
+        setBatchText('');
+        setBatchParsed([]);
+        setBatchErrors([]);
+        setBatchResultMsg('');
+        setBatchProgress({ current: 0, total: 0, success: 0, failed: 0 });
+    };
+
+    const handleBatchFileChange = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+            const content = evt.target?.result;
+            if (typeof content === 'string') {
+                try {
+                    const parsed = parseCSVToAnimals(content);
+                    setBatchParsed(parsed.results);
+                    setBatchErrors(parsed.errors);
+                    setBatchText(content);
+                } catch (err) {
+                    alert('Erro ao ler planilha: ' + err.message);
+                }
+            }
+        };
+        reader.readAsText(file);
+    };
+
+    const handleExecuteBatchImport = async () => {
+        if (batchParsed.length === 0) {
+            alert('Nenhum animal válido identificado para importar.');
+            return;
+        }
+
+        setBatchProcessing(true);
+        setBatchResultMsg('');
+        let success = 0;
+        let failed = 0;
+
+        for (let i = 0; i < batchParsed.length; i++) {
+            const item = batchParsed[i];
+            setBatchProgress({ current: i + 1, total: batchParsed.length, success, failed });
+            try {
+                await api.createAnimal({
+                    identificacao: item.brinco,
+                    sexo: item.sexo,
+                    categoria: item.categoria,
+                    raca: item.raca,
+                    peso_atual: item.peso_atual || null,
+                    data_nascimento: item.data_nascimento || null,
+                    status: 'ativo',
+                    piquete_atual_id: batchPiquetePadrao || null,
+                    observacoes: item.observacoes
+                });
+                success++;
+            } catch (err) {
+                console.error(`Erro ao importar brinco ${item.brinco}:`, err);
+                failed++;
+            }
+        }
+
+        setBatchProcessing(false);
+        setBatchProgress({ current: batchParsed.length, total: batchParsed.length, success, failed });
+        setBatchResultMsg(`Importação finalizada: ${success} animais cadastrados com sucesso${failed > 0 ? `, ${failed} falhas/duplicados.` : '.'}`);
+        loadAnimais();
+        if (onReloadPiquetes) onReloadPiquetes();
+    };
+
     // Pagination slice
     const totalPages = Math.ceil(animais.length / itemsPerPage) || 1;
     const paginatedAnimais = animais.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -299,12 +438,41 @@ export default function RebanhoView({ piquetes = [], onReloadPiquetes, triggerNe
                     </p>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                    <button
+                        onClick={handlePrintPDF}
+                        disabled={animais.length === 0}
+                        className="px-3.5 py-2 bg-white hover:bg-slate-50 text-[#172033] border border-[#E6EBE8] font-semibold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer disabled:opacity-40"
+                        title="Imprimir Ficha Zootécnica em PDF"
+                    >
+                        <Printer className="w-3.5 h-3.5 text-[#087F5B]" strokeWidth={2} />
+                        <span>Imprimir PDF</span>
+                    </button>
+
+                    <button
+                        onClick={handleExportCSV}
+                        disabled={animais.length === 0}
+                        className="px-3.5 py-2 bg-white hover:bg-slate-50 text-[#172033] border border-[#E6EBE8] font-semibold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer disabled:opacity-40"
+                        title="Exportar Rebanho para Planilha CSV / Excel"
+                    >
+                        <Download className="w-3.5 h-3.5 text-[#087F5B]" strokeWidth={2} />
+                        <span>Exportar CSV</span>
+                    </button>
+
+                    <button
+                        onClick={handleOpenBatchModal}
+                        className="px-3.5 py-2 bg-[#E8F5EF] hover:bg-[#D3EFE3] text-[#087F5B] border border-[#C3E6D6] font-semibold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                        title="Importar múltiplos animais via Planilha CSV"
+                    >
+                        <FileSpreadsheet className="w-3.5 h-3.5 text-[#087F5B]" strokeWidth={2} />
+                        <span>Importar Planilha</span>
+                    </button>
+
                     <button
                         onClick={handleOpenNew}
-                        className="px-4 py-2.5 bg-[#087F5B] hover:bg-[#159A70] text-white font-semibold text-xs rounded-xl shadow-xs transition flex items-center gap-2 cursor-pointer"
+                        className="px-4 py-2 bg-[#087F5B] hover:bg-[#159A70] text-white font-semibold text-xs rounded-xl shadow-xs transition flex items-center gap-2 cursor-pointer shadow-sm hover:shadow-md"
                     >
-                        <Plus className="w-4 h-4" strokeWidth={2} />
+                        <Plus className="w-4 h-4" strokeWidth={2.5} />
                         <span>Novo Animal</span>
                     </button>
                 </div>
@@ -1045,6 +1213,186 @@ export default function RebanhoView({ piquetes = [], onReloadPiquetes, triggerNe
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal Importação em Lote CSV / Planilha */}
+            {batchModalOpen && (
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-[#E6EBE8] animate-in fade-in duration-200 max-h-[90vh] flex flex-col">
+                        <div className="flex justify-between items-center pb-4 border-b border-[#E6EBE8]">
+                            <div className="flex items-center gap-2.5">
+                                <div className="w-10 h-10 rounded-2xl bg-[#E8F5EF] text-[#087F5B] flex items-center justify-center">
+                                    <FileSpreadsheet className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h3 className="text-base font-bold text-[#172033]">Importação em Lote via Planilha CSV</h3>
+                                    <p className="text-xs text-[#64748B]">Cadastre centenas de animais em segundos a partir de arquivos CSV/Excel.</p>
+                                </div>
+                            </div>
+                            <button 
+                                onClick={() => setBatchModalOpen(false)} 
+                                disabled={batchProcessing}
+                                className="text-[#64748B] hover:text-[#172033] cursor-pointer"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <div className="py-4 space-y-4 overflow-y-auto flex-1 pr-1">
+                            {/* Download Modelo CSV */}
+                            <div className="p-3.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl flex items-center justify-between gap-3">
+                                <div>
+                                    <h4 className="text-xs font-bold text-[#0F172A]">Não tem a planilha no modelo?</h4>
+                                    <p className="text-[11px] text-[#64748B]">Baixe nosso arquivo modelo com cabeçalhos prontos para preencher.</p>
+                                </div>
+                                <button
+                                    onClick={generateSampleCSV}
+                                    type="button"
+                                    className="px-3 py-1.5 bg-white hover:bg-slate-100 text-[#087F5B] border border-[#C3E6D6] rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer shadow-xs"
+                                >
+                                    <Download className="w-3.5 h-3.5" />
+                                    <span>Baixar Modelo CSV</span>
+                                </button>
+                            </div>
+
+                            {/* Piquete Destino Padrão */}
+                            <div>
+                                <label className="block text-[11px] font-bold text-[#172033] mb-1">
+                                    Piquete / Pasto de Destino (Opcional):
+                                </label>
+                                <select
+                                    value={batchPiquetePadrao}
+                                    onChange={(e) => setBatchPiquetePadrao(e.target.value)}
+                                    disabled={batchProcessing}
+                                    className="w-full bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl px-3 py-2 text-xs text-[#172033] focus:outline-none focus:border-[#087F5B]"
+                                >
+                                    <option value="">Nenhum piquete (manter sem alocação inicial)</option>
+                                    {piquetes.map(p => (
+                                        <option key={p.id} value={p.id}>{p.nome} (Capacidade: {p.capacidade_suporte || '-'} cab)</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Upload Area */}
+                            <div>
+                                <label className="block text-[11px] font-bold text-[#172033] mb-1">
+                                    Selecione o arquivo CSV (.csv):
+                                </label>
+                                <input
+                                    type="file"
+                                    accept=".csv,text/csv,text/plain"
+                                    onChange={handleBatchFileChange}
+                                    disabled={batchProcessing}
+                                    className="w-full text-xs text-[#64748B] file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-[#E8F5EF] file:text-[#087F5B] hover:file:bg-[#D3EFE3] cursor-pointer"
+                                />
+                            </div>
+
+                            {/* Erros / Avisos de Validação */}
+                            {batchErrors.length > 0 && (
+                                <div className="p-3 bg-[#FEF2F2] border border-[#FACDCD] text-[#D64545] rounded-xl text-xs space-y-1">
+                                    <div className="font-bold flex items-center gap-1.5">
+                                        <AlertCircle className="w-4 h-4" />
+                                        <span>Linhas com aviso ({batchErrors.length}):</span>
+                                    </div>
+                                    <ul className="list-disc pl-4 text-[11px] space-y-0.5 max-h-24 overflow-y-auto">
+                                        {batchErrors.map((err, idx) => (
+                                            <li key={idx}>Linha {err.line}: {err.error}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+
+                            {/* Prévia da Importação */}
+                            {batchParsed.length > 0 && (
+                                <div>
+                                    <div className="flex items-center justify-between mb-2">
+                                        <h4 className="text-xs font-bold text-[#172033] flex items-center gap-1.5">
+                                            <CheckCircle2 className="w-4 h-4 text-[#087F5B]" />
+                                            Prévia: <strong>{batchParsed.length}</strong> animais prontos para importar
+                                        </h4>
+                                    </div>
+                                    <div className="max-h-48 overflow-y-auto border border-[#E6EBE8] rounded-xl">
+                                        <table className="w-full text-left text-xs">
+                                            <thead className="bg-[#F7F9F8] text-[#64748B] font-semibold border-b border-[#E6EBE8] sticky top-0">
+                                                <tr>
+                                                    <th className="px-3 py-2">Brinco</th>
+                                                    <th className="px-3 py-2">Sexo</th>
+                                                    <th className="px-3 py-2">Categoria</th>
+                                                    <th className="px-3 py-2">Raça</th>
+                                                    <th className="px-3 py-2 text-right">Peso (kg)</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-[#E6EBE8]">
+                                                {batchParsed.slice(0, 50).map((a, idx) => (
+                                                    <tr key={idx} className="hover:bg-[#F8FAFC]">
+                                                        <td className="px-3 py-1.5 font-bold text-[#172033]">{a.brinco}</td>
+                                                        <td className="px-3 py-1.5">{a.sexo === 'M' ? 'Macho' : 'Fêmea'}</td>
+                                                        <td className="px-3 py-1.5">{a.categoria}</td>
+                                                        <td className="px-3 py-1.5">{a.raca}</td>
+                                                        <td className="px-3 py-1.5 text-right font-medium">{a.peso_atual || '-'}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                        {batchParsed.length > 50 && (
+                                            <div className="p-2 text-center text-[11px] text-[#64748B] bg-[#F8FAFC] border-t border-[#E6EBE8]">
+                                                ...e mais {batchParsed.length - 50} animais
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Barra de Progresso durante processamento */}
+                            {batchProcessing && (
+                                <div className="space-y-2 p-3 bg-[#E8F5EF] border border-[#C3E6D6] rounded-2xl">
+                                    <div className="flex justify-between text-xs font-bold text-[#087F5B]">
+                                        <span>Importando animais...</span>
+                                        <span>{batchProgress.current} de {batchProgress.total}</span>
+                                    </div>
+                                    <div className="w-full bg-[#C3E6D6] h-2.5 rounded-full overflow-hidden">
+                                        <div 
+                                            className="bg-[#087F5B] h-full transition-all duration-150"
+                                            style={{ width: `${(batchProgress.current / batchProgress.total) * 100}%` }}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Mensagem de Resultado */}
+                            {batchResultMsg && (
+                                <div className="p-3 bg-[#E8F5EF] border border-[#C3E6D6] text-[#087F5B] rounded-xl text-xs font-bold flex items-center gap-2">
+                                    <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+                                    <span>{batchResultMsg}</span>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="pt-4 border-t border-[#E6EBE8] flex justify-end gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setBatchModalOpen(false)}
+                                disabled={batchProcessing}
+                                className="px-4 py-2 bg-[#F7F9F8] hover:bg-[#E6EBE8] text-[#172033] border border-[#E6EBE8] rounded-xl text-xs font-semibold cursor-pointer flex items-center gap-1.5"
+                            >
+                                <ArrowLeft className="w-3.5 h-3.5" />
+                                <span>{batchResultMsg ? 'Fechar' : 'Voltar / Cancelar'}</span>
+                            </button>
+
+                            {batchParsed.length > 0 && !batchResultMsg && (
+                                <button
+                                    type="button"
+                                    onClick={handleExecuteBatchImport}
+                                    disabled={batchProcessing}
+                                    className="px-5 py-2 bg-[#087F5B] hover:bg-[#159A70] text-white rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer shadow-sm hover:shadow-md disabled:opacity-50"
+                                >
+                                    <Upload className="w-4 h-4" />
+                                    <span>{batchProcessing ? 'Importando...' : `Confirmar Importação (${batchParsed.length} animais)`}</span>
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}

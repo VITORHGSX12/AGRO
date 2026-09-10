@@ -1,18 +1,41 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import Header from './components/Header';
 import LoginView from './views/LoginView';
 import HomeView from './views/HomeView';
-import DashboardView from './views/DashboardView';
-import RebanhoView from './views/RebanhoView';
-import MovimentacoesView from './views/MovimentacoesView';
-import SanidadeView from './views/SanidadeView';
-import FinanceiroView from './views/FinanceiroView';
-import FazendaView from './views/FazendaView';
-import RHView from './views/RHView';
-import AgricolaView from './views/AgricolaView';
-import PatrimonioView from './views/PatrimonioView';
-import UsuariosView from './views/UsuariosView';
 import { api, getAuthToken } from './services/api';
+
+// Dynamic Lazy-loaded Views for Maximum Performance
+const DashboardView = lazy(() => import('./views/DashboardView'));
+const RebanhoView = lazy(() => import('./views/RebanhoView'));
+const MovimentacoesView = lazy(() => import('./views/MovimentacoesView'));
+const SanidadeView = lazy(() => import('./views/SanidadeView'));
+const FinanceiroView = lazy(() => import('./views/FinanceiroView'));
+const FazendaView = lazy(() => import('./views/FazendaView'));
+const RHView = lazy(() => import('./views/RHView'));
+const AgricolaView = lazy(() => import('./views/AgricolaView'));
+const PatrimonioView = lazy(() => import('./views/PatrimonioView'));
+const UsuariosView = lazy(() => import('./views/UsuariosView'));
+
+function ViewLoaderSkeleton() {
+    return (
+        <div className="space-y-6 animate-pulse">
+            <div className="h-20 bg-white border border-[#E6EBE8] rounded-2xl p-4 flex items-center justify-between">
+                <div className="space-y-2">
+                    <div className="h-5 w-48 bg-slate-200 rounded-lg"></div>
+                    <div className="h-3 w-72 bg-slate-100 rounded-lg"></div>
+                </div>
+                <div className="h-9 w-32 bg-slate-200 rounded-xl"></div>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="h-24 bg-white border border-[#E6EBE8] rounded-2xl p-4"></div>
+                <div className="h-24 bg-white border border-[#E6EBE8] rounded-2xl p-4"></div>
+                <div className="h-24 bg-white border border-[#E6EBE8] rounded-2xl p-4"></div>
+                <div className="h-24 bg-white border border-[#E6EBE8] rounded-2xl p-4"></div>
+            </div>
+            <div className="h-72 bg-white border border-[#E6EBE8] rounded-2xl p-6"></div>
+        </div>
+    );
+}
 
 export default function App() {
     const [currentUser, setCurrentUser] = useState(null);
@@ -169,6 +192,7 @@ export default function App() {
             {/* Main Scrollable View */}
             <main className="flex-1 overflow-y-auto p-3.5 sm:p-5 lg:p-6">
                 <div className="w-full max-w-7xl mx-auto pb-12">
+                    <Suspense fallback={<ViewLoaderSkeleton />}>
                         {activeTab === 'dashboard' && (
                             <DashboardView 
                                 mesAno={mesAno} 
@@ -204,7 +228,7 @@ export default function App() {
 
                         {activeTab === 'financeiro' && (
                             <FinanceiroView 
-                                mesAno={mesAno}
+                                mesAno={mesAno} 
                                 onReloadDashboard={loadGlobalState}
                                 triggerNewModal={triggerModal === 'novo_financeiro'}
                                 onResetTrigger={() => setTriggerModal(null)}
@@ -224,7 +248,7 @@ export default function App() {
 
                         {activeTab === 'rh' && (
                             <RHView 
-                                mesAno={mesAno}
+                                mesAno={mesAno} 
                                 onReloadDashboard={loadGlobalState}
                                 triggerNewModal={triggerModal === 'novo_colaborador'}
                                 onResetTrigger={() => setTriggerModal(null)}
@@ -261,8 +285,9 @@ export default function App() {
                                 onResetTrigger={() => setTriggerModal(null)}
                             />
                         )}
-                    </div>
-                </main>
+                    </Suspense>
+                </div>
+            </main>
         </div>
     );
 }

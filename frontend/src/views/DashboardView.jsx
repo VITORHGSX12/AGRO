@@ -15,7 +15,9 @@ import {
     ArrowLeftRight,
     Activity,
     ChevronRight,
-    AlertCircle
+    AlertCircle,
+    Printer,
+    Download
 } from 'lucide-react';
 import { 
     BarChart, 
@@ -29,6 +31,7 @@ import {
     Cell 
 } from 'recharts';
 import { api } from '../services/api';
+import { printReport } from '../utils/reportPrinter';
 
 const GREEN_PALETTE = ['#087F5B', '#159A70', '#20C997', '#D9A441', '#3978C7', '#64748B', '#845EC2', '#FF9671'];
 
@@ -147,6 +150,34 @@ export default function DashboardView({ mesAno, setActiveTab }) {
     // Formatação de data em português
     const dataFormatada = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'long' }).format(new Date());
 
+    const handlePrintExecutiveReport = () => {
+        const summaryCards = [
+            { label: 'Rebanho Ativo', value: `${rebanho.total_ativos || 0} cab`, colorClass: 'text-green' },
+            { label: 'Receitas Período', value: formatCurrency(financeiro.receitas_mes), colorClass: 'text-green' },
+            { label: 'Despesas Período', value: formatCurrency(financeiro.despesas_mes), colorClass: 'text-red' },
+            { label: 'Saldo Operacional', value: formatCurrency(financeiro.saldo_mes), colorClass: financeiro.saldo_mes >= 0 ? 'text-green' : 'text-red' },
+            { label: 'Lotação Global', value: `${(pastagens.taxa_lotacao_global_cab_ha || 0).toFixed(2)} cab/ha` },
+            { label: 'Alertas Sanitários', value: `${sanidade.total_pendentes || 0} pendentes`, colorClass: (sanidade.total_pendentes || 0) > 0 ? 'text-red' : 'text-green' }
+        ];
+
+        const pastagensColumns = [
+            { key: 'piquete_nome', label: 'Piquete / Pasto' },
+            { key: 'tamanho_ha', label: 'Área (ha)', align: 'right', format: (v) => `${v} ha` },
+            { key: 'total_animais', label: 'Lotação Atual', align: 'right', format: (v) => `${v} cab` },
+            { key: 'capacidade', label: 'Capacidade Suporte', align: 'right', format: (v) => `${v} cab` },
+            { key: 'taxa_ocupacao', label: 'Taxa de Ocupação', align: 'right', format: (v) => `${v}%` }
+        ];
+
+        printReport({
+            title: `Relatório Executivo Geral — Fazenda GD (${periodo.label || 'Visão Consolidada'})`,
+            subtitle: 'Demonstrativo Agropecuário Integrado (Zootécnico, Pastagens e Financeiro)',
+            summaryCards,
+            columns: pastagensColumns,
+            data: ocupacaoPiquetes || [],
+            notes: `Custo médio por animal: ${formatCurrency(financeiro.custo_medio_por_animal)}. Total de colaboradores no RH: ${rh.total_colaboradores_ativos || 0}. Safras ativas: ${agricola.safras_ativas || 0}.`
+        });
+    };
+
     return (
         <div className="space-y-6">
             {/* 1. Header de Boas-Vindas */}
@@ -164,6 +195,14 @@ export default function DashboardView({ mesAno, setActiveTab }) {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-3">
+                        <button
+                            onClick={handlePrintExecutiveReport}
+                            className="px-3.5 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-[#172033] border border-[#E6EBE8] text-xs font-semibold shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                            title="Gerar e Imprimir Relatório Executivo Consolidado em PDF"
+                        >
+                            <Printer className="w-3.5 h-3.5 text-[#087F5B]" strokeWidth={2} />
+                            <span>Imprimir Relatório Executivo</span>
+                        </button>
                         <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#E8F5EF] border border-[#C3E6D6] text-xs font-semibold text-[#087F5B]">
                             <span className="w-2 h-2 rounded-full bg-[#087F5B] animate-pulse"></span>
                             <span>Operação em tempo real</span>

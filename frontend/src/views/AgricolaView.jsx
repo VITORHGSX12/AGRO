@@ -370,24 +370,24 @@ export default function AgricolaView({ onReloadDashboard, triggerNewModal, onRes
         <div className="space-y-6">
             {/* Toast Feedback */}
             {feedback && (
-                <div className="fixed top-5 right-5 z-50 flex items-center gap-2 bg-emerald-600 text-white px-5 py-3 rounded-xl shadow-xl font-medium animate-fade-in">
-                    <CheckCircle2 className="w-5 h-5" />
+                <div className="fixed top-5 right-5 z-50 flex items-center gap-2 bg-[#087F5B] text-white px-5 py-3 rounded-xl shadow-xl font-medium animate-fade-in text-xs">
+                    <CheckCircle2 className="w-4 h-4" />
                     <span>{feedback}</span>
                 </div>
             )}
 
             {/* Header & Sub-Tabs */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900/40 border border-slate-800/80 p-5 rounded-2xl backdrop-blur-md">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-[#E6EBE8] p-5 rounded-2xl shadow-[0_4px_20px_rgba(20,60,45,0.04)]">
                 <div>
                     <div className="flex items-center gap-3">
-                        <div className="p-2.5 bg-amber-500/10 text-amber-400 rounded-xl border border-amber-500/20">
-                            <Wheat className="w-6 h-6" />
+                        <div className="p-2.5 bg-[#E8F5EF] text-[#087F5B] rounded-xl border border-[#C3E6D6]">
+                            <Wheat className="w-6 h-6" strokeWidth={1.75} />
                         </div>
                         <div>
-                            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+                            <h1 className="text-xl sm:text-2xl font-bold text-[#172033] tracking-tight">
                                 Gestão Agrícola & Safras
                             </h1>
-                            <p className="text-sm text-slate-400">
+                            <p className="text-xs text-[#64748B] mt-0.5 font-medium">
                                 Ciclo de plantio, monitoramento de insumos, produtividade por hectare e fechamento de colheitas
                             </p>
                         </div>
@@ -395,27 +395,27 @@ export default function AgricolaView({ onReloadDashboard, triggerNewModal, onRes
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <div className="flex bg-slate-800/80 p-1 rounded-xl border border-slate-700/60">
+                    <div className="flex bg-[#F7F9F8] p-1 rounded-xl border border-[#E6EBE8]">
                         <button
                             onClick={() => setSubTab('safras')}
-                            className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all flex items-center gap-2 ${
+                            className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all flex items-center gap-2 cursor-pointer ${
                                 subTab === 'safras'
-                                    ? 'bg-amber-600 text-white shadow-lg shadow-amber-600/30'
-                                    : 'text-slate-400 hover:text-white'
+                                    ? 'bg-[#087F5B] text-white shadow-sm'
+                                    : 'text-[#64748B] hover:text-[#172033]'
                             }`}
                         >
-                            <Sprout className="w-4 h-4" />
+                            <Sprout className="w-4 h-4" strokeWidth={1.75} />
                             Safras & Ciclos
                         </button>
                         <button
                             onClick={() => setSubTab('talhoes')}
-                            className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all flex items-center gap-2 ${
+                            className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all flex items-center gap-2 cursor-pointer ${
                                 subTab === 'talhoes'
-                                    ? 'bg-amber-600 text-white shadow-lg shadow-amber-600/30'
-                                    : 'text-slate-400 hover:text-white'
+                                    ? 'bg-[#087F5B] text-white shadow-sm'
+                                    : 'text-[#64748B] hover:text-[#172033]'
                             }`}
                         >
-                            <Layers className="w-4 h-4" />
+                            <Layers className="w-4 h-4" strokeWidth={1.75} />
                             Talhões & Áreas
                         </button>
                     </div>
@@ -423,17 +423,17 @@ export default function AgricolaView({ onReloadDashboard, triggerNewModal, onRes
                     {subTab === 'safras' ? (
                         <button
                             onClick={handleOpenNewSafra}
-                            className="flex items-center gap-2 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white px-4 py-2.5 rounded-xl font-semibold shadow-lg shadow-amber-600/20 hover:shadow-amber-500/30 transition-all text-sm"
+                            className="flex items-center gap-2 bg-[#087F5B] hover:bg-[#159A70] text-white px-4 py-2.5 rounded-xl font-semibold shadow-sm hover:shadow-md transition-all text-xs cursor-pointer"
                         >
-                            <Plus className="w-4 h-4" />
+                            <Plus className="w-4 h-4" strokeWidth={2.5} />
                             Iniciar Safra
                         </button>
                     ) : (
                         <button
                             onClick={handleOpenNewTalhao}
-                            className="flex items-center gap-2 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white px-4 py-2.5 rounded-xl font-semibold shadow-lg shadow-amber-600/20 hover:shadow-amber-500/30 transition-all text-sm"
+                            className="flex items-center gap-2 bg-[#087F5B] hover:bg-[#159A70] text-white px-4 py-2.5 rounded-xl font-semibold shadow-sm hover:shadow-md transition-all text-xs cursor-pointer"
                         >
-                            <Plus className="w-4 h-4" />
+                            <Plus className="w-4 h-4" strokeWidth={2.5} />
                             Novo Talhão
                         </button>
                     )}
@@ -443,64 +443,71 @@ export default function AgricolaView({ onReloadDashboard, triggerNewModal, onRes
             {/* Top KPIs */}
             {kpis && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="bg-slate-900/60 border border-slate-800/80 p-4 rounded-2xl relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl group-hover:bg-amber-500/10 transition-all" />
+                    <div className="bg-white border border-[#E6EBE8] p-5 rounded-2xl shadow-[0_4px_20px_rgba(20,60,45,0.04)] hover:shadow-md transition-all">
                         <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Área Cultivada</span>
-                            <Layers className="w-4 h-4 text-amber-400" />
+                            <span className="text-xs font-semibold uppercase tracking-wider text-[#64748B]">Área Cultivada</span>
+                            <div className="w-8 h-8 rounded-xl bg-[#FEF9E7] border border-[#FDE8B3] flex items-center justify-center text-[#D9A441]">
+                                <Layers className="w-4 h-4" strokeWidth={2} />
+                            </div>
                         </div>
-                        <div className="text-2xl font-bold text-white">
-                            {formatNumber(kpis.area_plantada_ha)} <span className="text-xs font-normal text-slate-400">ha</span>
+                        <div className="text-2xl font-bold text-[#172033]">
+                            {formatNumber(kpis.area_plantada_ha)} <span className="text-xs font-normal text-[#64748B]">ha</span>
                         </div>
-                        <div className="mt-2 text-xs text-slate-400 flex items-center justify-between">
+                        <div className="mt-2 text-xs text-[#64748B] flex items-center justify-between font-medium">
                             <span>Total: {formatNumber(kpis.area_total_ha)} ha</span>
-                            <span className="text-emerald-400 font-medium">
+                            <span className="text-[#087F5B] font-semibold">
                                 {kpis.area_total_ha > 0 ? Math.round((kpis.area_plantada_ha / kpis.area_total_ha) * 100) : 0}% plantado
                             </span>
                         </div>
-                        <div className="w-full bg-slate-800 h-1.5 rounded-full mt-2 overflow-hidden">
+                        <div className="w-full bg-[#F7F9F8] border border-[#E6EBE8] h-2 rounded-full mt-2.5 overflow-hidden">
                             <div 
-                                className="bg-gradient-to-r from-amber-500 to-emerald-500 h-full rounded-full transition-all duration-500"
+                                className="bg-[#087F5B] h-full rounded-full transition-all duration-500"
                                 style={{ width: `${kpis.area_total_ha > 0 ? Math.min(100, (kpis.area_plantada_ha / kpis.area_total_ha) * 100) : 0}%` }}
                             />
                         </div>
                     </div>
 
-                    <div className="bg-slate-900/60 border border-slate-800/80 p-4 rounded-2xl relative overflow-hidden group">
+                    <div className="bg-white border border-[#E6EBE8] p-5 rounded-2xl shadow-[0_4px_20px_rgba(20,60,45,0.04)] hover:shadow-md transition-all">
                         <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Safras em Andamento</span>
-                            <Sprout className="w-4 h-4 text-emerald-400" />
+                            <span className="text-xs font-semibold uppercase tracking-wider text-[#64748B]">Safras em Andamento</span>
+                            <div className="w-8 h-8 rounded-xl bg-[#E8F5EF] border border-[#C3E6D6] flex items-center justify-center text-[#087F5B]">
+                                <Sprout className="w-4 h-4" strokeWidth={2} />
+                            </div>
                         </div>
-                        <div className="text-2xl font-bold text-emerald-400">
+                        <div className="text-2xl font-bold text-[#087F5B]">
                             {kpis.safras_ativas}
                         </div>
-                        <p className="text-xs text-slate-400 mt-2">
+                        <p className="text-xs text-[#64748B] mt-2 font-medium">
                             Em {kpis.total_talhoes} talhões cadastrados
                         </p>
                     </div>
 
-                    <div className="bg-slate-900/60 border border-slate-800/80 p-4 rounded-2xl relative overflow-hidden group">
+                    <div className="bg-white border border-[#E6EBE8] p-5 rounded-2xl shadow-[0_4px_20px_rgba(20,60,45,0.04)] hover:shadow-md transition-all">
                         <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Investido em Insumos</span>
-                            <Package className="w-4 h-4 text-red-400" />
+                            <span className="text-xs font-semibold uppercase tracking-wider text-[#64748B]">Investido em Insumos</span>
+                            <div className="w-8 h-8 rounded-xl bg-[#FEF2F2] border border-[#FACDCD] flex items-center justify-center text-[#D64545]">
+                                <Package className="w-4 h-4" strokeWidth={2} />
+                            </div>
                         </div>
-                        <div className="text-2xl font-bold text-red-400">
+                        <div className="text-2xl font-bold text-[#D64545]">
                             {formatCurrency(kpis.total_investido_insumos)}
                         </div>
-                        <p className="text-xs text-slate-400 mt-2">
+                        <p className="text-xs text-[#64748B] mt-2 font-medium">
                             Sementes, adubos e defensivos
                         </p>
                     </div>
 
-                    <div className="bg-slate-900/60 border border-slate-800/80 p-4 rounded-2xl relative overflow-hidden group">
+                    <div className="bg-white border border-[#E6EBE8] p-5 rounded-2xl shadow-[0_4px_20px_rgba(20,60,45,0.04)] hover:shadow-md transition-all">
                         <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Receita de Colheitas</span>
-                            <DollarSign className="w-4 h-4 text-emerald-400" />
+                            <span className="text-xs font-semibold uppercase tracking-wider text-[#64748B]">Receita de Colheitas</span>
+                            <div className="w-8 h-8 rounded-xl bg-[#E8F5EF] border border-[#C3E6D6] flex items-center justify-center text-[#087F5B]">
+                                <DollarSign className="w-4 h-4" strokeWidth={2} />
+                            </div>
                         </div>
-                        <div className="text-2xl font-bold text-emerald-400">
+                        <div className="text-2xl font-bold text-[#087F5B]">
                             {formatCurrency(kpis.total_receita_colheitas)}
                         </div>
-                        <p className="text-xs text-slate-400 mt-2">
+                        <p className="text-xs text-[#64748B] mt-2 font-medium">
                             Total bruto faturado
                         </p>
                     </div>
@@ -511,23 +518,23 @@ export default function AgricolaView({ onReloadDashboard, triggerNewModal, onRes
             {subTab === 'safras' && (
                 <div className="space-y-4">
                     {/* Filtros */}
-                    <div className="bg-slate-900/40 border border-slate-800/80 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-3">
+                    <div className="bg-white border border-[#E6EBE8] p-4 rounded-2xl shadow-[0_4px_20px_rgba(20,60,45,0.03)] flex flex-wrap items-center justify-between gap-3">
                         <div className="flex flex-wrap items-center gap-2">
                             <div className="relative">
-                                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                                <Search className="w-4 h-4 text-[#64748B] absolute left-3 top-1/2 -translate-y-1/2" />
                                 <input
                                     type="text"
                                     placeholder="Buscar por cultura..."
                                     value={buscaCultura}
                                     onChange={(e) => setBuscaCultura(e.target.value)}
-                                    className="bg-slate-800/80 border border-slate-700/80 text-white text-xs rounded-xl pl-9 pr-3 py-2 focus:outline-none focus:border-amber-500 transition-all w-44 sm:w-56"
+                                    className="bg-[#F7F9F8] border border-[#E6EBE8] text-[#172033] text-xs font-medium rounded-xl pl-9 pr-3 py-2 focus:outline-none focus:border-[#087F5B] focus:bg-white transition-all w-44 sm:w-56"
                                 />
                             </div>
 
                             <select
                                 value={filtroTalhao}
                                 onChange={(e) => setFiltroTalhao(e.target.value)}
-                                className="bg-slate-800/80 border border-slate-700/80 text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-amber-500"
+                                className="bg-[#F7F9F8] border border-[#E6EBE8] text-[#172033] text-xs font-medium rounded-xl px-3 py-2 focus:outline-none focus:border-[#087F5B] focus:bg-white"
                             >
                                 <option value="">Todos os Talhões</option>
                                 {talhoes.map(t => (
@@ -538,7 +545,7 @@ export default function AgricolaView({ onReloadDashboard, triggerNewModal, onRes
                             <select
                                 value={filtroStatus}
                                 onChange={(e) => setFiltroStatus(e.target.value)}
-                                className="bg-slate-800/80 border border-slate-700/80 text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-amber-500"
+                                className="bg-[#F7F9F8] border border-[#E6EBE8] text-[#172033] text-xs font-medium rounded-xl px-3 py-2 focus:outline-none focus:border-[#087F5B] focus:bg-white"
                             >
                                 <option value="">Todos os Status</option>
                                 <option value="plantio">🌱 Em Plantio</option>
@@ -547,30 +554,30 @@ export default function AgricolaView({ onReloadDashboard, triggerNewModal, onRes
                             </select>
                         </div>
 
-                        <div className="text-xs text-slate-400">
-                            Exibindo <span className="font-semibold text-white">{safras.length}</span> safras
+                        <div className="text-xs text-[#64748B] font-medium">
+                            Exibindo <span className="font-bold text-[#172033]">{safras.length}</span> safras
                         </div>
                     </div>
 
                     {/* Lista de Safras */}
                     {loading ? (
-                        <div className="py-20 text-center text-slate-400">Carregando safras...</div>
+                        <div className="py-20 text-center text-xs text-[#64748B]">Carregando safras...</div>
                     ) : safras.length === 0 ? (
-                        <div className="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-12 text-center">
-                            <Wheat className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-                            <h3 className="text-base font-semibold text-white mb-1">Nenhuma safra encontrada</h3>
-                            <p className="text-xs text-slate-400 max-w-md mx-auto mb-4">
+                        <div className="bg-white border border-[#E6EBE8] rounded-2xl p-12 text-center shadow-sm">
+                            <Wheat className="w-12 h-12 text-slate-300 mx-auto mb-3" strokeWidth={1.5} />
+                            <h3 className="text-base font-bold text-[#172033] mb-1">Nenhuma safra encontrada</h3>
+                            <p className="text-xs text-[#64748B] max-w-md mx-auto mb-4 font-medium">
                                 Cadastre um talhão e inicie o ciclo de uma nova safra para acompanhar insumos, custos e colheita.
                             </p>
                             <button
                                 onClick={handleOpenNewSafra}
-                                className="bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold px-4 py-2 rounded-xl transition-all"
+                                className="bg-[#087F5B] hover:bg-[#159A70] text-white text-xs font-semibold px-4 py-2 rounded-xl transition-all cursor-pointer shadow-sm"
                             >
                                 Iniciar Safra Agora
                             </button>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                             {safras.map(safra => {
                                 const isColhida = safra.status === 'colhida';
                                 const isDesenv = safra.status === 'em_desenvolvimento';
@@ -579,58 +586,52 @@ export default function AgricolaView({ onReloadDashboard, triggerNewModal, onRes
                                 return (
                                     <div
                                         key={safra.id}
-                                        className={`bg-slate-900/60 border rounded-2xl p-5 relative overflow-hidden transition-all hover:border-slate-700 flex flex-col justify-between ${
-                                            isColhida 
-                                                ? 'border-emerald-500/30 shadow-lg shadow-emerald-500/5' 
-                                                : isDesenv 
-                                                ? 'border-blue-500/30' 
-                                                : 'border-amber-500/30'
-                                        }`}
+                                        className="bg-white border border-[#E6EBE8] rounded-2xl p-5 shadow-[0_4px_20px_rgba(20,60,45,0.04)] hover:shadow-md transition-all flex flex-col justify-between"
                                     >
                                         <div>
                                             {/* Header do Card */}
                                             <div className="flex items-start justify-between gap-2 mb-3">
                                                 <div>
                                                     <div className="flex items-center gap-2">
-                                                        <span className="text-lg font-bold text-white tracking-tight">
+                                                        <span className="text-lg font-bold text-[#172033] tracking-tight">
                                                             {safra.cultura}
                                                         </span>
-                                                        <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border ${
+                                                        <span className={`text-[10px] uppercase font-bold px-2.5 py-0.5 rounded-full border ${
                                                             isColhida
-                                                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                                                ? 'bg-[#E8F5EF] text-[#087F5B] border-[#C3E6D6]'
                                                                 : isDesenv
-                                                                ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
-                                                                : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                                                                ? 'bg-[#EFF6FF] text-[#3978C7] border-[#DBEAFE]'
+                                                                : 'bg-[#FEF9E7] text-[#D9A441] border-[#FDE8B3]'
                                                         }`}>
                                                             {isColhida ? 'Colhida' : isDesenv ? 'Em Desenvolvimento' : 'Em Plantio'}
                                                         </span>
                                                     </div>
-                                                    <div className="text-xs text-slate-400 flex items-center gap-1.5 mt-1">
-                                                        <Layers className="w-3.5 h-3.5 text-slate-500" />
-                                                        <span>Talhão: <strong className="text-slate-300">{safra.talhao_nome}</strong> ({safra.talhao_area} ha)</span>
+                                                    <div className="text-xs text-[#64748B] flex items-center gap-1.5 mt-1 font-medium">
+                                                        <Layers className="w-3.5 h-3.5 text-[#64748B]" strokeWidth={1.75} />
+                                                        <span>Talhão: <strong className="text-[#172033]">{safra.talhao_nome}</strong> ({safra.talhao_area} ha)</span>
                                                     </div>
                                                 </div>
 
                                                 <button
                                                     onClick={() => handleDeleteSafra(safra.id, safra.cultura)}
-                                                    className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
+                                                    className="p-1.5 text-[#64748B] hover:text-[#D64545] hover:bg-[#FEF2F2] rounded-lg transition-all cursor-pointer"
                                                     title="Excluir Safra"
                                                 >
-                                                    <Trash2 className="w-4 h-4" />
+                                                    <Trash2 className="w-4 h-4" strokeWidth={1.75} />
                                                 </button>
                                             </div>
 
                                             {/* Datas */}
-                                            <div className="grid grid-cols-2 gap-2 bg-slate-950/40 p-2.5 rounded-xl text-xs mb-3 border border-slate-800/40">
+                                            <div className="grid grid-cols-2 gap-2 bg-[#F7F9F8] p-3 rounded-xl text-xs mb-3 border border-[#E6EBE8]">
                                                 <div>
-                                                    <span className="text-slate-500 block text-[10px] uppercase">Plantio</span>
-                                                    <span className="text-slate-300 font-medium">{safra.data_plantio}</span>
+                                                    <span className="text-[#64748B] block text-[10px] uppercase font-semibold">Plantio</span>
+                                                    <span className="text-[#172033] font-semibold">{safra.data_plantio}</span>
                                                 </div>
                                                 <div>
-                                                    <span className="text-slate-500 block text-[10px] uppercase">
+                                                    <span className="text-[#64748B] block text-[10px] uppercase font-semibold">
                                                         {isColhida ? 'Colheita Real' : 'Previsão Colheita'}
                                                     </span>
-                                                    <span className="text-slate-300 font-medium">
+                                                    <span className="text-[#172033] font-semibold">
                                                         {isColhida ? safra.data_colheita_real : (safra.data_colheita_prevista || 'Não definida')}
                                                     </span>
                                                 </div>
@@ -639,63 +640,63 @@ export default function AgricolaView({ onReloadDashboard, triggerNewModal, onRes
                                             {/* Métricas de Produtividade e Custos */}
                                             <div className="space-y-2 mb-4">
                                                 <div className="flex items-center justify-between text-xs">
-                                                    <span className="text-slate-400">Custo Insumos:</span>
+                                                    <span className="text-[#64748B] font-medium">Custo Insumos:</span>
                                                     <div className="text-right">
-                                                        <span className="font-semibold text-red-400">{formatCurrency(safra.total_custo_insumos)}</span>
-                                                        <span className="text-[10px] text-slate-500 block">({formatCurrency(safra.custo_por_ha)}/ha)</span>
+                                                        <span className="font-bold text-[#D64545]">{formatCurrency(safra.total_custo_insumos)}</span>
+                                                        <span className="text-[10px] text-[#64748B] block">({formatCurrency(safra.custo_por_ha)}/ha)</span>
                                                     </div>
                                                 </div>
 
                                                 {isColhida ? (
                                                     <>
                                                         <div className="flex items-center justify-between text-xs">
-                                                            <span className="text-slate-400">Produção Total:</span>
-                                                            <span className="font-semibold text-white">
+                                                            <span className="text-[#64748B] font-medium">Produção Total:</span>
+                                                            <span className="font-bold text-[#172033]">
                                                                 {formatNumber(safra.quantidade_colhida)} {safra.unidade_medida}
                                                             </span>
                                                         </div>
                                                         <div className="flex items-center justify-between text-xs">
-                                                            <span className="text-slate-400">Produtividade:</span>
-                                                            <span className="font-bold text-amber-400">
+                                                            <span className="text-[#64748B] font-medium">Produtividade:</span>
+                                                            <span className="font-bold text-[#D9A441]">
                                                                 {formatNumber(safra.produtividade_ha)} {safra.unidade_medida}/ha
                                                             </span>
                                                         </div>
-                                                        <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-800">
-                                                            <span className="text-slate-400">Receita Bruta:</span>
-                                                            <span className="font-semibold text-emerald-400">{formatCurrency(safra.valor_venda_total)}</span>
+                                                        <div className="flex items-center justify-between text-xs pt-2 border-t border-[#E6EBE8]">
+                                                            <span className="text-[#64748B] font-medium">Receita Bruta:</span>
+                                                            <span className="font-bold text-[#087F5B]">{formatCurrency(safra.valor_venda_total)}</span>
                                                         </div>
                                                         <div className="flex items-center justify-between text-xs font-bold">
-                                                            <span className="text-slate-300">Margem Líquida:</span>
-                                                            <span className={safra.lucro_bruto >= 0 ? 'text-emerald-400' : 'text-red-400'}>
+                                                            <span className="text-[#172033]">Margem Líquida:</span>
+                                                            <span className={safra.lucro_bruto >= 0 ? 'text-[#087F5B]' : 'text-[#D64545]'}>
                                                                 {formatCurrency(safra.lucro_bruto)} ({formatCurrency(safra.lucro_por_ha)}/ha)
                                                             </span>
                                                         </div>
                                                     </>
                                                 ) : (
-                                                    <div className="text-xs text-slate-400 flex items-center justify-between bg-slate-800/30 p-2 rounded-lg">
+                                                    <div className="text-xs text-[#64748B] flex items-center justify-between bg-[#F7F9F8] border border-[#E6EBE8] p-2.5 rounded-xl font-medium">
                                                         <span>Insumos lançados:</span>
-                                                        <span className="font-semibold text-white">{safra.total_insumos_count} itens</span>
+                                                        <span className="font-bold text-[#172033]">{safra.total_insumos_count} itens</span>
                                                     </div>
                                                 )}
                                             </div>
                                         </div>
 
                                         {/* Ações do Card */}
-                                        <div className="pt-3 border-t border-slate-800/80 flex flex-wrap gap-2">
+                                        <div className="pt-3 border-t border-[#E6EBE8] flex flex-wrap gap-2">
                                             {!isColhida && (
                                                 <>
                                                     <button
                                                         onClick={() => handleOpenLancarInsumo(safra)}
-                                                        className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold py-2 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 border border-slate-700/60"
+                                                        className="flex-1 bg-white hover:bg-slate-50 text-[#172033] text-xs font-semibold py-2 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 border border-[#E6EBE8] cursor-pointer shadow-sm"
                                                     >
-                                                        <Package className="w-3.5 h-3.5 text-amber-400" />
+                                                        <Package className="w-3.5 h-3.5 text-[#D9A441]" strokeWidth={2} />
                                                         Lançar Insumo
                                                     </button>
 
                                                     {isPlantio && (
                                                         <button
                                                             onClick={() => handleUpdateStatusSafra(safra.id, 'em_desenvolvimento')}
-                                                            className="bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/30 text-xs font-semibold py-2 px-2.5 rounded-xl transition-all"
+                                                            className="bg-[#EFF6FF] hover:bg-[#DBEAFE] text-[#3978C7] border border-[#DBEAFE] text-xs font-semibold py-2 px-2.5 rounded-xl transition-all cursor-pointer"
                                                             title="Avançar para Desenvolvimento"
                                                         >
                                                             🌿 Em Desenv.
@@ -704,9 +705,9 @@ export default function AgricolaView({ onReloadDashboard, triggerNewModal, onRes
 
                                                     <button
                                                         onClick={() => handleOpenColheita(safra)}
-                                                        className="bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white text-xs font-semibold py-2 px-3 rounded-xl transition-all shadow-md shadow-emerald-600/20 flex items-center justify-center gap-1"
+                                                        className="bg-[#087F5B] hover:bg-[#159A70] text-white text-xs font-semibold py-2 px-3 rounded-xl transition-all shadow-sm flex items-center justify-center gap-1 cursor-pointer"
                                                     >
-                                                        <Wheat className="w-3.5 h-3.5" />
+                                                        <Wheat className="w-3.5 h-3.5" strokeWidth={2} />
                                                         Colher
                                                     </button>
                                                 </>
@@ -714,8 +715,8 @@ export default function AgricolaView({ onReloadDashboard, triggerNewModal, onRes
 
                                             <button
                                                 onClick={() => openSafraDrawer(safra.id)}
-                                                className={`text-xs font-medium py-2 px-3 rounded-xl transition-all flex items-center justify-center gap-1 text-slate-400 hover:text-white hover:bg-slate-800/80 ${
-                                                    isColhida ? 'w-full bg-slate-800/60 border border-slate-700/40 text-slate-200' : ''
+                                                className={`text-xs font-medium py-2 px-3 rounded-xl transition-all flex items-center justify-center gap-1 text-[#64748B] hover:text-[#172033] hover:bg-slate-100 cursor-pointer ${
+                                                    isColhida ? 'w-full bg-[#F7F9F8] border border-[#E6EBE8] text-[#172033] font-semibold' : ''
                                                 }`}
                                             >
                                                 <span>Ficha & Insumos</span>
@@ -733,83 +734,83 @@ export default function AgricolaView({ onReloadDashboard, triggerNewModal, onRes
             {/* Sub-Tab 2: Talhões & Áreas */}
             {subTab === 'talhoes' && (
                 <div className="space-y-4">
-                    <div className="flex items-center justify-between bg-slate-900/40 border border-slate-800/80 p-4 rounded-2xl">
+                    <div className="flex items-center justify-between bg-white border border-[#E6EBE8] p-4 rounded-2xl shadow-[0_4px_20px_rgba(20,60,45,0.03)]">
                         <div>
-                            <h3 className="text-sm font-bold text-white">Talhões de Plantio Registrados</h3>
-                            <p className="text-xs text-slate-400">Delimite suas áreas agricultáveis para cálculo de produtividade e rotação de culturas</p>
+                            <h3 className="text-sm font-bold text-[#172033]">Talhões de Plantio Registrados</h3>
+                            <p className="text-xs text-[#64748B] font-medium">Delimite suas áreas agricultáveis para cálculo de produtividade e rotação de culturas</p>
                         </div>
                         <button
                             onClick={handleOpenNewTalhao}
-                            className="flex items-center gap-2 bg-amber-600 hover:bg-amber-500 text-white px-3.5 py-2 rounded-xl text-xs font-semibold transition-all"
+                            className="flex items-center gap-2 bg-[#087F5B] hover:bg-[#159A70] text-white px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer shadow-sm"
                         >
-                            <Plus className="w-4 h-4" />
+                            <Plus className="w-4 h-4" strokeWidth={2.5} />
                             Novo Talhão
                         </button>
                     </div>
 
                     {talhoes.length === 0 ? (
-                        <div className="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-12 text-center">
-                            <Layers className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-                            <h3 className="text-base font-semibold text-white mb-1">Nenhum talhão cadastrado</h3>
-                            <p className="text-xs text-slate-400 max-w-md mx-auto mb-4">
+                        <div className="bg-white border border-[#E6EBE8] rounded-2xl p-12 text-center shadow-sm">
+                            <Layers className="w-12 h-12 text-slate-300 mx-auto mb-3" strokeWidth={1.5} />
+                            <h3 className="text-base font-bold text-[#172033] mb-1">Nenhum talhão cadastrado</h3>
+                            <p className="text-xs text-[#64748B] max-w-md mx-auto mb-4 font-medium">
                                 Comece adicionando seus talhões para gerenciar áreas de lavoura e ciclos de safras.
                             </p>
                             <button
                                 onClick={handleOpenNewTalhao}
-                                className="bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold px-4 py-2 rounded-xl transition-all"
+                                className="bg-[#087F5B] hover:bg-[#159A70] text-white text-xs font-semibold px-4 py-2 rounded-xl transition-all cursor-pointer shadow-sm"
                             >
                                 Cadastrar Primeiro Talhão
                             </button>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                             {talhoes.map(t => (
                                 <div
                                     key={t.id}
-                                    className="bg-slate-900/60 border border-slate-800/80 hover:border-slate-700/80 p-5 rounded-2xl transition-all flex flex-col justify-between"
+                                    className="bg-white border border-[#E6EBE8] hover:border-[#087F5B]/30 p-5 rounded-2xl shadow-[0_4px_20px_rgba(20,60,45,0.04)] hover:shadow-md transition-all flex flex-col justify-between"
                                 >
                                     <div>
                                         <div className="flex items-start justify-between mb-3">
                                             <div>
-                                                <h4 className="text-base font-bold text-white">{t.nome}</h4>
-                                                <span className="text-xs text-slate-400">Solo: {t.tipo_solo || 'Não informado'}</span>
+                                                <h4 className="text-base font-bold text-[#172033]">{t.nome}</h4>
+                                                <span className="text-xs text-[#64748B] font-medium">Solo: {t.tipo_solo || 'Não informado'}</span>
                                             </div>
-                                            <span className="text-xs font-bold px-2.5 py-1 bg-amber-500/10 text-amber-400 rounded-lg border border-amber-500/20">
+                                            <span className="text-xs font-bold px-2.5 py-1 bg-[#E8F5EF] text-[#087F5B] rounded-lg border border-[#C3E6D6]">
                                                 {formatNumber(t.area_hectares)} ha
                                             </span>
                                         </div>
 
-                                        <div className="bg-slate-950/40 p-3 rounded-xl border border-slate-800/40 mb-4 text-xs space-y-1.5">
+                                        <div className="bg-[#F7F9F8] p-3.5 rounded-xl border border-[#E6EBE8] mb-4 text-xs space-y-2">
                                             <div className="flex items-center justify-between">
-                                                <span className="text-slate-400">Cultura Atual:</span>
-                                                <span className="font-semibold text-white">
+                                                <span className="text-[#64748B] font-medium">Cultura Atual:</span>
+                                                <span className="font-semibold text-[#172033]">
                                                     {t.cultura_atual ? (
-                                                        <span className="text-emerald-400">{t.cultura_atual} ({t.status_safra_atual})</span>
+                                                        <span className="text-[#087F5B]">{t.cultura_atual} ({t.status_safra_atual})</span>
                                                     ) : (
-                                                        <span className="text-slate-500">Em Pousio / Descanso</span>
+                                                        <span className="text-[#64748B]">Em Pousio / Descanso</span>
                                                     )}
                                                 </span>
                                             </div>
                                             <div className="flex items-center justify-between">
-                                                <span className="text-slate-400">Total de Safras Históricas:</span>
-                                                <span className="font-semibold text-slate-300">{t.total_safras}</span>
+                                                <span className="text-[#64748B] font-medium">Total de Safras Históricas:</span>
+                                                <span className="font-bold text-[#172033]">{t.total_safras}</span>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+                                    <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#E6EBE8]">
                                         <button
                                             onClick={() => handleOpenEditTalhao(t)}
-                                            className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-all text-xs flex items-center gap-1"
+                                            className="p-2 text-[#64748B] hover:text-[#172033] hover:bg-slate-100 rounded-xl transition-all text-xs flex items-center gap-1 cursor-pointer font-medium"
                                         >
-                                            <Edit className="w-3.5 h-3.5" />
+                                            <Edit className="w-3.5 h-3.5" strokeWidth={1.75} />
                                             Editar
                                         </button>
                                         <button
                                             onClick={() => handleDeleteTalhao(t.id, t.nome)}
-                                            className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all text-xs flex items-center gap-1"
+                                            className="p-2 text-[#64748B] hover:text-[#D64545] hover:bg-[#FEF2F2] rounded-xl transition-all text-xs flex items-center gap-1 cursor-pointer font-medium"
                                         >
-                                            <Trash2 className="w-3.5 h-3.5" />
+                                            <Trash2 className="w-3.5 h-3.5" strokeWidth={1.75} />
                                             Excluir
                                         </button>
                                     </div>
@@ -822,22 +823,22 @@ export default function AgricolaView({ onReloadDashboard, triggerNewModal, onRes
 
             {/* Modal Novo / Editar Talhão */}
             {modalTalhaoOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-                    <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-white border border-[#E6EBE8] rounded-2xl w-full max-w-md p-6 shadow-2xl">
                         <div className="flex items-center justify-between mb-5">
-                            <h3 className="text-lg font-bold text-white">
+                            <h3 className="text-base font-bold text-[#172033]">
                                 {editingTalhao ? 'Editar Talhão' : 'Novo Talhão de Plantio'}
                             </h3>
                             <button
                                 onClick={() => setModalTalhaoOpen(false)}
-                                className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg"
+                                className="p-1.5 text-[#64748B] hover:text-[#172033] rounded-lg transition"
                             >
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
 
                         {errorTalhao && (
-                            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-xl flex items-center gap-2">
+                            <div className="mb-4 p-3 bg-[#FEF2F2] border border-[#FACDCD] text-[#D64545] text-xs rounded-xl flex items-center gap-2 font-medium">
                                 <AlertCircle className="w-4 h-4 flex-shrink-0" />
                                 <span>{errorTalhao}</span>
                             </div>
@@ -845,20 +846,20 @@ export default function AgricolaView({ onReloadDashboard, triggerNewModal, onRes
 
                         <form onSubmit={handleSaveTalhao} className="space-y-4 text-xs">
                             <div>
-                                <label className="block text-slate-400 mb-1 font-medium">Nome / Identificação do Talhão *</label>
+                                <label className="block text-[#172033] mb-1 font-semibold">Nome / Identificação do Talhão *</label>
                                 <input
                                     type="text"
                                     required
                                     placeholder="Ex: Talhão 01 - Baixada"
                                     value={talhaoForm.nome}
                                     onChange={(e) => setTalhaoForm({ ...talhaoForm, nome: e.target.value })}
-                                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-amber-500"
+                                    className="w-full bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl px-3 py-2.5 text-[#172033] font-medium focus:outline-none focus:border-[#087F5B] focus:bg-white"
                                 />
                             </div>
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-slate-400 mb-1 font-medium">Área (Hectares) *</label>
+                                    <label className="block text-[#172033] mb-1 font-semibold">Área (Hectares) *</label>
                                     <input
                                         type="number"
                                         step="0.01"
@@ -867,33 +868,33 @@ export default function AgricolaView({ onReloadDashboard, triggerNewModal, onRes
                                         placeholder="Ex: 45.5"
                                         value={talhaoForm.area_hectares}
                                         onChange={(e) => setTalhaoForm({ ...talhaoForm, area_hectares: e.target.value })}
-                                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-amber-500"
+                                        className="w-full bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl px-3 py-2.5 text-[#172033] font-medium focus:outline-none focus:border-[#087F5B] focus:bg-white"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-slate-400 mb-1 font-medium">Tipo de Solo</label>
+                                    <label className="block text-[#172033] mb-1 font-semibold">Tipo de Solo</label>
                                     <input
                                         type="text"
                                         placeholder="Ex: Argiloso / Misto"
                                         value={talhaoForm.tipo_solo}
                                         onChange={(e) => setTalhaoForm({ ...talhaoForm, tipo_solo: e.target.value })}
-                                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-amber-500"
+                                        className="w-full bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl px-3 py-2.5 text-[#172033] font-medium focus:outline-none focus:border-[#087F5B] focus:bg-white"
                                     />
                                 </div>
                             </div>
 
-                            <div className="flex items-center justify-end gap-3 pt-3">
+                            <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#E6EBE8]">
                                 <button
                                     type="button"
                                     onClick={() => setModalTalhaoOpen(false)}
-                                    className="px-4 py-2.5 text-slate-400 hover:text-white rounded-xl"
+                                    className="px-4 py-2.5 text-[#64748B] hover:bg-slate-100 rounded-xl font-medium cursor-pointer"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={saving}
-                                    className="bg-amber-600 hover:bg-amber-500 text-white px-5 py-2.5 rounded-xl font-semibold shadow-lg shadow-amber-600/20"
+                                    className="bg-[#087F5B] hover:bg-[#159A70] text-white px-5 py-2.5 rounded-xl font-semibold shadow-sm cursor-pointer"
                                 >
                                     {saving ? 'Salvando...' : 'Salvar Talhão'}
                                 </button>
@@ -905,23 +906,25 @@ export default function AgricolaView({ onReloadDashboard, triggerNewModal, onRes
 
             {/* Modal Iniciar Nova Safra */}
             {modalSafraOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-                    <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-white border border-[#E6EBE8] rounded-2xl w-full max-w-lg p-6 shadow-2xl">
                         <div className="flex items-center justify-between mb-5">
                             <div className="flex items-center gap-2">
-                                <Sprout className="w-5 h-5 text-amber-400" />
-                                <h3 className="text-lg font-bold text-white">Iniciar Novo Ciclo de Safra</h3>
+                                <div className="w-8 h-8 rounded-xl bg-[#E8F5EF] flex items-center justify-center text-[#087F5B]">
+                                    <Sprout className="w-4 h-4" strokeWidth={2} />
+                                </div>
+                                <h3 className="text-base font-bold text-[#172033]">Iniciar Novo Ciclo de Safra</h3>
                             </div>
                             <button
                                 onClick={() => setModalSafraOpen(false)}
-                                className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg"
+                                className="p-1.5 text-[#64748B] hover:text-[#172033] rounded-lg transition"
                             >
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
 
                         {errorSafra && (
-                            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-xl flex items-center gap-2">
+                            <div className="mb-4 p-3 bg-[#FEF2F2] border border-[#FACDCD] text-[#D64545] text-xs rounded-xl flex items-center gap-2 font-medium">
                                 <AlertCircle className="w-4 h-4 flex-shrink-0" />
                                 <span>{errorSafra}</span>
                             </div>
@@ -930,12 +933,12 @@ export default function AgricolaView({ onReloadDashboard, triggerNewModal, onRes
                         <form onSubmit={handleSaveSafra} className="space-y-4 text-xs">
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-slate-400 mb-1 font-medium">Talhão *</label>
+                                    <label className="block text-[#172033] mb-1 font-semibold">Talhão *</label>
                                     <select
                                         required
                                         value={safraForm.talhao_id}
                                         onChange={(e) => setSafraForm({ ...safraForm, talhao_id: e.target.value })}
-                                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-amber-500"
+                                        className="w-full bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl px-3 py-2.5 text-[#172033] font-medium focus:outline-none focus:border-[#087F5B] focus:bg-white"
                                     >
                                         {talhoes.map(t => (
                                             <option key={t.id} value={t.id}>{t.nome} ({t.area_hectares} ha)</option>
@@ -943,12 +946,12 @@ export default function AgricolaView({ onReloadDashboard, triggerNewModal, onRes
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-slate-400 mb-1 font-medium">Cultura *</label>
+                                    <label className="block text-[#172033] mb-1 font-semibold">Cultura *</label>
                                     <select
                                         required
                                         value={safraForm.cultura}
                                         onChange={(e) => setSafraForm({ ...safraForm, cultura: e.target.value })}
-                                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-amber-500"
+                                        className="w-full bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl px-3 py-2.5 text-[#172033] font-medium focus:outline-none focus:border-[#087F5B] focus:bg-white"
                                     >
                                         {CULTURAS_COMUNS.map(c => (
                                             <option key={c.value} value={c.value}>{c.label}</option>
@@ -959,49 +962,49 @@ export default function AgricolaView({ onReloadDashboard, triggerNewModal, onRes
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-slate-400 mb-1 font-medium">Data de Plantio *</label>
+                                    <label className="block text-[#172033] mb-1 font-semibold">Data de Plantio *</label>
                                     <input
                                         type="date"
                                         required
                                         value={safraForm.data_plantio}
                                         onChange={(e) => setSafraForm({ ...safraForm, data_plantio: e.target.value })}
-                                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-amber-500"
+                                        className="w-full bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl px-3 py-2.5 text-[#172033] font-medium focus:outline-none focus:border-[#087F5B] focus:bg-white"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-slate-400 mb-1 font-medium">Previsão de Colheita</label>
+                                    <label className="block text-[#172033] mb-1 font-semibold">Previsão de Colheita</label>
                                     <input
                                         type="date"
                                         value={safraForm.data_colheita_prevista}
                                         onChange={(e) => setSafraForm({ ...safraForm, data_colheita_prevista: e.target.value })}
-                                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-amber-500"
+                                        className="w-full bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl px-3 py-2.5 text-[#172033] font-medium focus:outline-none focus:border-[#087F5B] focus:bg-white"
                                     />
                                 </div>
                             </div>
 
                             <div>
-                                <label className="block text-slate-400 mb-1 font-medium">Observações / Variedade de Semente</label>
+                                <label className="block text-[#172033] mb-1 font-semibold">Observações / Variedade de Semente</label>
                                 <textarea
                                     rows="2"
                                     placeholder="Ex: Variedade TMG 7062 IPRO, espaçamento 0,45m..."
                                     value={safraForm.observacoes}
                                     onChange={(e) => setSafraForm({ ...safraForm, observacoes: e.target.value })}
-                                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-amber-500"
+                                    className="w-full bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl px-3 py-2.5 text-[#172033] font-medium focus:outline-none focus:border-[#087F5B] focus:bg-white"
                                 />
                             </div>
 
-                            <div className="flex items-center justify-end gap-3 pt-3">
+                            <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#E6EBE8]">
                                 <button
                                     type="button"
                                     onClick={() => setModalSafraOpen(false)}
-                                    className="px-4 py-2.5 text-slate-400 hover:text-white rounded-xl"
+                                    className="px-4 py-2.5 text-[#64748B] hover:bg-slate-100 rounded-xl font-medium cursor-pointer"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={saving}
-                                    className="bg-amber-600 hover:bg-amber-500 text-white px-5 py-2.5 rounded-xl font-semibold shadow-lg shadow-amber-600/20"
+                                    className="bg-[#087F5B] hover:bg-[#159A70] text-white px-5 py-2.5 rounded-xl font-semibold shadow-sm cursor-pointer"
                                 >
                                     {saving ? 'Iniciando...' : 'Iniciar Safra'}
                                 </button>
@@ -1013,25 +1016,25 @@ export default function AgricolaView({ onReloadDashboard, triggerNewModal, onRes
 
             {/* Modal Lançar Insumo */}
             {modalInsumoOpen && selectedSafraParaInsumo && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-                    <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-white border border-[#E6EBE8] rounded-2xl w-full max-w-lg p-6 shadow-2xl">
                         <div className="flex items-center justify-between mb-5">
                             <div>
-                                <h3 className="text-lg font-bold text-white">Lançar Insumo Agrícola</h3>
-                                <p className="text-xs text-slate-400">
-                                    Safra: <strong className="text-amber-400">{selectedSafraParaInsumo.cultura}</strong> ({selectedSafraParaInsumo.talhao_nome})
+                                <h3 className="text-base font-bold text-[#172033]">Lançar Insumo Agrícola</h3>
+                                <p className="text-xs text-[#64748B] font-medium mt-0.5">
+                                    Safra: <strong className="text-[#087F5B]">{selectedSafraParaInsumo.cultura}</strong> ({selectedSafraParaInsumo.talhao_nome})
                                 </p>
                             </div>
                             <button
                                 onClick={() => setModalInsumoOpen(false)}
-                                className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg"
+                                className="p-1.5 text-[#64748B] hover:text-[#172033] rounded-lg transition"
                             >
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
 
                         {errorInsumo && (
-                            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-xl flex items-center gap-2">
+                            <div className="mb-4 p-3 bg-[#FEF2F2] border border-[#FACDCD] text-[#D64545] text-xs rounded-xl flex items-center gap-2 font-medium">
                                 <AlertCircle className="w-4 h-4 flex-shrink-0" />
                                 <span>{errorInsumo}</span>
                             </div>
@@ -1040,12 +1043,12 @@ export default function AgricolaView({ onReloadDashboard, triggerNewModal, onRes
                         <form onSubmit={handleSaveInsumo} className="space-y-4 text-xs">
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-slate-400 mb-1 font-medium">Tipo de Insumo *</label>
+                                    <label className="block text-[#172033] mb-1 font-semibold">Tipo de Insumo *</label>
                                     <select
                                         required
                                         value={insumoForm.tipo}
                                         onChange={(e) => setInsumoForm({ ...insumoForm, tipo: e.target.value })}
-                                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-amber-500"
+                                        className="w-full bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl px-3 py-2.5 text-[#172033] font-medium focus:outline-none focus:border-[#087F5B] focus:bg-white"
                                     >
                                         <option value="semente">🌱 Sementes / Mudas</option>
                                         <option value="fertilizante">🧪 Fertilizantes & Adubos</option>
@@ -1054,32 +1057,32 @@ export default function AgricolaView({ onReloadDashboard, triggerNewModal, onRes
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-slate-400 mb-1 font-medium">Data da Aplicação *</label>
+                                    <label className="block text-[#172033] mb-1 font-semibold">Data da Aplicação *</label>
                                     <input
                                         type="date"
                                         required
                                         value={insumoForm.data}
                                         onChange={(e) => setInsumoForm({ ...insumoForm, data: e.target.value })}
-                                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-amber-500"
+                                        className="w-full bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl px-3 py-2.5 text-[#172033] font-medium focus:outline-none focus:border-[#087F5B] focus:bg-white"
                                     />
                                 </div>
                             </div>
 
                             <div>
-                                <label className="block text-slate-400 mb-1 font-medium">Descrição do Produto *</label>
+                                <label className="block text-[#172033] mb-1 font-semibold">Descrição do Produto *</label>
                                 <input
                                     type="text"
                                     required
                                     placeholder="Ex: NPK 04-14-08 (15 toneladas) ou Glifosato 480"
                                     value={insumoForm.descricao}
                                     onChange={(e) => setInsumoForm({ ...insumoForm, descricao: e.target.value })}
-                                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-amber-500"
+                                    className="w-full bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl px-3 py-2.5 text-[#172033] font-medium focus:outline-none focus:border-[#087F5B] focus:bg-white"
                                 />
                             </div>
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-slate-400 mb-1 font-medium">Quantidade</label>
+                                    <label className="block text-[#172033] mb-1 font-semibold">Quantidade</label>
                                     <input
                                         type="number"
                                         step="0.01"
@@ -1087,11 +1090,11 @@ export default function AgricolaView({ onReloadDashboard, triggerNewModal, onRes
                                         placeholder="Ex: 15"
                                         value={insumoForm.quantidade}
                                         onChange={(e) => setInsumoForm({ ...insumoForm, quantidade: e.target.value })}
-                                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-amber-500"
+                                        className="w-full bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl px-3 py-2.5 text-[#172033] font-medium focus:outline-none focus:border-[#087F5B] focus:bg-white"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-slate-400 mb-1 font-medium">Valor Total (R$) *</label>
+                                    <label className="block text-[#172033] mb-1 font-semibold">Valor Total (R$) *</label>
                                     <input
                                         type="number"
                                         step="0.01"
@@ -1100,33 +1103,33 @@ export default function AgricolaView({ onReloadDashboard, triggerNewModal, onRes
                                         placeholder="Ex: 4500.00"
                                         value={insumoForm.valor}
                                         onChange={(e) => setInsumoForm({ ...insumoForm, valor: e.target.value })}
-                                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-amber-500"
+                                        className="w-full bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl px-3 py-2.5 text-[#172033] font-medium focus:outline-none focus:border-[#087F5B] focus:bg-white"
                                     />
                                 </div>
                             </div>
 
-                            <label className="flex items-center gap-2 text-slate-300 cursor-pointer pt-1">
+                            <label className="flex items-center gap-2 text-[#172033] cursor-pointer pt-1 font-medium">
                                 <input
                                     type="checkbox"
                                     checked={insumoForm.gerar_despesa_financeira}
                                     onChange={(e) => setInsumoForm({ ...insumoForm, gerar_despesa_financeira: e.target.checked })}
-                                    className="rounded bg-slate-800 border-slate-700 text-amber-600 focus:ring-amber-500"
+                                    className="rounded border-[#E6EBE8] text-[#087F5B] focus:ring-[#087F5B]"
                                 />
                                 <span>Lançar automaticamente como despesa no Financeiro</span>
                             </label>
 
-                            <div className="flex items-center justify-end gap-3 pt-3">
+                            <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#E6EBE8]">
                                 <button
                                     type="button"
                                     onClick={() => setModalInsumoOpen(false)}
-                                    className="px-4 py-2.5 text-slate-400 hover:text-white rounded-xl"
+                                    className="px-4 py-2.5 text-[#64748B] hover:bg-slate-100 rounded-xl font-medium cursor-pointer"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={saving}
-                                    className="bg-amber-600 hover:bg-amber-500 text-white px-5 py-2.5 rounded-xl font-semibold shadow-lg shadow-amber-600/20"
+                                    className="bg-[#087F5B] hover:bg-[#159A70] text-white px-5 py-2.5 rounded-xl font-semibold shadow-sm cursor-pointer"
                                 >
                                     {saving ? 'Lançando...' : 'Lançar Insumo'}
                                 </button>
@@ -1138,25 +1141,25 @@ export default function AgricolaView({ onReloadDashboard, triggerNewModal, onRes
 
             {/* Modal Fechamento de Colheita */}
             {modalColheitaOpen && selectedSafraParaColher && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-                    <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-white border border-[#E6EBE8] rounded-2xl w-full max-w-lg p-6 shadow-2xl">
                         <div className="flex items-center justify-between mb-5">
                             <div>
-                                <h3 className="text-lg font-bold text-white">Fechamento & Registro de Colheita</h3>
-                                <p className="text-xs text-slate-400">
-                                    Safra: <strong className="text-emerald-400">{selectedSafraParaColher.cultura}</strong> ({selectedSafraParaColher.talhao_nome}, {selectedSafraParaColher.talhao_area} ha)
+                                <h3 className="text-base font-bold text-[#172033]">Fechamento & Registro de Colheita</h3>
+                                <p className="text-xs text-[#64748B] font-medium mt-0.5">
+                                    Safra: <strong className="text-[#087F5B]">{selectedSafraParaColher.cultura}</strong> ({selectedSafraParaColher.talhao_nome}, {selectedSafraParaColher.talhao_area} ha)
                                 </p>
                             </div>
                             <button
                                 onClick={() => setModalColheitaOpen(false)}
-                                className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg"
+                                className="p-1.5 text-[#64748B] hover:text-[#172033] rounded-lg transition"
                             >
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
 
                         {errorColheita && (
-                            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-xl flex items-center gap-2">
+                            <div className="mb-4 p-3 bg-[#FEF2F2] border border-[#FACDCD] text-[#D64545] text-xs rounded-xl flex items-center gap-2 font-medium">
                                 <AlertCircle className="w-4 h-4 flex-shrink-0" />
                                 <span>{errorColheita}</span>
                             </div>
@@ -1165,21 +1168,21 @@ export default function AgricolaView({ onReloadDashboard, triggerNewModal, onRes
                         <form onSubmit={handleSaveColheita} className="space-y-4 text-xs">
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-slate-400 mb-1 font-medium">Data Real da Colheita *</label>
+                                    <label className="block text-[#172033] mb-1 font-semibold">Data Real da Colheita *</label>
                                     <input
                                         type="date"
                                         required
                                         value={colheitaForm.data_colheita_real}
                                         onChange={(e) => setColheitaForm({ ...colheitaForm, data_colheita_real: e.target.value })}
-                                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-emerald-500"
+                                        className="w-full bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl px-3 py-2.5 text-[#172033] font-medium focus:outline-none focus:border-[#087F5B] focus:bg-white"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-slate-400 mb-1 font-medium">Unidade de Medida *</label>
+                                    <label className="block text-[#172033] mb-1 font-semibold">Unidade de Medida *</label>
                                     <select
                                         value={colheitaForm.unidade_medida}
                                         onChange={(e) => setColheitaForm({ ...colheitaForm, unidade_medida: e.target.value })}
-                                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-emerald-500"
+                                        className="w-full bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl px-3 py-2.5 text-[#172033] font-medium focus:outline-none focus:border-[#087F5B] focus:bg-white"
                                     >
                                         <option value="sacas">Sacas (sc)</option>
                                         <option value="toneladas">Toneladas (ton)</option>
@@ -1189,7 +1192,7 @@ export default function AgricolaView({ onReloadDashboard, triggerNewModal, onRes
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-slate-400 mb-1 font-medium">Quantidade Total Colhida *</label>
+                                    <label className="block text-[#172033] mb-1 font-semibold">Quantidade Total Colhida *</label>
                                     <input
                                         type="number"
                                         step="0.01"
@@ -1198,16 +1201,16 @@ export default function AgricolaView({ onReloadDashboard, triggerNewModal, onRes
                                         placeholder="Ex: 3500"
                                         value={colheitaForm.quantidade_colhida}
                                         onChange={(e) => setColheitaForm({ ...colheitaForm, quantidade_colhida: e.target.value })}
-                                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-emerald-500 font-semibold"
+                                        className="w-full bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl px-3 py-2.5 text-[#172033] font-semibold focus:outline-none focus:border-[#087F5B] focus:bg-white"
                                     />
                                     {colheitaForm.quantidade_colhida && selectedSafraParaColher.talhao_area > 0 && (
-                                        <span className="text-[11px] text-amber-400 mt-1 block">
+                                        <span className="text-[11px] text-[#D9A441] mt-1 block font-semibold">
                                             Produtividade: <strong>{(Number(colheitaForm.quantidade_colhida) / selectedSafraParaColher.talhao_area).toFixed(2)}</strong> {colheitaForm.unidade_medida}/ha
                                         </span>
                                     )}
                                 </div>
                                 <div>
-                                    <label className="block text-slate-400 mb-1 font-medium">Valor Total da Venda (R$)</label>
+                                    <label className="block text-[#172033] mb-1 font-semibold">Valor Total da Venda (R$)</label>
                                     <input
                                         type="number"
                                         step="0.01"
@@ -1215,35 +1218,35 @@ export default function AgricolaView({ onReloadDashboard, triggerNewModal, onRes
                                         placeholder="Ex: 420000.00"
                                         value={colheitaForm.valor_venda_total}
                                         onChange={(e) => setColheitaForm({ ...colheitaForm, valor_venda_total: e.target.value })}
-                                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-emerald-500 font-semibold text-emerald-400"
+                                        className="w-full bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl px-3 py-2.5 text-[#087F5B] font-bold focus:outline-none focus:border-[#087F5B] focus:bg-white"
                                     />
                                 </div>
                             </div>
 
-                            <label className="flex items-center gap-2 text-slate-300 cursor-pointer pt-1">
+                            <label className="flex items-center gap-2 text-[#172033] cursor-pointer pt-1 font-medium">
                                 <input
                                     type="checkbox"
                                     checked={colheitaForm.gerar_receita_financeira}
                                     onChange={(e) => setColheitaForm({ ...colheitaForm, gerar_receita_financeira: e.target.checked })}
-                                    className="rounded bg-slate-800 border-slate-700 text-emerald-600 focus:ring-emerald-500"
+                                    className="rounded border-[#E6EBE8] text-[#087F5B] focus:ring-[#087F5B]"
                                 />
                                 <span>Lançar receita de venda automaticamente no Financeiro</span>
                             </label>
 
-                            <div className="flex items-center justify-end gap-3 pt-3">
+                            <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#E6EBE8]">
                                 <button
                                     type="button"
                                     onClick={() => setModalColheitaOpen(false)}
-                                    className="px-4 py-2.5 text-slate-400 hover:text-white rounded-xl"
+                                    className="px-4 py-2.5 text-[#64748B] hover:bg-slate-100 rounded-xl font-medium cursor-pointer"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={saving}
-                                    className="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-semibold shadow-lg shadow-emerald-600/20 flex items-center gap-2"
+                                    className="bg-[#087F5B] hover:bg-[#159A70] text-white px-5 py-2.5 rounded-xl font-semibold shadow-sm flex items-center gap-2 cursor-pointer"
                                 >
-                                    <Check className="w-4 h-4" />
+                                    <Check className="w-4 h-4" strokeWidth={2.5} />
                                     {saving ? 'Fechando...' : 'Concluir Colheita'}
                                 </button>
                             </div>
@@ -1254,58 +1257,58 @@ export default function AgricolaView({ onReloadDashboard, triggerNewModal, onRes
 
             {/* Drawer Lateral: Detalhes & Insumos da Safra */}
             {drawerOpen && safraDetalhes && (
-                <div className="fixed inset-0 z-50 overflow-hidden bg-slate-950/80 backdrop-blur-sm animate-fade-in flex justify-end">
-                    <div className="w-full max-w-xl bg-slate-900 border-l border-slate-800 h-full p-6 overflow-y-auto flex flex-col justify-between shadow-2xl">
+                <div className="fixed inset-0 z-50 overflow-hidden bg-black/40 backdrop-blur-sm animate-fade-in flex justify-end">
+                    <div className="w-full max-w-xl bg-white border-l border-[#E6EBE8] h-full p-6 overflow-y-auto flex flex-col justify-between shadow-2xl">
                         <div className="space-y-6">
                             {/* Header Drawer */}
-                            <div className="flex items-start justify-between border-b border-slate-800 pb-4">
+                            <div className="flex items-start justify-between border-b border-[#E6EBE8] pb-4">
                                 <div>
                                     <div className="flex items-center gap-2">
-                                        <h2 className="text-xl font-bold text-white tracking-tight">
+                                        <h2 className="text-lg font-bold text-[#172033] tracking-tight">
                                             Safra: {safraDetalhes.cultura}
                                         </h2>
-                                        <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border ${
+                                        <span className={`text-[10px] uppercase font-bold px-2.5 py-0.5 rounded-full border ${
                                             safraDetalhes.status === 'colhida'
-                                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                                                : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                                                ? 'bg-[#E8F5EF] text-[#087F5B] border-[#C3E6D6]'
+                                                : 'bg-[#FEF9E7] text-[#D9A441] border-[#FDE8B3]'
                                         }`}>
                                             {safraDetalhes.status}
                                         </span>
                                     </div>
-                                    <p className="text-xs text-slate-400 mt-1">
-                                        Talhão: <strong className="text-white">{safraDetalhes.talhao_nome}</strong> ({safraDetalhes.talhao_area} ha)
+                                    <p className="text-xs text-[#64748B] mt-1 font-medium">
+                                        Talhão: <strong className="text-[#172033]">{safraDetalhes.talhao_nome}</strong> ({safraDetalhes.talhao_area} ha)
                                     </p>
                                 </div>
                                 <button
                                     onClick={() => setDrawerOpen(false)}
-                                    className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg"
+                                    className="p-1.5 text-[#64748B] hover:text-[#172033] rounded-lg transition cursor-pointer"
                                 >
                                     <X className="w-5 h-5" />
                                 </button>
                             </div>
 
                             {/* Resumo Financeiro da Safra */}
-                            <div className="grid grid-cols-2 gap-3 bg-slate-950/60 p-4 rounded-2xl border border-slate-800">
+                            <div className="grid grid-cols-2 gap-3 bg-[#F7F9F8] p-4 rounded-2xl border border-[#E6EBE8]">
                                 <div>
-                                    <span className="text-[10px] uppercase font-semibold text-slate-500">Custo Total Insumos</span>
-                                    <div className="text-lg font-bold text-red-400">
+                                    <span className="text-[10px] uppercase font-semibold text-[#64748B]">Custo Total Insumos</span>
+                                    <div className="text-lg font-bold text-[#D64545]">
                                         {formatCurrency(safraDetalhes.total_custo_insumos)}
                                     </div>
-                                    <span className="text-[10px] text-slate-400">
+                                    <span className="text-[10px] text-[#64748B] font-medium">
                                         {formatCurrency(safraDetalhes.custo_por_ha)} / ha
                                     </span>
                                 </div>
 
                                 <div>
-                                    <span className="text-[10px] uppercase font-semibold text-slate-500">
+                                    <span className="text-[10px] uppercase font-semibold text-[#64748B]">
                                         {safraDetalhes.status === 'colhida' ? 'Receita Bruta' : 'Status'}
                                     </span>
-                                    <div className="text-lg font-bold text-emerald-400">
+                                    <div className="text-lg font-bold text-[#087F5B]">
                                         {safraDetalhes.status === 'colhida' 
                                             ? formatCurrency(safraDetalhes.valor_venda_total)
                                             : 'Em Andamento'}
                                     </div>
-                                    <span className="text-[10px] text-slate-400">
+                                    <span className="text-[10px] text-[#64748B] font-medium">
                                         {safraDetalhes.status === 'colhida' 
                                             ? `Lucro: ${formatCurrency(safraDetalhes.lucro_bruto)}`
                                             : 'Aguardando Colheita'}
@@ -1316,14 +1319,14 @@ export default function AgricolaView({ onReloadDashboard, triggerNewModal, onRes
                             {/* Lista de Insumos */}
                             <div>
                                 <div className="flex items-center justify-between mb-3">
-                                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                                        <Package className="w-4 h-4 text-amber-400" />
+                                    <h3 className="text-xs font-bold text-[#172033] uppercase tracking-wider flex items-center gap-2">
+                                        <Package className="w-4 h-4 text-[#087F5B]" strokeWidth={2} />
                                         Insumos Aplicados ({safraDetalhes.insumos?.length || 0})
                                     </h3>
                                     {safraDetalhes.status !== 'colhida' && (
                                         <button
                                             onClick={() => handleOpenLancarInsumo(safraDetalhes)}
-                                            className="text-xs bg-amber-600 hover:bg-amber-500 text-white font-semibold px-3 py-1.5 rounded-xl transition-all"
+                                            className="text-xs bg-[#087F5B] hover:bg-[#159A70] text-white font-semibold px-3 py-1.5 rounded-xl transition-all cursor-pointer shadow-sm"
                                         >
                                             + Lançar Insumo
                                         </button>
@@ -1335,44 +1338,44 @@ export default function AgricolaView({ onReloadDashboard, triggerNewModal, onRes
                                         {safraDetalhes.insumos.map(i => (
                                             <div
                                                 key={i.id}
-                                                className="bg-slate-950/40 border border-slate-800 p-3 rounded-xl flex items-center justify-between text-xs"
+                                                className="bg-[#F7F9F8] border border-[#E6EBE8] p-3 rounded-xl flex items-center justify-between text-xs"
                                             >
                                                 <div>
                                                     <div className="flex items-center gap-2">
-                                                        <span className="font-semibold text-white">{i.descricao}</span>
-                                                        <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">
+                                                        <span className="font-semibold text-[#172033]">{i.descricao}</span>
+                                                        <span className="text-[9px] uppercase font-bold px-1.5 py-0.5 rounded bg-white text-[#64748B] border border-[#E6EBE8]">
                                                             {i.tipo}
                                                         </span>
                                                     </div>
-                                                    <span className="text-[11px] text-slate-400 block mt-0.5">
+                                                    <span className="text-[11px] text-[#64748B] block mt-0.5">
                                                         {i.data} {i.quantidade ? `• ${i.quantidade} un` : ''}
                                                     </span>
                                                 </div>
                                                 <div className="flex items-center gap-3">
-                                                    <span className="font-bold text-red-400">{formatCurrency(i.valor)}</span>
+                                                    <span className="font-bold text-[#D64545]">{formatCurrency(i.valor)}</span>
                                                     <button
                                                         onClick={() => handleDeleteInsumo(i.id)}
-                                                        className="text-slate-500 hover:text-red-400 transition-all p-1"
+                                                        className="text-[#64748B] hover:text-[#D64545] transition-all p-1 cursor-pointer"
                                                         title="Remover Insumo"
                                                     >
-                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                        <Trash2 className="w-3.5 h-3.5" strokeWidth={1.75} />
                                                     </button>
                                                 </div>
                                             </div>
                                         ))}
                                     </div>
                                 ) : (
-                                    <div className="text-center py-8 text-xs text-slate-500 bg-slate-950/20 rounded-xl border border-dashed border-slate-800">
+                                    <div className="text-center py-8 text-xs text-[#64748B] bg-[#F7F9F8] rounded-xl border border-dashed border-[#E6EBE8]">
                                         Nenhum insumo lançado para esta safra.
                                     </div>
                                 )}
                             </div>
                         </div>
 
-                        <div className="pt-4 border-t border-slate-800">
+                        <div className="pt-4 border-t border-[#E6EBE8]">
                             <button
                                 onClick={() => setDrawerOpen(false)}
-                                className="w-full bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold py-2.5 rounded-xl transition-all"
+                                className="w-full bg-[#F7F9F8] hover:bg-slate-100 border border-[#E6EBE8] text-[#172033] text-xs font-semibold py-2.5 rounded-xl transition-all cursor-pointer"
                             >
                                 Fechar Ficha
                             </button>

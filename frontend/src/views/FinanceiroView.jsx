@@ -23,10 +23,10 @@ import { exportToCSV } from '../utils/csvExporter';
 import Pagination from '../components/Pagination';
 
 export const ATIVIDADES_CONFIG = [
-    { value: 'pecuaria', label: 'Pecuária', icon: Beef, color: 'text-amber-400 bg-amber-500/10 border-amber-500/20' },
-    { value: 'agricola', label: 'Agrícola', icon: Sprout, color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
-    { value: 'rh', label: 'Equipe & RH', icon: Users, color: 'text-purple-400 bg-purple-500/10 border-purple-500/20' },
-    { value: 'geral', label: 'Geral / Infra', icon: Wrench, color: 'text-blue-400 bg-blue-500/10 border-blue-500/20' },
+    { value: 'pecuaria', label: 'Pecuária', icon: Beef, color: 'text-[#D9A441] bg-[#FEF9E7] border-[#FDE8B3]' },
+    { value: 'agricola', label: 'Agrícola', icon: Sprout, color: 'text-[#087F5B] bg-[#E8F5EF] border-[#C3E6D6]' },
+    { value: 'rh', label: 'Equipe & RH', icon: Users, color: 'text-purple-600 bg-purple-50 border-purple-200' },
+    { value: 'geral', label: 'Geral / Infra', icon: Wrench, color: 'text-[#3978C7] bg-[#EFF6FF] border-[#DBEAFE]' },
 ];
 
 export const CATEGORIAS_CONFIG = [
@@ -96,7 +96,6 @@ export default function FinanceiroView({ mesAno, onReloadDashboard, triggerNewMo
                 data_fim: dataFim || undefined
             };
 
-            // Se não houver filtro de período específico, filtra pelo mês selecionado
             if (!dataInicio && !dataFim && mesAno) {
                 queryParams.mes_ano = mesAno;
             }
@@ -107,7 +106,7 @@ export default function FinanceiroView({ mesAno, onReloadDashboard, triggerNewMo
             ]);
             setLancamentos(listData);
             setResumo(resData);
-            setCurrentPage(1); // Reset page on filter change
+            setCurrentPage(1);
         } catch (err) {
             console.error('Erro ao carregar dados financeiros:', err);
         } finally {
@@ -224,88 +223,98 @@ export default function FinanceiroView({ mesAno, onReloadDashboard, triggerNewMo
     return (
         <div className="space-y-6">
             {/* Top Cards: Receitas, Despesas, Saldo */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="p-5 rounded-2xl bg-slate-800/80 border border-slate-700/60 shadow-sm">
-                    <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total de Receitas</span>
-                        <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-                            <TrendingUp className="w-4 h-4" />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                <div className="p-6 rounded-2xl bg-white border border-[#E6EBE8] shadow-[0_4px_20px_rgba(20,60,45,0.04)] hover:shadow-md transition-all">
+                    <div className="flex items-center justify-between mb-3">
+                        <span className="text-xs font-semibold text-[#64748B] uppercase tracking-wider">Total de Receitas</span>
+                        <div className="w-9 h-9 rounded-xl bg-[#E8F5EF] border border-[#C3E6D6] flex items-center justify-center text-[#087F5B]">
+                            <TrendingUp className="w-4 h-4" strokeWidth={2} />
                         </div>
                     </div>
-                    <div className="text-2xl font-extrabold text-emerald-400 tracking-tight">
+                    <div className="text-2xl font-bold text-[#087F5B] tracking-tight">
                         {formatCurrency(resumo.total_receitas)}
                     </div>
+                    <p className="text-[11px] text-[#64748B] mt-1 font-medium">Entradas consolidadas no período</p>
                 </div>
 
-                <div className="p-5 rounded-2xl bg-slate-800/80 border border-slate-700/60 shadow-sm">
-                    <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total de Despesas</span>
-                        <div className="w-8 h-8 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
-                            <TrendingDown className="w-4 h-4" />
+                <div className="p-6 rounded-2xl bg-white border border-[#E6EBE8] shadow-[0_4px_20px_rgba(20,60,45,0.04)] hover:shadow-md transition-all">
+                    <div className="flex items-center justify-between mb-3">
+                        <span className="text-xs font-semibold text-[#64748B] uppercase tracking-wider">Total de Despesas</span>
+                        <div className="w-9 h-9 rounded-xl bg-[#FEF2F2] border border-[#FACDCD] flex items-center justify-center text-[#D64545]">
+                            <TrendingDown className="w-4 h-4" strokeWidth={2} />
                         </div>
                     </div>
-                    <div className="text-2xl font-extrabold text-rose-400 tracking-tight">
+                    <div className="text-2xl font-bold text-[#D64545] tracking-tight">
                         {formatCurrency(resumo.total_despesas)}
                     </div>
+                    <p className="text-[11px] text-[#64748B] mt-1 font-medium">Saídas operacionais e custos</p>
                 </div>
 
-                <div className="p-5 rounded-2xl bg-slate-800/80 border border-slate-700/60 shadow-sm">
-                    <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Saldo Líquido</span>
-                        <div className="w-8 h-8 rounded-xl bg-slate-900 flex items-center justify-center text-slate-200">
-                            <CircleDollarSign className="w-4 h-4" />
+                <div className="p-6 rounded-2xl bg-white border border-[#E6EBE8] shadow-[0_4px_20px_rgba(20,60,45,0.04)] hover:shadow-md transition-all">
+                    <div className="flex items-center justify-between mb-3">
+                        <span className="text-xs font-semibold text-[#64748B] uppercase tracking-wider">Saldo Líquido</span>
+                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center border ${
+                            resumo.saldo >= 0 
+                                ? 'bg-[#E8F5EF] text-[#087F5B] border-[#C3E6D6]' 
+                                : 'bg-[#FEF2F2] text-[#D64545] border-[#FACDCD]'
+                        }`}>
+                            <CircleDollarSign className="w-4 h-4" strokeWidth={2} />
                         </div>
                     </div>
-                    <div className={`text-2xl font-extrabold tracking-tight ${resumo.saldo >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    <div className={`text-2xl font-bold tracking-tight ${resumo.saldo >= 0 ? 'text-[#087F5B]' : 'text-[#D64545]'}`}>
                         {formatCurrency(resumo.saldo)}
                     </div>
+                    <p className="text-[11px] text-[#64748B] mt-1 font-medium">Margem líquida da fazenda</p>
                 </div>
             </div>
 
             {/* Resultado por Atividade */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {ATIVIDADES_CONFIG.map((ativ) => {
-                    const dadosAtiv = porAtividade[ativ.value] || { receitas: 0, despesas: 0, saldo: 0 };
-                    const Icon = ativ.icon;
-                    const isSelected = filtroAtividade === ativ.value;
+            <div>
+                <h3 className="text-xs font-bold text-[#64748B] uppercase tracking-wider mb-3">Filtrar por Atividade Operacional</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    {ATIVIDADES_CONFIG.map((ativ) => {
+                        const dadosAtiv = porAtividade[ativ.value] || { receitas: 0, despesas: 0, saldo: 0 };
+                        const Icon = ativ.icon;
+                        const isSelected = filtroAtividade === ativ.value;
 
-                    return (
-                        <button
-                            key={ativ.value}
-                            onClick={() => setFiltroAtividade(isSelected ? '' : ativ.value)}
-                            className={`text-left p-4 rounded-2xl border transition-all ${
-                                isSelected 
-                                    ? 'bg-slate-800/95 border-emerald-500 ring-2 ring-emerald-500/30 shadow-lg' 
-                                    : 'bg-slate-900/60 border-slate-800/80 hover:border-slate-700'
-                            }`}
-                        >
-                            <div className="flex items-center justify-between mb-2">
-                                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                                    <Icon className="w-3.5 h-3.5 text-slate-300" />
-                                    {ativ.label}
-                                </span>
-                                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${ativ.color}`}>
-                                    {dadosAtiv.saldo >= 0 ? '+ ' : ''}{formatCurrency(dadosAtiv.saldo)}
-                                </span>
-                            </div>
-                            <div className="flex items-center justify-between text-[11px] text-slate-400 mt-2 pt-2 border-t border-slate-800/60">
-                                <span>Rec: <strong className="text-emerald-400">{formatCurrency(dadosAtiv.receitas)}</strong></span>
-                                <span>Desp: <strong className="text-rose-400">{formatCurrency(dadosAtiv.despesas)}</strong></span>
-                            </div>
-                        </button>
-                    );
-                })}
+                        return (
+                            <button
+                                key={ativ.value}
+                                onClick={() => setFiltroAtividade(isSelected ? '' : ativ.value)}
+                                className={`text-left p-4 rounded-2xl border transition-all cursor-pointer ${
+                                    isSelected 
+                                        ? 'bg-[#E8F5EF] border-[#087F5B] ring-2 ring-[#087F5B]/20 shadow-sm' 
+                                        : 'bg-white border-[#E6EBE8] hover:border-[#087F5B]/40 hover:shadow-sm'
+                                }`}
+                            >
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-xs font-bold text-[#172033] flex items-center gap-2">
+                                        <Icon className="w-4 h-4 text-[#087F5B]" strokeWidth={1.75} />
+                                        {ativ.label}
+                                    </span>
+                                    <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${ativ.color}`}>
+                                        {dadosAtiv.saldo >= 0 ? '+ ' : ''}{formatCurrency(dadosAtiv.saldo)}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between text-[11px] text-[#64748B] mt-2 pt-2 border-t border-[#E6EBE8]">
+                                    <span>Rec: <strong className="text-[#087F5B] font-semibold">{formatCurrency(dadosAtiv.receitas)}</strong></span>
+                                    <span>Desp: <strong className="text-[#D64545] font-semibold">{formatCurrency(dadosAtiv.despesas)}</strong></span>
+                                </div>
+                            </button>
+                        );
+                    })}
+                </div>
             </div>
 
             {/* Filter and Action Bar */}
-            <div className="p-4 rounded-2xl bg-slate-800/80 border border-slate-700/60 space-y-3 shadow-sm">
+            <div className="p-4 rounded-2xl bg-white border border-[#E6EBE8] shadow-[0_4px_20px_rgba(20,60,45,0.03)] space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex flex-wrap items-center gap-2.5">
                         {/* Atividade Filter */}
                         <select
                             value={filtroAtividade}
                             onChange={(e) => setFiltroAtividade(e.target.value)}
-                            className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
+                            className="bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl px-3 py-2 text-xs font-medium text-[#172033] focus:outline-none focus:border-[#087F5B] focus:bg-white"
                         >
                             <option value="">Todas as Atividades</option>
                             {ATIVIDADES_CONFIG.map((a) => (
@@ -317,7 +326,7 @@ export default function FinanceiroView({ mesAno, onReloadDashboard, triggerNewMo
                         <select
                             value={filtroTipo}
                             onChange={(e) => setFiltroTipo(e.target.value)}
-                            className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
+                            className="bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl px-3 py-2 text-xs font-medium text-[#172033] focus:outline-none focus:border-[#087F5B] focus:bg-white"
                         >
                             <option value="">Todos os Tipos</option>
                             <option value="receita">Apenas Receitas (+)</option>
@@ -328,7 +337,7 @@ export default function FinanceiroView({ mesAno, onReloadDashboard, triggerNewMo
                         <select
                             value={filtroCategoria}
                             onChange={(e) => setFiltroCategoria(e.target.value)}
-                            className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500 max-w-[200px]"
+                            className="bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl px-3 py-2 text-xs font-medium text-[#172033] focus:outline-none focus:border-[#087F5B] focus:bg-white max-w-[200px]"
                         >
                             <option value="">Todas as Categorias</option>
                             {CATEGORIAS_CONFIG.map((c) => (
@@ -337,27 +346,27 @@ export default function FinanceiroView({ mesAno, onReloadDashboard, triggerNewMo
                         </select>
 
                         {/* Date Range Filters */}
-                        <div className="flex items-center gap-1.5 bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-1 text-xs">
-                            <span className="text-slate-400 text-[11px]">De:</span>
+                        <div className="flex items-center gap-1.5 bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl px-3 py-1.5 text-xs">
+                            <span className="text-[#64748B] text-[11px] font-medium">De:</span>
                             <input
                                 type="date"
                                 value={dataInicio}
                                 onChange={(e) => setDataInicio(e.target.value)}
-                                className="bg-transparent text-slate-200 focus:outline-none text-xs"
+                                className="bg-transparent text-[#172033] focus:outline-none text-xs font-medium"
                             />
-                            <span className="text-slate-400 text-[11px]">Até:</span>
+                            <span className="text-[#64748B] text-[11px] font-medium">Até:</span>
                             <input
                                 type="date"
                                 value={dataFim}
                                 onChange={(e) => setDataFim(e.target.value)}
-                                className="bg-transparent text-slate-200 focus:outline-none text-xs"
+                                className="bg-transparent text-[#172033] focus:outline-none text-xs font-medium"
                             />
                         </div>
 
                         {(filtroTipo || filtroCategoria || filtroAtividade || dataInicio || dataFim) && (
                             <button
                                 onClick={handleClearFilters}
-                                className="px-2.5 py-1.5 rounded-xl bg-slate-700/60 hover:bg-slate-700 text-[11px] text-slate-300 transition"
+                                className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-medium text-[#64748B] transition"
                             >
                                 Limpar Filtros
                             </button>
@@ -369,19 +378,19 @@ export default function FinanceiroView({ mesAno, onReloadDashboard, triggerNewMo
                         <button
                             onClick={handleExportCSV}
                             disabled={lancamentos.length === 0}
-                            className="flex items-center gap-1.5 bg-slate-700/80 hover:bg-slate-750 border border-slate-600 text-slate-200 hover:text-white text-xs font-medium px-3 py-2 rounded-xl transition disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
+                            className="flex items-center gap-1.5 bg-white hover:bg-slate-50 border border-[#E6EBE8] text-[#172033] text-xs font-semibold px-3.5 py-2 rounded-xl transition disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
                             title="Exportar dados filtrados para arquivo CSV (compatível com Excel)"
                         >
-                            <Download className="w-3.5 h-3.5 text-emerald-400" />
+                            <Download className="w-3.5 h-3.5 text-[#087F5B]" strokeWidth={2} />
                             <span>Exportar CSV</span>
                         </button>
 
                         {/* New Transaction Button */}
                         <button
                             onClick={handleOpenNew}
-                            className="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold px-4 py-2 rounded-xl transition shadow-md shadow-emerald-500/20"
+                            className="flex items-center gap-1.5 bg-[#087F5B] hover:bg-[#159A70] text-white text-xs font-semibold px-4 py-2 rounded-xl transition shadow-sm hover:shadow-md cursor-pointer"
                         >
-                            <Plus className="w-4 h-4" />
+                            <Plus className="w-4 h-4" strokeWidth={2.5} />
                             <span>Novo Lançamento</span>
                         </button>
                     </div>
@@ -391,56 +400,56 @@ export default function FinanceiroView({ mesAno, onReloadDashboard, triggerNewMo
             {/* Content: Table & Breakdown Chart */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Table: Lançamentos */}
-                <div className="lg:col-span-2 bg-slate-800/80 border border-slate-700/60 rounded-2xl overflow-hidden shadow-sm flex flex-col justify-between">
+                <div className="lg:col-span-2 bg-white border border-[#E6EBE8] rounded-2xl overflow-hidden shadow-[0_4px_20px_rgba(20,60,45,0.04)] flex flex-col justify-between">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-xs">
-                            <thead className="bg-slate-900/60 text-slate-400 font-semibold border-b border-slate-700/60">
+                            <thead className="bg-[#F7F9F8] text-[#64748B] font-semibold border-b border-[#E6EBE8]">
                                 <tr>
-                                    <th className="px-4 py-3.5">Data</th>
-                                    <th className="px-4 py-3.5">Atividade</th>
-                                    <th className="px-4 py-3.5">Descrição</th>
-                                    <th className="px-4 py-3.5">Categoria</th>
-                                    <th className="px-4 py-3.5 text-right">Valor</th>
-                                    <th className="px-4 py-3.5 text-right">Ação</th>
+                                    <th className="px-5 py-3.5 uppercase tracking-wider text-[11px]">Data</th>
+                                    <th className="px-4 py-3.5 uppercase tracking-wider text-[11px]">Atividade</th>
+                                    <th className="px-4 py-3.5 uppercase tracking-wider text-[11px]">Descrição</th>
+                                    <th className="px-4 py-3.5 uppercase tracking-wider text-[11px]">Categoria</th>
+                                    <th className="px-4 py-3.5 text-right uppercase tracking-wider text-[11px]">Valor</th>
+                                    <th className="px-5 py-3.5 text-right uppercase tracking-wider text-[11px]">Ação</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-700/40">
+                            <tbody className="divide-y divide-[#E6EBE8]">
                                 {currentLancamentos.map((l) => {
                                     const ativObj = ATIVIDADES_CONFIG.find(a => a.value === l.atividade);
                                     return (
-                                        <tr key={l.id} className="hover:bg-slate-700/30 transition">
-                                            <td className="px-4 py-3.5 text-slate-300 font-medium whitespace-nowrap">
+                                        <tr key={l.id} className="hover:bg-[#F7F9F8] transition-colors">
+                                            <td className="px-5 py-4 text-[#172033] font-medium whitespace-nowrap">
                                                 {l.data}
                                             </td>
-                                            <td className="px-4 py-3.5 whitespace-nowrap">
-                                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${ativObj?.color || 'text-slate-400 bg-slate-800 border-slate-700'}`}>
+                                            <td className="px-4 py-4 whitespace-nowrap">
+                                                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${ativObj?.color || 'text-[#64748B] bg-slate-50 border-slate-200'}`}>
                                                     {ativObj?.label || l.atividade || 'Geral'}
                                                 </span>
                                             </td>
-                                            <td className="px-4 py-3.5 text-slate-100 font-semibold">
+                                            <td className="px-4 py-4 text-[#172033] font-semibold">
                                                 <div>{l.descricao || 'Sem descrição'}</div>
                                                 {l.animal_brinco && (
-                                                    <div className="text-[11px] text-slate-400 font-normal">Animal: Brinco {l.animal_brinco}</div>
+                                                    <div className="text-[11px] text-[#64748B] font-normal mt-0.5">Animal: Brinco {l.animal_brinco}</div>
                                                 )}
                                             </td>
-                                            <td className="px-4 py-3.5">
-                                                <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-900 text-slate-300 border border-slate-700">
+                                            <td className="px-4 py-4">
+                                                <span className="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-[#F7F9F8] text-[#172033] border border-[#E6EBE8]">
                                                     {CATEGORIAS_CONFIG.find(c => c.value === l.categoria)?.label || l.categoria}
                                                 </span>
                                             </td>
-                                            <td className={`px-4 py-3.5 text-right font-bold whitespace-nowrap ${
-                                                l.tipo === 'receita' ? 'text-emerald-400' : 'text-rose-400'
+                                            <td className={`px-4 py-4 text-right font-bold whitespace-nowrap text-sm ${
+                                                l.tipo === 'receita' ? 'text-[#087F5B]' : 'text-[#D64545]'
                                             }`}>
                                                 {l.tipo === 'receita' ? '+ ' : '- '}
                                                 {formatCurrency(l.valor)}
                                             </td>
-                                            <td className="px-4 py-3.5 text-right">
+                                            <td className="px-5 py-4 text-right">
                                                 <button
                                                     onClick={() => handleDelete(l.id)}
-                                                    className="p-1.5 rounded-lg bg-slate-700/60 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 transition"
+                                                    className="p-1.5 rounded-lg text-[#64748B] hover:text-[#D64545] hover:bg-[#FEF2F2] transition cursor-pointer"
                                                     title="Excluir Lançamento"
                                                 >
-                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                    <Trash2 className="w-4 h-4" strokeWidth={1.75} />
                                                 </button>
                                             </td>
                                         </tr>
@@ -450,21 +459,21 @@ export default function FinanceiroView({ mesAno, onReloadDashboard, triggerNewMo
                         </table>
 
                         {loading && (
-                            <div className="py-16 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
-                                <RefreshCw className="w-4 h-4 animate-spin text-emerald-400" />
+                            <div className="py-16 text-center text-xs text-[#64748B] flex items-center justify-center gap-2">
+                                <RefreshCw className="w-4 h-4 animate-spin text-[#087F5B]" />
                                 <span>Carregando dados financeiros...</span>
                             </div>
                         )}
 
                         {!loading && lancamentos.length === 0 && (
-                            <div className="py-16 text-center text-xs text-slate-500">
+                            <div className="py-16 text-center text-xs text-[#64748B]">
                                 Nenhum lançamento financeiro encontrado para os filtros selecionados.
                             </div>
                         )}
                     </div>
 
                     {/* Pagination Bar */}
-                    <div className="border-t border-slate-700/60 p-3 bg-slate-900/30">
+                    <div className="border-t border-[#E6EBE8] p-3.5 bg-[#F7F9F8]">
                         <Pagination
                             currentPage={currentPage}
                             totalItems={totalItems}
@@ -475,26 +484,28 @@ export default function FinanceiroView({ mesAno, onReloadDashboard, triggerNewMo
                 </div>
 
                 {/* Breakdown by Category */}
-                <div className="p-5 rounded-2xl bg-slate-800/80 border border-slate-700/60 shadow-sm flex flex-col justify-between">
+                <div className="p-6 rounded-2xl bg-white border border-[#E6EBE8] shadow-[0_4px_20px_rgba(20,60,45,0.04)] flex flex-col justify-between">
                     <div>
-                        <div className="flex items-center gap-2 mb-4">
-                            <PieIcon className="w-4 h-4 text-emerald-400" />
-                            <h3 className="font-bold text-xs text-white uppercase tracking-wider">Despesas por Categoria</h3>
+                        <div className="flex items-center gap-2 mb-5">
+                            <div className="w-7 h-7 rounded-lg bg-[#E8F5EF] flex items-center justify-center text-[#087F5B]">
+                                <PieIcon className="w-4 h-4" strokeWidth={2} />
+                            </div>
+                            <h3 className="font-bold text-xs text-[#172033] uppercase tracking-wider">Despesas por Categoria</h3>
                         </div>
 
-                        <div className="space-y-3">
+                        <div className="space-y-4">
                             {despesasCategorias.map((cat) => {
                                 const label = CATEGORIAS_CONFIG.find(c => c.value === cat.categoria)?.label || cat.categoria;
                                 const percent = resumo.total_despesas > 0 ? Math.round((cat.total / resumo.total_despesas) * 100) : 0;
                                 return (
-                                    <div key={cat.categoria} className="space-y-1">
+                                    <div key={cat.categoria} className="space-y-1.5">
                                         <div className="flex items-center justify-between text-xs">
-                                            <span className="text-slate-300 font-medium truncate max-w-[170px]">{label}</span>
-                                            <span className="text-slate-200 font-bold">{formatCurrency(cat.total)}</span>
+                                            <span className="text-[#172033] font-medium truncate max-w-[170px]">{label}</span>
+                                            <span className="text-[#172033] font-bold">{formatCurrency(cat.total)}</span>
                                         </div>
-                                        <div className="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden">
+                                        <div className="w-full bg-[#F7F9F8] border border-[#E6EBE8] rounded-full h-2 overflow-hidden">
                                             <div 
-                                                className="h-full bg-rose-500 rounded-full"
+                                                className="h-full bg-[#D64545] rounded-full"
                                                 style={{ width: `${percent}%` }}
                                             ></div>
                                         </div>
@@ -502,7 +513,7 @@ export default function FinanceiroView({ mesAno, onReloadDashboard, triggerNewMo
                                 );
                             })}
                             {despesasCategorias.length === 0 && (
-                                <p className="text-xs text-slate-500 py-6 text-center">Nenhuma despesa no período.</p>
+                                <p className="text-xs text-[#64748B] py-8 text-center">Nenhuma despesa no período.</p>
                             )}
                         </div>
                     </div>
@@ -511,36 +522,38 @@ export default function FinanceiroView({ mesAno, onReloadDashboard, triggerNewMo
 
             {/* Modal: Novo Lançamento Financeiro */}
             {modalOpen && (
-                <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-150">
-                        <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white border border-[#E6EBE8] rounded-2xl w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                        <div className="px-6 py-4 border-b border-[#E6EBE8] flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                                <CircleDollarSign className="w-5 h-5 text-emerald-400" />
-                                <h3 className="font-bold text-sm text-white">Novo Lançamento Financeiro</h3>
+                                <div className="w-8 h-8 rounded-xl bg-[#E8F5EF] flex items-center justify-center text-[#087F5B]">
+                                    <CircleDollarSign className="w-4 h-4" strokeWidth={2} />
+                                </div>
+                                <h3 className="font-bold text-sm text-[#172033]">Novo Lançamento Financeiro</h3>
                             </div>
-                            <button onClick={() => setModalOpen(false)} className="text-slate-400 hover:text-white">
+                            <button onClick={() => setModalOpen(false)} className="text-[#64748B] hover:text-[#172033] transition">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
 
                         <form onSubmit={handleSave} className="p-6 space-y-4">
                             {errorMsg && (
-                                <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-400 text-xs">
+                                <div className="p-3 bg-[#FEF2F2] border border-[#FACDCD] rounded-xl text-[#D64545] text-xs font-medium">
                                     {errorMsg}
                                 </div>
                             )}
 
                             {/* Tipo: Receita ou Despesa */}
                             <div>
-                                <label className="block text-xs font-semibold text-slate-300 mb-1.5">Tipo de Movimentação *</label>
+                                <label className="block text-xs font-semibold text-[#172033] mb-1.5">Tipo de Movimentação *</label>
                                 <div className="grid grid-cols-2 gap-2">
                                     <button
                                         type="button"
                                         onClick={() => setFormData({ ...formData, tipo: 'receita', categoria: 'venda_animal', atividade: 'pecuaria' })}
-                                        className={`py-2 rounded-xl border text-xs font-semibold transition ${
+                                        className={`py-2.5 rounded-xl border text-xs font-semibold transition cursor-pointer ${
                                             formData.tipo === 'receita'
-                                                ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300'
-                                                : 'bg-slate-800 border-slate-700 text-slate-400'
+                                                ? 'bg-[#E8F5EF] border-[#087F5B] text-[#087F5B]'
+                                                : 'bg-white border-[#E6EBE8] text-[#64748B] hover:bg-[#F7F9F8]'
                                         }`}
                                     >
                                         + Receita (Entrada)
@@ -548,10 +561,10 @@ export default function FinanceiroView({ mesAno, onReloadDashboard, triggerNewMo
                                     <button
                                         type="button"
                                         onClick={() => setFormData({ ...formData, tipo: 'despesa', categoria: 'nutricao_racao', atividade: 'pecuaria' })}
-                                        className={`py-2 rounded-xl border text-xs font-semibold transition ${
+                                        className={`py-2.5 rounded-xl border text-xs font-semibold transition cursor-pointer ${
                                             formData.tipo === 'despesa'
-                                                ? 'bg-rose-500/20 border-rose-500 text-rose-300'
-                                                : 'bg-slate-800 border-slate-700 text-slate-400'
+                                                ? 'bg-[#FEF2F2] border-[#FACDCD] text-[#D64545]'
+                                                : 'bg-white border-[#E6EBE8] text-[#64748B] hover:bg-[#F7F9F8]'
                                         }`}
                                     >
                                         - Despesa (Saída)
@@ -562,12 +575,12 @@ export default function FinanceiroView({ mesAno, onReloadDashboard, triggerNewMo
                             {/* Atividade e Categoria */}
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-xs font-semibold text-slate-300 mb-1">Atividade *</label>
+                                    <label className="block text-xs font-semibold text-[#172033] mb-1">Atividade *</label>
                                     <select
                                         required
                                         value={formData.atividade}
                                         onChange={(e) => setFormData({ ...formData, atividade: e.target.value })}
-                                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                                        className="w-full bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl px-3 py-2 text-xs font-medium text-[#172033] focus:outline-none focus:border-[#087F5B] focus:bg-white"
                                     >
                                         {ATIVIDADES_CONFIG.map((a) => (
                                             <option key={a.value} value={a.value}>{a.label}</option>
@@ -576,12 +589,12 @@ export default function FinanceiroView({ mesAno, onReloadDashboard, triggerNewMo
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-semibold text-slate-300 mb-1">Categoria *</label>
+                                    <label className="block text-xs font-semibold text-[#172033] mb-1">Categoria *</label>
                                     <select
                                         required
                                         value={formData.categoria}
                                         onChange={(e) => handleCategoryChange(e.target.value)}
-                                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                                        className="w-full bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl px-3 py-2 text-xs font-medium text-[#172033] focus:outline-none focus:border-[#087F5B] focus:bg-white"
                                     >
                                         {CATEGORIAS_CONFIG.map((c) => (
                                             <option key={c.value} value={c.value}>{c.label}</option>
@@ -593,7 +606,7 @@ export default function FinanceiroView({ mesAno, onReloadDashboard, triggerNewMo
                             {/* Valor e Data */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-xs font-semibold text-slate-300 mb-1">Valor (R$) *</label>
+                                    <label className="block text-xs font-semibold text-[#172033] mb-1">Valor (R$) *</label>
                                     <input
                                         type="number"
                                         step="0.01"
@@ -601,47 +614,47 @@ export default function FinanceiroView({ mesAno, onReloadDashboard, triggerNewMo
                                         placeholder="Ex: 1250.00"
                                         value={formData.valor}
                                         onChange={(e) => setFormData({ ...formData, valor: e.target.value })}
-                                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                                        className="w-full bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl px-3 py-2 text-xs font-medium text-[#172033] focus:outline-none focus:border-[#087F5B] focus:bg-white"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-semibold text-slate-300 mb-1">Data *</label>
+                                    <label className="block text-xs font-semibold text-[#172033] mb-1">Data *</label>
                                     <input
                                         type="date"
                                         required
                                         value={formData.data}
                                         onChange={(e) => setFormData({ ...formData, data: e.target.value })}
-                                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                                        className="w-full bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl px-3 py-2 text-xs font-medium text-[#172033] focus:outline-none focus:border-[#087F5B] focus:bg-white"
                                     />
                                 </div>
                             </div>
 
                             {/* Descrição */}
                             <div>
-                                <label className="block text-xs font-semibold text-slate-300 mb-1">Descrição / Histórico</label>
+                                <label className="block text-xs font-semibold text-[#172033] mb-1">Descrição / Histórico</label>
                                 <input
                                     type="text"
                                     placeholder="Ex: Pagamento fornecedor AgroSul..."
                                     value={formData.descricao}
                                     onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-                                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                                    className="w-full bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl px-3 py-2 text-xs font-medium text-[#172033] focus:outline-none focus:border-[#087F5B] focus:bg-white"
                                 />
                             </div>
 
-                            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+                            <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#E6EBE8]">
                                 <button
                                     type="button"
                                     onClick={() => setModalOpen(false)}
-                                    className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:bg-slate-800 transition"
+                                    className="px-4 py-2 rounded-xl text-xs font-semibold text-[#64748B] hover:bg-slate-100 transition cursor-pointer"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={saving}
-                                    className="px-5 py-2 rounded-xl text-xs font-semibold bg-emerald-500 hover:bg-emerald-600 text-white transition flex items-center gap-1.5 shadow-md shadow-emerald-500/20"
+                                    className="px-5 py-2 rounded-xl text-xs font-semibold bg-[#087F5B] hover:bg-[#159A70] text-white transition flex items-center gap-1.5 shadow-sm cursor-pointer"
                                 >
-                                    <Check className="w-4 h-4" />
+                                    <Check className="w-4 h-4" strokeWidth={2.5} />
                                     <span>{saving ? 'Gravando...' : 'Salvar Lançamento'}</span>
                                 </button>
                             </div>

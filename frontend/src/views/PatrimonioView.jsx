@@ -334,63 +334,63 @@ export default function PatrimonioView({ onReloadDashboard, triggerNewModal, onR
         <div className="space-y-6">
             {/* Feedback Alert */}
             {feedback && (
-                <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 rounded-2xl flex items-center justify-between animate-fade-in shadow-sm">
+                <div className="p-4 bg-[#E8F5EF] border border-[#C3E6D6] text-[#087F5B] rounded-2xl flex items-center justify-between animate-fade-in shadow-sm">
                     <div className="flex items-center gap-3">
-                        <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-                        <span className="text-sm font-medium">{feedback}</span>
+                        <CheckCircle2 className="w-5 h-5 text-[#087F5B] shrink-0" />
+                        <span className="text-xs font-semibold">{feedback}</span>
                     </div>
-                    <button onClick={() => setFeedback('')} className="text-emerald-400 hover:text-emerald-300">
+                    <button onClick={() => setFeedback('')} className="text-[#087F5B] hover:opacity-75 cursor-pointer">
                         <X className="w-4 h-4" />
                     </button>
                 </div>
             )}
 
             {/* KPI Cards Consolidado do Patrimônio */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {/* 1. Valor Patrimonial Atual (Destaque Principal) */}
-                <div className="p-5 rounded-2xl bg-gradient-to-br from-emerald-950/80 to-slate-900 border border-emerald-500/30 shadow-lg shadow-emerald-500/5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {/* 1. Valor Patrimonial Atual */}
+                <div className="p-6 rounded-2xl bg-white border border-[#E6EBE8] shadow-[0_4px_20px_rgba(20,60,45,0.04)] hover:shadow-md transition-all">
                     <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs font-semibold text-emerald-300 uppercase tracking-wider">Patrimônio Atual Líquido</span>
-                        <div className="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-                            <DollarSign className="w-4 h-4" />
+                        <span className="text-xs font-semibold text-[#64748B] uppercase tracking-wider">Patrimônio Atual Líquido</span>
+                        <div className="w-9 h-9 rounded-xl bg-[#E8F5EF] border border-[#C3E6D6] flex items-center justify-center text-[#087F5B]">
+                            <DollarSign className="w-4 h-4" strokeWidth={2} />
                         </div>
                     </div>
-                    <div className="text-2xl font-black text-emerald-400 tracking-tight">
+                    <div className="text-2xl font-bold text-[#087F5B] tracking-tight">
                         {formatCurrency(resumo?.total_patrimonial_atual || 0)}
                     </div>
-                    <div className="mt-2 text-[11px] text-slate-300 font-medium">
+                    <div className="mt-1 text-[11px] text-[#64748B] font-medium">
                         Soma após depreciação linear acumulada
                     </div>
                 </div>
 
                 {/* 2. Total de Aquisição Original */}
-                <div className="p-5 rounded-2xl bg-slate-800/80 border border-slate-700/60 shadow-sm">
+                <div className="p-6 rounded-2xl bg-white border border-[#E6EBE8] shadow-[0_4px_20px_rgba(20,60,45,0.04)] hover:shadow-md transition-all">
                     <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Custo de Aquisição</span>
-                        <div className="w-8 h-8 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
-                            <Layers className="w-4 h-4" />
+                        <span className="text-xs font-semibold text-[#64748B] uppercase tracking-wider">Custo de Aquisição</span>
+                        <div className="w-9 h-9 rounded-xl bg-[#EFF6FF] border border-[#DBEAFE] flex items-center justify-center text-[#3978C7]">
+                            <Layers className="w-4 h-4" strokeWidth={2} />
                         </div>
                     </div>
-                    <div className="text-2xl font-extrabold text-white tracking-tight">
+                    <div className="text-2xl font-bold text-[#172033] tracking-tight">
                         {formatCurrency(resumo?.total_aquisicao || 0)}
                     </div>
-                    <div className="mt-2 text-[11px] text-slate-400">
+                    <div className="mt-1 text-[11px] text-[#64748B] font-medium">
                         {resumo?.maquinas?.total_itens || 0} máquinas + {resumo?.benfeitorias?.total_itens || 0} benfeitorias
                     </div>
                 </div>
 
                 {/* 3. Depreciação Acumulada */}
-                <div className="p-5 rounded-2xl bg-slate-800/80 border border-slate-700/60 shadow-sm">
+                <div className="p-6 rounded-2xl bg-white border border-[#E6EBE8] shadow-[0_4px_20px_rgba(20,60,45,0.04)] hover:shadow-md transition-all">
                     <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Depreciação Acumulada</span>
-                        <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
-                            <TrendingDown className="w-4 h-4" />
+                        <span className="text-xs font-semibold text-[#64748B] uppercase tracking-wider">Depreciação Acumulada</span>
+                        <div className="w-9 h-9 rounded-xl bg-[#FEF9E7] border border-[#FDE8B3] flex items-center justify-center text-[#D9A441]">
+                            <TrendingDown className="w-4 h-4" strokeWidth={2} />
                         </div>
                     </div>
-                    <div className="text-2xl font-extrabold text-amber-400 tracking-tight">
+                    <div className="text-2xl font-bold text-[#D9A441] tracking-tight">
                         {formatCurrency(resumo?.total_depreciacao_acumulada || 0)}
                     </div>
-                    <div className="mt-2 text-[11px] text-slate-400">
+                    <div className="mt-1 text-[11px] text-[#64748B] font-medium">
                         {resumo?.total_aquisicao > 0 
                             ? `${((resumo.total_depreciacao_acumulada / resumo.total_aquisicao) * 100).toFixed(1)}% do valor original consumido`
                             : '0% consumido'}
@@ -398,58 +398,58 @@ export default function PatrimonioView({ onReloadDashboard, triggerNewModal, onR
                 </div>
 
                 {/* 4. Total Gasto com Manutenções */}
-                <div className="p-5 rounded-2xl bg-slate-800/80 border border-slate-700/60 shadow-sm">
+                <div className="p-6 rounded-2xl bg-white border border-[#E6EBE8] shadow-[0_4px_20px_rgba(20,60,45,0.04)] hover:shadow-md transition-all">
                     <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Gasto com Manutenções</span>
-                        <div className="w-8 h-8 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
-                            <Wrench className="w-4 h-4" />
+                        <span className="text-xs font-semibold text-[#64748B] uppercase tracking-wider">Gasto com Manutenções</span>
+                        <div className="w-9 h-9 rounded-xl bg-purple-50 border border-purple-200 flex items-center justify-center text-purple-600">
+                            <Wrench className="w-4 h-4" strokeWidth={2} />
                         </div>
                     </div>
-                    <div className="text-2xl font-extrabold text-purple-400 tracking-tight">
+                    <div className="text-2xl font-bold text-purple-600 tracking-tight">
                         {formatCurrency(resumo?.manutencoes?.total_gasto || 0)}
                     </div>
-                    <div className="mt-2 text-[11px] text-slate-400">
+                    <div className="mt-1 text-[11px] text-[#64748B] font-medium">
                         {resumo?.manutencoes?.total_registros || 0} manutenções registradas
                     </div>
                 </div>
             </div>
 
             {/* Navigation Tabs and Top Actions */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
-                <div className="flex items-center gap-2 bg-slate-900/90 p-1 rounded-xl border border-slate-800">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[#E6EBE8] pb-4">
+                <div className="flex items-center gap-2 bg-[#F7F9F8] p-1 rounded-xl border border-[#E6EBE8]">
                     <button
                         onClick={() => { setSubTab('maquinas'); setFiltroTipo(''); }}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-xs transition ${
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-xs transition cursor-pointer ${
                             subTab === 'maquinas'
-                                ? 'bg-emerald-500 text-white shadow-md font-semibold'
-                                : 'text-slate-400 hover:text-slate-200'
+                                ? 'bg-[#087F5B] text-white shadow-sm'
+                                : 'text-[#64748B] hover:text-[#172033]'
                         }`}
                     >
-                        <Tractor className="w-4 h-4" />
+                        <Tractor className="w-4 h-4" strokeWidth={1.75} />
                         <span>Máquinas & Equipamentos ({maquinas.length})</span>
                     </button>
 
                     <button
                         onClick={() => { setSubTab('benfeitorias'); setFiltroTipo(''); }}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-xs transition ${
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-xs transition cursor-pointer ${
                             subTab === 'benfeitorias'
-                                ? 'bg-emerald-500 text-white shadow-md font-semibold'
-                                : 'text-slate-400 hover:text-slate-200'
+                                ? 'bg-[#087F5B] text-white shadow-sm'
+                                : 'text-[#64748B] hover:text-[#172033]'
                         }`}
                     >
-                        <Home className="w-4 h-4" />
+                        <Home className="w-4 h-4" strokeWidth={1.75} />
                         <span>Benfeitorias & Instalações ({benfeitorias.length})</span>
                     </button>
 
                     <button
                         onClick={() => setSubTab('manutencoes')}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-xs transition ${
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-xs transition cursor-pointer ${
                             subTab === 'manutencoes'
-                                ? 'bg-emerald-500 text-white shadow-md font-semibold'
-                                : 'text-slate-400 hover:text-slate-200'
+                                ? 'bg-[#087F5B] text-white shadow-sm'
+                                : 'text-[#64748B] hover:text-[#172033]'
                         }`}
                     >
-                        <History className="w-4 h-4" />
+                        <History className="w-4 h-4" strokeWidth={1.75} />
                         <span>Todas as Manutenções ({manutencoes.length})</span>
                     </button>
                 </div>
@@ -458,9 +458,9 @@ export default function PatrimonioView({ onReloadDashboard, triggerNewModal, onR
                     {subTab === 'maquinas' && (
                         <button
                             onClick={handleOpenNewMaquina}
-                            className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold text-xs px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-500/20 transition"
+                            className="flex items-center gap-2 bg-[#087F5B] hover:bg-[#159A70] text-white font-semibold text-xs px-4 py-2.5 rounded-xl shadow-sm hover:shadow-md transition cursor-pointer"
                         >
-                            <Plus className="w-4 h-4" />
+                            <Plus className="w-4 h-4" strokeWidth={2.5} />
                             <span>Nova Máquina / Veículo</span>
                         </button>
                     )}
@@ -468,9 +468,9 @@ export default function PatrimonioView({ onReloadDashboard, triggerNewModal, onR
                     {subTab === 'benfeitorias' && (
                         <button
                             onClick={handleOpenNewBenfeitoria}
-                            className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold text-xs px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-500/20 transition"
+                            className="flex items-center gap-2 bg-[#087F5B] hover:bg-[#159A70] text-white font-semibold text-xs px-4 py-2.5 rounded-xl shadow-sm hover:shadow-md transition cursor-pointer"
                         >
-                            <Plus className="w-4 h-4" />
+                            <Plus className="w-4 h-4" strokeWidth={2.5} />
                             <span>Nova Benfeitoria</span>
                         </button>
                     )}
@@ -483,20 +483,20 @@ export default function PatrimonioView({ onReloadDashboard, triggerNewModal, onR
                     {/* Search & Filter Bar */}
                     <div className="flex flex-col sm:flex-row items-center gap-3">
                         <div className="relative flex-1 w-full">
-                            <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                            <Search className="w-4 h-4 text-[#64748B] absolute left-3.5 top-1/2 -translate-y-1/2" />
                             <input
                                 type="text"
                                 placeholder="Buscar máquinas por nome ou modelo..."
                                 value={busca}
                                 onChange={(e) => setBusca(e.target.value)}
-                                className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500/50"
+                                className="w-full bg-white border border-[#E6EBE8] rounded-xl pl-10 pr-4 py-2 text-xs font-medium text-[#172033] placeholder-[#64748B] focus:outline-none focus:border-[#087F5B] shadow-sm"
                             />
                         </div>
 
                         <select
                             value={filtroTipo}
                             onChange={(e) => setFiltroTipo(e.target.value)}
-                            className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500/50"
+                            className="bg-white border border-[#E6EBE8] rounded-xl px-3 py-2 text-xs font-medium text-[#172033] focus:outline-none focus:border-[#087F5B] shadow-sm"
                         >
                             <option value="">Todos os Tipos</option>
                             {TIPOS_MAQUINA.map(t => (
@@ -507,7 +507,7 @@ export default function PatrimonioView({ onReloadDashboard, triggerNewModal, onR
                         <select
                             value={filtroStatus}
                             onChange={(e) => setFiltroStatus(e.target.value)}
-                            className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500/50"
+                            className="bg-white border border-[#E6EBE8] rounded-xl px-3 py-2 text-xs font-medium text-[#172033] focus:outline-none focus:border-[#087F5B] shadow-sm"
                         >
                             <option value="">Todos os Status</option>
                             <option value="ativo">Ativos</option>
@@ -522,78 +522,78 @@ export default function PatrimonioView({ onReloadDashboard, triggerNewModal, onR
                             {maquinasFiltradas.map((m) => (
                                 <div
                                     key={m.id}
-                                    className={`rounded-2xl bg-slate-900/90 border p-5 flex flex-col justify-between transition relative overflow-hidden shadow-sm hover:border-slate-700 ${
-                                        m.status === 'em_manutencao' ? 'border-amber-500/30' : 'border-slate-800'
+                                    className={`rounded-2xl bg-white border p-5 flex flex-col justify-between transition relative overflow-hidden shadow-[0_4px_20px_rgba(20,60,45,0.04)] hover:shadow-md ${
+                                        m.status === 'em_manutencao' ? 'border-[#D9A441]' : 'border-[#E6EBE8]'
                                     }`}
                                 >
                                     <div>
                                         {/* Header do Card */}
                                         <div className="flex items-start justify-between gap-2 mb-3">
                                             <div>
-                                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-800 px-2 py-0.5 rounded border border-slate-700">
+                                                <span className="text-[10px] font-bold uppercase tracking-wider text-[#64748B] bg-[#F7F9F8] px-2 py-0.5 rounded border border-[#E6EBE8]">
                                                     {m.tipo}
                                                 </span>
-                                                <h3 className="text-base font-bold text-white tracking-tight mt-1.5">{m.nome}</h3>
+                                                <h3 className="text-base font-bold text-[#172033] tracking-tight mt-1.5">{m.nome}</h3>
                                             </div>
 
-                                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase border ${
+                                            <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase border ${
                                                 m.status === 'ativo'
-                                                    ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                                                    ? 'bg-[#E8F5EF] border-[#C3E6D6] text-[#087F5B]'
                                                     : m.status === 'em_manutencao'
-                                                    ? 'bg-amber-500/10 border-amber-500/20 text-amber-400'
-                                                    : 'bg-slate-700 border-slate-600 text-slate-300'
+                                                    ? 'bg-[#FEF9E7] border-[#FDE8B3] text-[#D9A441]'
+                                                    : 'bg-slate-100 border-slate-200 text-[#64748B]'
                                             }`}>
                                                 {m.status === 'em_manutencao' ? 'Em Manutenção' : m.status}
                                             </span>
                                         </div>
 
                                         {/* Financial & Depreciation Specs */}
-                                        <div className="grid grid-cols-2 gap-3 bg-slate-950/60 p-3.5 rounded-xl border border-slate-800/80 mb-4">
+                                        <div className="grid grid-cols-2 gap-3 bg-[#F7F9F8] p-3.5 rounded-xl border border-[#E6EBE8] mb-4">
                                             <div>
-                                                <span className="text-[10px] text-slate-400 block font-medium">Valor Atual (Líquido)</span>
-                                                <span className="text-base font-black text-emerald-400">{formatCurrency(m.valor_atual)}</span>
+                                                <span className="text-[10px] text-[#64748B] block font-semibold">Valor Atual (Líquido)</span>
+                                                <span className="text-base font-bold text-[#087F5B]">{formatCurrency(m.valor_atual)}</span>
                                             </div>
                                             <div>
-                                                <span className="text-[10px] text-slate-400 block font-medium">Aquisição Original</span>
-                                                <span className="text-xs font-semibold text-slate-300">{formatCurrency(m.valor_aquisicao)}</span>
+                                                <span className="text-[10px] text-[#64748B] block font-semibold">Aquisição Original</span>
+                                                <span className="text-xs font-semibold text-[#172033]">{formatCurrency(m.valor_aquisicao)}</span>
                                             </div>
                                         </div>
 
                                         {/* Depreciation Progress Bar */}
                                         <div className="space-y-1.5 mb-4">
                                             <div className="flex items-center justify-between text-[11px]">
-                                                <span className="text-slate-400 font-medium">Vida Útil ({m.vida_util_anos} anos)</span>
-                                                <span className="text-amber-400 font-bold">{m.percentual_depreciado}% depreciado</span>
+                                                <span className="text-[#64748B] font-medium">Vida Útil ({m.vida_util_anos} anos)</span>
+                                                <span className="text-[#D9A441] font-bold">{m.percentual_depreciado}% depreciado</span>
                                             </div>
-                                            <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                                            <div className="w-full bg-[#F7F9F8] border border-[#E6EBE8] rounded-full h-2 overflow-hidden">
                                                 <div
-                                                    className="bg-gradient-to-r from-emerald-500 via-amber-500 to-rose-500 h-2 rounded-full transition-all duration-300"
+                                                    className="bg-[#087F5B] h-2 rounded-full transition-all duration-300"
                                                     style={{ width: `${m.percentual_depreciado}%` }}
                                                 />
                                             </div>
-                                            <div className="flex items-center justify-between text-[10px] text-slate-500">
+                                            <div className="flex items-center justify-between text-[10px] text-[#64748B] font-medium">
                                                 <span>Adquirido em: {m.data_aquisicao}</span>
                                                 <span>Deprec. Anual: {formatCurrency(m.depreciacao_anual)}/ano</span>
                                             </div>
                                         </div>
 
                                         {/* Maintenance Info */}
-                                        <div className="flex items-center justify-between text-xs text-slate-400 border-t border-slate-800/80 pt-3">
+                                        <div className="flex items-center justify-between text-xs text-[#64748B] border-t border-[#E6EBE8] pt-3 font-medium">
                                             <span className="flex items-center gap-1.5">
-                                                <Wrench className="w-3.5 h-3.5 text-purple-400" />
+                                                <Wrench className="w-3.5 h-3.5 text-purple-600" strokeWidth={1.75} />
                                                 <span>{m.total_manutencoes_count || 0} manutenções</span>
                                             </span>
-                                            <span className="text-purple-400 font-semibold">{formatCurrency(m.total_gasto_manutencoes || 0)}</span>
+                                            <span className="text-purple-600 font-bold">{formatCurrency(m.total_gasto_manutencoes || 0)}</span>
                                         </div>
                                     </div>
 
                                     {/* Action Buttons */}
-                                    <div className="flex items-center justify-between gap-2 border-t border-slate-800/80 pt-3 mt-4">
+                                    <div className="flex items-center justify-between gap-2 border-t border-[#E6EBE8] pt-3 mt-4">
                                         <button
                                             onClick={() => handleOpenNovaManutencao(m)}
-                                            className="flex items-center gap-1.5 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/20 font-medium text-xs px-3 py-1.5 rounded-lg transition"
+                                            className="flex items-center gap-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 font-semibold text-xs px-3 py-1.5 rounded-lg transition cursor-pointer"
                                         >
-                                            <Wrench className="w-3.5 h-3.5" />
+                                            <Wrench className="w-3.5 h-3.5" strokeWidth={2} />
                                             <span>Lançar Manutenção</span>
                                         </button>
 
@@ -601,23 +601,23 @@ export default function PatrimonioView({ onReloadDashboard, triggerNewModal, onR
                                             <button
                                                 onClick={() => handleVerHistorico(m.id)}
                                                 title="Histórico de Manutenções"
-                                                className="p-1.5 text-slate-400 hover:text-slate-100 hover:bg-slate-800 rounded-lg transition"
+                                                className="p-1.5 text-[#64748B] hover:text-[#172033] hover:bg-slate-100 rounded-lg transition cursor-pointer"
                                             >
-                                                <History className="w-4 h-4" />
+                                                <History className="w-4 h-4" strokeWidth={1.75} />
                                             </button>
                                             <button
                                                 onClick={() => handleOpenEditMaquina(m)}
                                                 title="Editar Máquina"
-                                                className="p-1.5 text-slate-400 hover:text-slate-100 hover:bg-slate-800 rounded-lg transition"
+                                                className="p-1.5 text-[#64748B] hover:text-[#172033] hover:bg-slate-100 rounded-lg transition cursor-pointer"
                                             >
-                                                <Edit className="w-4 h-4" />
+                                                <Edit className="w-4 h-4" strokeWidth={1.75} />
                                             </button>
                                             <button
                                                 onClick={() => handleDeleteMaquina(m.id, m.nome)}
                                                 title="Excluir Máquina"
-                                                className="p-1.5 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-lg transition"
+                                                className="p-1.5 text-[#64748B] hover:text-[#D64545] hover:bg-[#FEF2F2] rounded-lg transition cursor-pointer"
                                             >
-                                                <Trash2 className="w-4 h-4" />
+                                                <Trash2 className="w-4 h-4" strokeWidth={1.75} />
                                             </button>
                                         </div>
                                     </div>
@@ -625,15 +625,15 @@ export default function PatrimonioView({ onReloadDashboard, triggerNewModal, onR
                             ))}
                         </div>
                     ) : (
-                        <div className="text-center py-16 bg-slate-900/40 rounded-2xl border border-slate-800">
-                            <Tractor className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-                            <h3 className="text-sm font-semibold text-slate-300">Nenhuma máquina ou equipamento cadastrado</h3>
-                            <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1 mb-4">Cadastre tratores, implementos e veículos para acompanhar a depreciação e custos de oficina.</p>
+                        <div className="text-center py-16 bg-white rounded-2xl border border-[#E6EBE8] shadow-sm">
+                            <Tractor className="w-12 h-12 text-slate-300 mx-auto mb-3" strokeWidth={1.5} />
+                            <h3 className="text-sm font-bold text-[#172033]">Nenhuma máquina ou equipamento cadastrado</h3>
+                            <p className="text-xs text-[#64748B] max-w-sm mx-auto mt-1 mb-4 font-medium">Cadastre tratores, implementos e veículos para acompanhar a depreciação e custos de oficina.</p>
                             <button
                                 onClick={handleOpenNewMaquina}
-                                className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-medium text-xs px-4 py-2 rounded-xl transition"
+                                className="inline-flex items-center gap-2 bg-[#087F5B] hover:bg-[#159A70] text-white font-semibold text-xs px-4 py-2 rounded-xl transition shadow-sm cursor-pointer"
                             >
-                                <Plus className="w-4 h-4" />
+                                <Plus className="w-4 h-4" strokeWidth={2.5} />
                                 <span>Cadastrar Máquina</span>
                             </button>
                         </div>
@@ -647,20 +647,20 @@ export default function PatrimonioView({ onReloadDashboard, triggerNewModal, onR
                     {/* Search & Filter Bar */}
                     <div className="flex flex-col sm:flex-row items-center gap-3">
                         <div className="relative flex-1 w-full">
-                            <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                            <Search className="w-4 h-4 text-[#64748B] absolute left-3.5 top-1/2 -translate-y-1/2" />
                             <input
                                 type="text"
                                 placeholder="Buscar benfeitoria por descrição..."
                                 value={busca}
                                 onChange={(e) => setBusca(e.target.value)}
-                                className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500/50"
+                                className="w-full bg-white border border-[#E6EBE8] rounded-xl pl-10 pr-4 py-2 text-xs font-medium text-[#172033] placeholder-[#64748B] focus:outline-none focus:border-[#087F5B] shadow-sm"
                             />
                         </div>
 
                         <select
                             value={filtroTipo}
                             onChange={(e) => setFiltroTipo(e.target.value)}
-                            className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500/50"
+                            className="bg-white border border-[#E6EBE8] rounded-xl px-3 py-2 text-xs font-medium text-[#172033] focus:outline-none focus:border-[#087F5B] shadow-sm"
                         >
                             <option value="">Todos os Tipos de Benfeitoria</option>
                             {TIPOS_BENFEITORIA.map(t => (
@@ -675,89 +675,89 @@ export default function PatrimonioView({ onReloadDashboard, triggerNewModal, onR
                             {benfeitoriasFiltradas.map((b) => (
                                 <div
                                     key={b.id}
-                                    className="rounded-2xl bg-slate-900/90 border border-slate-800 p-5 flex flex-col justify-between transition shadow-sm hover:border-slate-700"
+                                    className="rounded-2xl bg-white border border-[#E6EBE8] p-5 flex flex-col justify-between transition shadow-[0_4px_20px_rgba(20,60,45,0.04)] hover:shadow-md"
                                 >
                                     <div>
                                         {/* Header do Card */}
                                         <div className="flex items-start justify-between gap-2 mb-3">
                                             <div>
-                                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-800 px-2 py-0.5 rounded border border-slate-700">
+                                                <span className="text-[10px] font-bold uppercase tracking-wider text-[#64748B] bg-[#F7F9F8] px-2 py-0.5 rounded border border-[#E6EBE8]">
                                                     {TIPOS_BENFEITORIA.find(t => t.value === b.tipo)?.label || b.tipo}
                                                 </span>
-                                                <h3 className="text-base font-bold text-white tracking-tight mt-1.5">{b.descricao}</h3>
+                                                <h3 className="text-base font-bold text-[#172033] tracking-tight mt-1.5">{b.descricao}</h3>
                                             </div>
-                                            <div className="w-8 h-8 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300">
-                                                <Home className="w-4 h-4" />
+                                            <div className="w-8 h-8 rounded-xl bg-[#E8F5EF] border border-[#C3E6D6] flex items-center justify-center text-[#087F5B]">
+                                                <Home className="w-4 h-4" strokeWidth={1.75} />
                                             </div>
                                         </div>
 
                                         {/* Values */}
-                                        <div className="grid grid-cols-2 gap-3 bg-slate-950/60 p-3.5 rounded-xl border border-slate-800/80 mb-4">
+                                        <div className="grid grid-cols-2 gap-3 bg-[#F7F9F8] p-3.5 rounded-xl border border-[#E6EBE8] mb-4">
                                             <div>
-                                                <span className="text-[10px] text-slate-400 block font-medium">Valor Atual (Líquido)</span>
-                                                <span className="text-base font-black text-emerald-400">{formatCurrency(b.valor_atual)}</span>
+                                                <span className="text-[10px] text-[#64748B] block font-semibold">Valor Atual (Líquido)</span>
+                                                <span className="text-base font-bold text-[#087F5B]">{formatCurrency(b.valor_atual)}</span>
                                             </div>
                                             <div>
-                                                <span className="text-[10px] text-slate-400 block font-medium">Aquisição / Construção</span>
-                                                <span className="text-xs font-semibold text-slate-300">{formatCurrency(b.valor_aquisicao)}</span>
+                                                <span className="text-[10px] text-[#64748B] block font-semibold">Aquisição / Construção</span>
+                                                <span className="text-xs font-semibold text-[#172033]">{formatCurrency(b.valor_aquisicao)}</span>
                                             </div>
                                         </div>
 
                                         {/* Depreciation Progress Bar */}
                                         <div className="space-y-1.5 mb-4">
                                             <div className="flex items-center justify-between text-[11px]">
-                                                <span className="text-slate-400 font-medium">Vida Útil Estimada ({b.vida_util_anos} anos)</span>
-                                                <span className="text-amber-400 font-bold">{b.percentual_depreciado}% depreciado</span>
+                                                <span className="text-[#64748B] font-medium">Vida Útil Estimada ({b.vida_util_anos} anos)</span>
+                                                <span className="text-[#D9A441] font-bold">{b.percentual_depreciado}% depreciado</span>
                                             </div>
-                                            <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                                            <div className="w-full bg-[#F7F9F8] border border-[#E6EBE8] rounded-full h-2 overflow-hidden">
                                                 <div
-                                                    className="bg-gradient-to-r from-emerald-500 via-amber-500 to-rose-500 h-2 rounded-full transition-all duration-300"
+                                                    className="bg-[#087F5B] h-2 rounded-full transition-all duration-300"
                                                     style={{ width: `${b.percentual_depreciado}%` }}
                                                 />
                                             </div>
-                                            <div className="flex items-center justify-between text-[10px] text-slate-500">
+                                            <div className="flex items-center justify-between text-[10px] text-[#64748B] font-medium">
                                                 <span>Data: {b.data_aquisicao}</span>
                                                 <span>Deprec. Anual: {formatCurrency(b.depreciacao_anual)}/ano</span>
                                             </div>
                                         </div>
 
                                         {b.observacoes && (
-                                            <p className="text-xs text-slate-400 italic bg-slate-950/40 p-2.5 rounded-lg border border-slate-800/50">
+                                            <p className="text-xs text-[#64748B] italic bg-[#F7F9F8] p-2.5 rounded-lg border border-[#E6EBE8]">
                                                 {b.observacoes}
                                             </p>
                                         )}
                                     </div>
 
                                     {/* Action Buttons */}
-                                    <div className="flex items-center justify-end gap-1.5 border-t border-slate-800/80 pt-3 mt-4">
+                                    <div className="flex items-center justify-end gap-1.5 border-t border-[#E6EBE8] pt-3 mt-4">
                                         <button
                                             onClick={() => handleOpenEditBenfeitoria(b)}
                                             title="Editar Benfeitoria"
-                                            className="p-1.5 text-slate-400 hover:text-slate-100 hover:bg-slate-800 rounded-lg transition"
+                                            className="p-1.5 text-[#64748B] hover:text-[#172033] hover:bg-slate-100 rounded-lg transition cursor-pointer"
                                         >
-                                            <Edit className="w-4 h-4" />
+                                            <Edit className="w-4 h-4" strokeWidth={1.75} />
                                         </button>
                                         <button
                                             onClick={() => handleDeleteBenfeitoria(b.id, b.descricao)}
                                             title="Excluir Benfeitoria"
-                                            className="p-1.5 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-lg transition"
+                                            className="p-1.5 text-[#64748B] hover:text-[#D64545] hover:bg-[#FEF2F2] rounded-lg transition cursor-pointer"
                                         >
-                                            <Trash2 className="w-4 h-4" />
+                                            <Trash2 className="w-4 h-4" strokeWidth={1.75} />
                                         </button>
                                     </div>
                                 </div>
                             ))}
                         </div>
                     ) : (
-                        <div className="text-center py-16 bg-slate-900/40 rounded-2xl border border-slate-800">
-                            <Home className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-                            <h3 className="text-sm font-semibold text-slate-300">Nenhuma benfeitoria cadastrada</h3>
-                            <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1 mb-4">Cadastre currais, galpões, casas, poços e cercas para valorizar o patrimônio da fazenda.</p>
+                        <div className="text-center py-16 bg-white rounded-2xl border border-[#E6EBE8] shadow-sm">
+                            <Home className="w-12 h-12 text-slate-300 mx-auto mb-3" strokeWidth={1.5} />
+                            <h3 className="text-sm font-bold text-[#172033]">Nenhuma benfeitoria cadastrada</h3>
+                            <p className="text-xs text-[#64748B] max-w-sm mx-auto mt-1 mb-4 font-medium">Cadastre currais, galpões, casas, poços e cercas para valorizar o patrimônio da fazenda.</p>
                             <button
                                 onClick={handleOpenNewBenfeitoria}
-                                className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-medium text-xs px-4 py-2 rounded-xl transition"
+                                className="inline-flex items-center gap-2 bg-[#087F5B] hover:bg-[#159A70] text-white font-semibold text-xs px-4 py-2 rounded-xl transition shadow-sm cursor-pointer"
                             >
-                                <Plus className="w-4 h-4" />
+                                <Plus className="w-4 h-4" strokeWidth={2.5} />
                                 <span>Cadastrar Benfeitoria</span>
                             </button>
                         </div>
@@ -767,51 +767,51 @@ export default function PatrimonioView({ onReloadDashboard, triggerNewModal, onR
 
             {/* TAB 3: TODAS AS MANUTENÇÕES */}
             {subTab === 'manutencoes' && (
-                <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-sm">
-                    <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+                <div className="bg-white border border-[#E6EBE8] rounded-2xl overflow-hidden shadow-[0_4px_20px_rgba(20,60,45,0.04)]">
+                    <div className="p-4 border-b border-[#E6EBE8] flex items-center justify-between">
                         <div>
-                            <h3 className="text-sm font-bold text-white">Histórico Geral de Manutenções</h3>
-                            <p className="text-xs text-slate-400">Todas as ordens de serviço e despesas de oficina registradas na propriedade</p>
+                            <h3 className="text-sm font-bold text-[#172033]">Histórico Geral de Manutenções</h3>
+                            <p className="text-xs text-[#64748B] font-medium">Todas as ordens de serviço e despesas de oficina registradas na propriedade</p>
                         </div>
-                        <div className="text-xs font-semibold text-purple-400 bg-purple-500/10 px-3 py-1.5 rounded-lg border border-purple-500/20">
+                        <div className="text-xs font-bold text-purple-700 bg-purple-50 px-3 py-1.5 rounded-lg border border-purple-200">
                             Total Gasto: {formatCurrency(resumo?.manutencoes?.total_gasto || 0)}
                         </div>
                     </div>
 
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-xs">
-                            <thead className="bg-slate-950/80 text-slate-400 font-semibold border-b border-slate-800">
+                            <thead className="bg-[#F7F9F8] text-[#64748B] font-semibold border-b border-[#E6EBE8]">
                                 <tr>
-                                    <th className="p-4">Data</th>
-                                    <th className="p-4">Máquina / Equipamento</th>
-                                    <th className="p-4">Tipo</th>
-                                    <th className="p-4">Descrição do Serviço</th>
-                                    <th className="p-4 text-right">Valor</th>
-                                    <th className="p-4 text-center">Ações</th>
+                                    <th className="p-4 uppercase tracking-wider text-[11px]">Data</th>
+                                    <th className="p-4 uppercase tracking-wider text-[11px]">Máquina / Equipamento</th>
+                                    <th className="p-4 uppercase tracking-wider text-[11px]">Tipo</th>
+                                    <th className="p-4 uppercase tracking-wider text-[11px]">Descrição do Serviço</th>
+                                    <th className="p-4 text-right uppercase tracking-wider text-[11px]">Valor</th>
+                                    <th className="p-4 text-center uppercase tracking-wider text-[11px]">Ações</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-800/60">
+                            <tbody className="divide-y divide-[#E6EBE8]">
                                 {manutencoes.map((mt) => (
-                                    <tr key={mt.id} className="hover:bg-slate-800/40 transition">
-                                        <td className="p-4 font-medium text-slate-200 whitespace-nowrap">{mt.data}</td>
-                                        <td className="p-4 font-bold text-white whitespace-nowrap">{mt.maquina_nome}</td>
-                                        <td className="p-4 text-slate-400 uppercase text-[11px] font-medium">{mt.maquina_tipo}</td>
-                                        <td className="p-4 text-slate-300">{mt.descricao}</td>
-                                        <td className="p-4 text-right font-black text-rose-400">{formatCurrency(mt.valor)}</td>
+                                    <tr key={mt.id} className="hover:bg-[#F7F9F8] transition-colors">
+                                        <td className="p-4 font-medium text-[#172033] whitespace-nowrap">{mt.data}</td>
+                                        <td className="p-4 font-bold text-[#172033] whitespace-nowrap">{mt.maquina_nome}</td>
+                                        <td className="p-4 text-[#64748B] uppercase text-[11px] font-semibold">{mt.maquina_tipo}</td>
+                                        <td className="p-4 text-[#172033] font-medium">{mt.descricao}</td>
+                                        <td className="p-4 text-right font-bold text-[#D64545]">{formatCurrency(mt.valor)}</td>
                                         <td className="p-4 text-center">
                                             <button
                                                 onClick={() => handleDeleteManutencao(mt.id)}
-                                                className="p-1.5 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-lg transition"
+                                                className="p-1.5 text-[#64748B] hover:text-[#D64545] hover:bg-[#FEF2F2] rounded-lg transition cursor-pointer"
                                                 title="Excluir Manutenção"
                                             >
-                                                <Trash2 className="w-4 h-4" />
+                                                <Trash2 className="w-4 h-4" strokeWidth={1.75} />
                                             </button>
                                         </td>
                                     </tr>
                                 ))}
                                 {manutencoes.length === 0 && (
                                     <tr>
-                                        <td colSpan="6" className="p-8 text-center text-slate-500">
+                                        <td colSpan="6" className="p-8 text-center text-[#64748B]">
                                             Nenhum registro de manutenção encontrado.
                                         </td>
                                     </tr>
@@ -824,45 +824,47 @@ export default function PatrimonioView({ onReloadDashboard, triggerNewModal, onR
 
             {/* MODAL CADASTRAR / EDITAR MÁQUINA */}
             {modalMaquinaOpen && (
-                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-fade-in">
-                        <div className="p-6 border-b border-slate-800 flex items-center justify-between">
-                            <h3 className="text-base font-bold text-white flex items-center gap-2">
-                                <Tractor className="w-5 h-5 text-emerald-400" />
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white border border-[#E6EBE8] rounded-2xl w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                        <div className="p-6 border-b border-[#E6EBE8] flex items-center justify-between">
+                            <h3 className="text-base font-bold text-[#172033] flex items-center gap-2">
+                                <div className="w-8 h-8 rounded-xl bg-[#E8F5EF] flex items-center justify-center text-[#087F5B]">
+                                    <Tractor className="w-4 h-4" strokeWidth={2} />
+                                </div>
                                 <span>{editingMaquina ? 'Editar Máquina / Equipamento' : 'Nova Máquina / Equipamento'}</span>
                             </h3>
-                            <button onClick={() => setModalMaquinaOpen(false)} className="text-slate-400 hover:text-slate-100">
+                            <button onClick={() => setModalMaquinaOpen(false)} className="text-[#64748B] hover:text-[#172033] transition">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
 
                         <form onSubmit={handleSaveMaquina} className="p-6 space-y-4">
                             {errorMaquina && (
-                                <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-300 text-xs flex items-center gap-2">
+                                <div className="p-3 bg-[#FEF2F2] border border-[#FACDCD] rounded-xl text-[#D64545] text-xs flex items-center gap-2 font-medium">
                                     <AlertCircle className="w-4 h-4 shrink-0" />
                                     <span>{errorMaquina}</span>
                                 </div>
                             )}
 
                             <div>
-                                <label className="block text-xs font-semibold text-slate-300 mb-1.5">Nome / Modelo do Equipamento *</label>
+                                <label className="block text-xs font-semibold text-[#172033] mb-1.5">Nome / Modelo do Equipamento *</label>
                                 <input
                                     type="text"
                                     required
                                     placeholder="Ex: Trator John Deere 6110M 4x4"
                                     value={maquinaForm.nome}
                                     onChange={(e) => setMaquinaForm({ ...maquinaForm, nome: e.target.value })}
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-emerald-500"
+                                    className="w-full bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl px-3.5 py-2.5 text-xs text-[#172033] font-medium focus:outline-none focus:border-[#087F5B] focus:bg-white"
                                 />
                             </div>
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-xs font-semibold text-slate-300 mb-1.5">Tipo *</label>
+                                    <label className="block text-xs font-semibold text-[#172033] mb-1.5">Tipo *</label>
                                     <select
                                         value={maquinaForm.tipo}
                                         onChange={(e) => setMaquinaForm({ ...maquinaForm, tipo: e.target.value })}
-                                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-emerald-500"
+                                        className="w-full bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl px-3.5 py-2.5 text-xs text-[#172033] font-medium focus:outline-none focus:border-[#087F5B] focus:bg-white"
                                     >
                                         {TIPOS_MAQUINA.map(t => (
                                             <option key={t.value} value={t.value}>{t.label}</option>
@@ -871,11 +873,11 @@ export default function PatrimonioView({ onReloadDashboard, triggerNewModal, onR
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-semibold text-slate-300 mb-1.5">Status *</label>
+                                    <label className="block text-xs font-semibold text-[#172033] mb-1.5">Status *</label>
                                     <select
                                         value={maquinaForm.status}
                                         onChange={(e) => setMaquinaForm({ ...maquinaForm, status: e.target.value })}
-                                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-emerald-500"
+                                        className="w-full bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl px-3.5 py-2.5 text-xs text-[#172033] font-medium focus:outline-none focus:border-[#087F5B] focus:bg-white"
                                     >
                                         <option value="ativo">Ativo / Operacional</option>
                                         <option value="em_manutencao">Em Manutenção</option>
@@ -886,7 +888,7 @@ export default function PatrimonioView({ onReloadDashboard, triggerNewModal, onR
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-xs font-semibold text-slate-300 mb-1.5">Valor de Aquisição (R$) *</label>
+                                    <label className="block text-xs font-semibold text-[#172033] mb-1.5">Valor de Aquisição (R$) *</label>
                                     <input
                                         type="number"
                                         step="0.01"
@@ -894,12 +896,12 @@ export default function PatrimonioView({ onReloadDashboard, triggerNewModal, onR
                                         placeholder="Ex: 350000"
                                         value={maquinaForm.valor_aquisicao}
                                         onChange={(e) => setMaquinaForm({ ...maquinaForm, valor_aquisicao: e.target.value })}
-                                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-emerald-500"
+                                        className="w-full bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl px-3.5 py-2.5 text-xs text-[#172033] font-medium focus:outline-none focus:border-[#087F5B] focus:bg-white"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-semibold text-slate-300 mb-1.5">Vida Útil (Anos) *</label>
+                                    <label className="block text-xs font-semibold text-[#172033] mb-1.5">Vida Útil (Anos) *</label>
                                     <input
                                         type="number"
                                         required
@@ -907,44 +909,44 @@ export default function PatrimonioView({ onReloadDashboard, triggerNewModal, onR
                                         placeholder="Ex: 10"
                                         value={maquinaForm.vida_util_anos}
                                         onChange={(e) => setMaquinaForm({ ...maquinaForm, vida_util_anos: e.target.value })}
-                                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-emerald-500"
+                                        className="w-full bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl px-3.5 py-2.5 text-xs text-[#172033] font-medium focus:outline-none focus:border-[#087F5B] focus:bg-white"
                                     />
                                 </div>
                             </div>
 
                             <div>
-                                <label className="block text-xs font-semibold text-slate-300 mb-1.5">Data de Aquisição *</label>
+                                <label className="block text-xs font-semibold text-[#172033] mb-1.5">Data de Aquisição *</label>
                                 <input
                                     type="date"
                                     required
                                     value={maquinaForm.data_aquisicao}
                                     onChange={(e) => setMaquinaForm({ ...maquinaForm, data_aquisicao: e.target.value })}
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-emerald-500"
+                                    className="w-full bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl px-3.5 py-2.5 text-xs text-[#172033] font-medium focus:outline-none focus:border-[#087F5B] focus:bg-white"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-xs font-semibold text-slate-300 mb-1.5">Observações (Opcional)</label>
+                                <label className="block text-xs font-semibold text-[#172033] mb-1.5">Observações (Opcional)</label>
                                 <textarea
                                     rows="2"
                                     placeholder="Ex: Chassi, horímetro inicial, nota fiscal..."
                                     value={maquinaForm.observacoes}
                                     onChange={(e) => setMaquinaForm({ ...maquinaForm, observacoes: e.target.value })}
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-100 focus:outline-none focus:border-emerald-500"
+                                    className="w-full bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl px-3.5 py-2 text-xs text-[#172033] font-medium focus:outline-none focus:border-[#087F5B] focus:bg-white"
                                 />
                             </div>
 
-                            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+                            <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#E6EBE8]">
                                 <button
                                     type="button"
                                     onClick={() => setModalMaquinaOpen(false)}
-                                    className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white"
+                                    className="px-4 py-2 rounded-xl text-xs font-semibold text-[#64748B] hover:bg-slate-100 cursor-pointer"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold text-xs transition shadow-lg shadow-emerald-500/20"
+                                    className="px-5 py-2.5 rounded-xl bg-[#087F5B] hover:bg-[#159A70] text-white font-semibold text-xs transition shadow-sm cursor-pointer"
                                 >
                                     {editingMaquina ? 'Salvar Alterações' : 'Cadastrar Máquina'}
                                 </button>
@@ -956,32 +958,34 @@ export default function PatrimonioView({ onReloadDashboard, triggerNewModal, onR
 
             {/* MODAL CADASTRAR / EDITAR BENFEITORIA */}
             {modalBenfeitoriaOpen && (
-                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-fade-in">
-                        <div className="p-6 border-b border-slate-800 flex items-center justify-between">
-                            <h3 className="text-base font-bold text-white flex items-center gap-2">
-                                <Home className="w-5 h-5 text-emerald-400" />
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white border border-[#E6EBE8] rounded-2xl w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                        <div className="p-6 border-b border-[#E6EBE8] flex items-center justify-between">
+                            <h3 className="text-base font-bold text-[#172033] flex items-center gap-2">
+                                <div className="w-8 h-8 rounded-xl bg-[#E8F5EF] flex items-center justify-center text-[#087F5B]">
+                                    <Home className="w-4 h-4" strokeWidth={2} />
+                                </div>
                                 <span>{editingBenfeitoria ? 'Editar Benfeitoria' : 'Nova Benfeitoria'}</span>
                             </h3>
-                            <button onClick={() => setModalBenfeitoriaOpen(false)} className="text-slate-400 hover:text-slate-100">
+                            <button onClick={() => setModalBenfeitoriaOpen(false)} className="text-[#64748B] hover:text-[#172033] transition">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
 
                         <form onSubmit={handleSaveBenfeitoria} className="p-6 space-y-4">
                             {errorBenfeitoria && (
-                                <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-300 text-xs flex items-center gap-2">
+                                <div className="p-3 bg-[#FEF2F2] border border-[#FACDCD] rounded-xl text-[#D64545] text-xs flex items-center gap-2 font-medium">
                                     <AlertCircle className="w-4 h-4 shrink-0" />
                                     <span>{errorBenfeitoria}</span>
                                 </div>
                             )}
 
                             <div>
-                                <label className="block text-xs font-semibold text-slate-300 mb-1.5">Tipo de Benfeitoria *</label>
+                                <label className="block text-xs font-semibold text-[#172033] mb-1.5">Tipo de Benfeitoria *</label>
                                 <select
                                     value={benfeitoriaForm.tipo}
                                     onChange={(e) => setBenfeitoriaForm({ ...benfeitoriaForm, tipo: e.target.value })}
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-emerald-500"
+                                    className="w-full bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl px-3.5 py-2.5 text-xs text-[#172033] font-medium focus:outline-none focus:border-[#087F5B] focus:bg-white"
                                 >
                                     {TIPOS_BENFEITORIA.map(t => (
                                         <option key={t.value} value={t.value}>{t.label}</option>
@@ -990,20 +994,20 @@ export default function PatrimonioView({ onReloadDashboard, triggerNewModal, onR
                             </div>
 
                             <div>
-                                <label className="block text-xs font-semibold text-slate-300 mb-1.5">Descrição / Identificação *</label>
+                                <label className="block text-xs font-semibold text-[#172033] mb-1.5">Descrição / Identificação *</label>
                                 <input
                                     type="text"
                                     required
                                     placeholder="Ex: Curral Anti-estresse com Balança e Tronco"
                                     value={benfeitoriaForm.descricao}
                                     onChange={(e) => setBenfeitoriaForm({ ...benfeitoriaForm, descricao: e.target.value })}
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-emerald-500"
+                                    className="w-full bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl px-3.5 py-2.5 text-xs text-[#172033] font-medium focus:outline-none focus:border-[#087F5B] focus:bg-white"
                                 />
                             </div>
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-xs font-semibold text-slate-300 mb-1.5">Valor de Aquisição / Obra (R$) *</label>
+                                    <label className="block text-xs font-semibold text-[#172033] mb-1.5">Valor de Aquisição / Obra (R$) *</label>
                                     <input
                                         type="number"
                                         step="0.01"
@@ -1011,12 +1015,12 @@ export default function PatrimonioView({ onReloadDashboard, triggerNewModal, onR
                                         placeholder="Ex: 85000"
                                         value={benfeitoriaForm.valor_aquisicao}
                                         onChange={(e) => setBenfeitoriaForm({ ...benfeitoriaForm, valor_aquisicao: e.target.value })}
-                                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-emerald-500"
+                                        className="w-full bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl px-3.5 py-2.5 text-xs text-[#172033] font-medium focus:outline-none focus:border-[#087F5B] focus:bg-white"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-semibold text-slate-300 mb-1.5">Vida Útil (Anos) *</label>
+                                    <label className="block text-xs font-semibold text-[#172033] mb-1.5">Vida Útil (Anos) *</label>
                                     <input
                                         type="number"
                                         required
@@ -1024,44 +1028,44 @@ export default function PatrimonioView({ onReloadDashboard, triggerNewModal, onR
                                         placeholder="Ex: 20"
                                         value={benfeitoriaForm.vida_util_anos}
                                         onChange={(e) => setBenfeitoriaForm({ ...benfeitoriaForm, vida_util_anos: e.target.value })}
-                                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-emerald-500"
+                                        className="w-full bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl px-3.5 py-2.5 text-xs text-[#172033] font-medium focus:outline-none focus:border-[#087F5B] focus:bg-white"
                                     />
                                 </div>
                             </div>
 
                             <div>
-                                <label className="block text-xs font-semibold text-slate-300 mb-1.5">Data de Conclusão / Aquisição *</label>
+                                <label className="block text-xs font-semibold text-[#172033] mb-1.5">Data de Conclusão / Aquisição *</label>
                                 <input
                                     type="date"
                                     required
                                     value={benfeitoriaForm.data_aquisicao}
                                     onChange={(e) => setBenfeitoriaForm({ ...benfeitoriaForm, data_aquisicao: e.target.value })}
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-emerald-500"
+                                    className="w-full bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl px-3.5 py-2.5 text-xs text-[#172033] font-medium focus:outline-none focus:border-[#087F5B] focus:bg-white"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-xs font-semibold text-slate-300 mb-1.5">Observações (Opcional)</label>
+                                <label className="block text-xs font-semibold text-[#172033] mb-1.5">Observações (Opcional)</label>
                                 <textarea
                                     rows="2"
                                     placeholder="Ex: Material utilizado, localização, capacidade..."
                                     value={benfeitoriaForm.observacoes}
                                     onChange={(e) => setBenfeitoriaForm({ ...benfeitoriaForm, observacoes: e.target.value })}
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-100 focus:outline-none focus:border-emerald-500"
+                                    className="w-full bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl px-3.5 py-2 text-xs text-[#172033] font-medium focus:outline-none focus:border-[#087F5B] focus:bg-white"
                                 />
                             </div>
 
-                            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+                            <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#E6EBE8]">
                                 <button
                                     type="button"
                                     onClick={() => setModalBenfeitoriaOpen(false)}
-                                    className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white"
+                                    className="px-4 py-2 rounded-xl text-xs font-semibold text-[#64748B] hover:bg-slate-100 cursor-pointer"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold text-xs transition shadow-lg shadow-emerald-500/20"
+                                    className="px-5 py-2.5 rounded-xl bg-[#087F5B] hover:bg-[#159A70] text-white font-semibold text-xs transition shadow-sm cursor-pointer"
                                 >
                                     {editingBenfeitoria ? 'Salvar Alterações' : 'Cadastrar Benfeitoria'}
                                 </button>
@@ -1073,44 +1077,46 @@ export default function PatrimonioView({ onReloadDashboard, triggerNewModal, onR
 
             {/* MODAL LANÇAR MANUTENÇÃO (AUTOMATIZA FINANCEIRO) */}
             {modalManutencaoOpen && selectedMaquinaParaMt && (
-                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-fade-in">
-                        <div className="p-6 border-b border-slate-800 flex items-center justify-between">
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white border border-[#E6EBE8] rounded-2xl w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                        <div className="p-6 border-b border-[#E6EBE8] flex items-center justify-between">
                             <div>
-                                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                                    <Wrench className="w-5 h-5 text-purple-400" />
+                                <h3 className="text-base font-bold text-[#172033] flex items-center gap-2">
+                                    <div className="w-8 h-8 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600">
+                                        <Wrench className="w-4 h-4" strokeWidth={2} />
+                                    </div>
                                     <span>Lançar Manutenção</span>
                                 </h3>
-                                <p className="text-xs text-slate-400 mt-0.5">{selectedMaquinaParaMt.nome} ({selectedMaquinaParaMt.tipo})</p>
+                                <p className="text-xs text-[#64748B] font-medium mt-0.5">{selectedMaquinaParaMt.nome} ({selectedMaquinaParaMt.tipo})</p>
                             </div>
-                            <button onClick={() => setModalManutencaoOpen(false)} className="text-slate-400 hover:text-slate-100">
+                            <button onClick={() => setModalManutencaoOpen(false)} className="text-[#64748B] hover:text-[#172033] transition">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
 
                         <form onSubmit={handleSaveManutencao} className="p-6 space-y-4">
                             {errorManutencao && (
-                                <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-300 text-xs flex items-center gap-2">
+                                <div className="p-3 bg-[#FEF2F2] border border-[#FACDCD] rounded-xl text-[#D64545] text-xs flex items-center gap-2 font-medium">
                                     <AlertCircle className="w-4 h-4 shrink-0" />
                                     <span>{errorManutencao}</span>
                                 </div>
                             )}
 
                             <div>
-                                <label className="block text-xs font-semibold text-slate-300 mb-1.5">Descrição do Serviço / Peça *</label>
+                                <label className="block text-xs font-semibold text-[#172033] mb-1.5">Descrição do Serviço / Peça *</label>
                                 <input
                                     type="text"
                                     required
                                     placeholder="Ex: Troca de óleo do motor, filtro e embuchamento"
                                     value={manutencaoForm.descricao}
                                     onChange={(e) => setManutencaoForm({ ...manutencaoForm, descricao: e.target.value })}
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-purple-500"
+                                    className="w-full bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl px-3.5 py-2.5 text-xs text-[#172033] font-medium focus:outline-none focus:border-[#087F5B] focus:bg-white"
                                 />
                             </div>
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-xs font-semibold text-slate-300 mb-1.5">Valor Total (R$) *</label>
+                                    <label className="block text-xs font-semibold text-[#172033] mb-1.5">Valor Total (R$) *</label>
                                     <input
                                         type="number"
                                         step="0.01"
@@ -1118,40 +1124,40 @@ export default function PatrimonioView({ onReloadDashboard, triggerNewModal, onR
                                         placeholder="Ex: 1850.00"
                                         value={manutencaoForm.valor}
                                         onChange={(e) => setManutencaoForm({ ...manutencaoForm, valor: e.target.value })}
-                                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-purple-500"
+                                        className="w-full bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl px-3.5 py-2.5 text-xs text-[#172033] font-medium focus:outline-none focus:border-[#087F5B] focus:bg-white"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-semibold text-slate-300 mb-1.5">Data do Serviço *</label>
+                                    <label className="block text-xs font-semibold text-[#172033] mb-1.5">Data do Serviço *</label>
                                     <input
                                         type="date"
                                         required
                                         value={manutencaoForm.data}
                                         onChange={(e) => setManutencaoForm({ ...manutencaoForm, data: e.target.value })}
-                                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-purple-500"
+                                        className="w-full bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl px-3.5 py-2.5 text-xs text-[#172033] font-medium focus:outline-none focus:border-[#087F5B] focus:bg-white"
                                     />
                                 </div>
                             </div>
 
-                            <div className="p-3 bg-purple-500/10 border border-purple-500/20 rounded-xl flex items-start gap-2.5">
-                                <Info className="w-4 h-4 text-purple-400 shrink-0 mt-0.5" />
-                                <span className="text-[11px] text-purple-300 leading-relaxed">
+                            <div className="p-3 bg-purple-50 border border-purple-200 rounded-xl flex items-start gap-2.5">
+                                <Info className="w-4 h-4 text-purple-600 shrink-0 mt-0.5" />
+                                <span className="text-[11px] text-purple-700 leading-relaxed font-medium">
                                     Ao confirmar, uma <strong>despesa</strong> de categoria <code>manutencao_maquina</code> será lançada automaticamente no Financeiro.
                                 </span>
                             </div>
 
-                            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+                            <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#E6EBE8]">
                                 <button
                                     type="button"
                                     onClick={() => setModalManutencaoOpen(false)}
-                                    className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white"
+                                    className="px-4 py-2 rounded-xl text-xs font-semibold text-[#64748B] hover:bg-slate-100 cursor-pointer"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-5 py-2.5 rounded-xl bg-purple-500 hover:bg-purple-600 text-white font-semibold text-xs transition shadow-lg shadow-purple-500/20"
+                                    className="px-5 py-2.5 rounded-xl bg-[#087F5B] hover:bg-[#159A70] text-white font-semibold text-xs transition shadow-sm cursor-pointer"
                                 >
                                     Registrar Manutenção
                                 </button>
@@ -1163,55 +1169,57 @@ export default function PatrimonioView({ onReloadDashboard, triggerNewModal, onR
 
             {/* MODAL HISTÓRICO DE MANUTENÇÃO POR MÁQUINA */}
             {modalHistoricoOpen && maquinaHistorico && (
-                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl animate-fade-in flex flex-col max-h-[85vh]">
-                        <div className="p-6 border-b border-slate-800 flex items-center justify-between">
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white border border-[#E6EBE8] rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-150 flex flex-col max-h-[85vh]">
+                        <div className="p-6 border-b border-[#E6EBE8] flex items-center justify-between">
                             <div>
-                                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                                    <History className="w-5 h-5 text-purple-400" />
+                                <h3 className="text-base font-bold text-[#172033] flex items-center gap-2">
+                                    <div className="w-8 h-8 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600">
+                                        <History className="w-4 h-4" strokeWidth={2} />
+                                    </div>
                                     <span>Histórico de Manutenções</span>
                                 </h3>
-                                <p className="text-xs text-slate-400 mt-0.5">{maquinaHistorico.nome} ({maquinaHistorico.tipo})</p>
+                                <p className="text-xs text-[#64748B] font-medium mt-0.5">{maquinaHistorico.nome} ({maquinaHistorico.tipo})</p>
                             </div>
-                            <button onClick={() => setModalHistoricoOpen(false)} className="text-slate-400 hover:text-slate-100">
+                            <button onClick={() => setModalHistoricoOpen(false)} className="text-[#64748B] hover:text-[#172033] transition">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
 
-                        <div className="p-4 bg-slate-950/60 border-b border-slate-800 flex items-center justify-between">
-                            <div className="text-xs text-slate-300">
-                                Total Acumulado em Oficina: <span className="font-bold text-purple-400">{formatCurrency(maquinaHistorico.total_gasto_manutencoes)}</span>
+                        <div className="p-4 bg-[#F7F9F8] border-b border-[#E6EBE8] flex items-center justify-between">
+                            <div className="text-xs text-[#172033] font-medium">
+                                Total Acumulado em Oficina: <span className="font-bold text-purple-700">{formatCurrency(maquinaHistorico.total_gasto_manutencoes)}</span>
                             </div>
                             <button
                                 onClick={() => handleOpenNovaManutencao(maquinaHistorico)}
-                                className="flex items-center gap-1.5 bg-purple-500 hover:bg-purple-600 text-white font-semibold text-xs px-3 py-1.5 rounded-lg transition"
+                                className="flex items-center gap-1.5 bg-[#087F5B] hover:bg-[#159A70] text-white font-semibold text-xs px-3 py-1.5 rounded-lg transition shadow-sm cursor-pointer"
                             >
-                                <Plus className="w-3.5 h-3.5" />
+                                <Plus className="w-3.5 h-3.5" strokeWidth={2} />
                                 <span>Nova Manutenção</span>
                             </button>
                         </div>
 
-                        <div className="p-6 overflow-y-auto flex-1 divide-y divide-slate-800">
+                        <div className="p-6 overflow-y-auto flex-1 divide-y divide-[#E6EBE8]">
                             {maquinaHistorico.manutencoes?.length > 0 ? (
                                 maquinaHistorico.manutencoes.map(mt => (
                                     <div key={mt.id} className="py-3.5 flex items-center justify-between gap-4">
                                         <div>
-                                            <span className="text-[11px] font-bold text-slate-400 block">{mt.data}</span>
-                                            <p className="text-sm font-semibold text-slate-100 mt-0.5">{mt.descricao}</p>
+                                            <span className="text-[11px] font-bold text-[#64748B] block">{mt.data}</span>
+                                            <p className="text-sm font-semibold text-[#172033] mt-0.5">{mt.descricao}</p>
                                         </div>
                                         <div className="flex items-center gap-3">
-                                            <span className="text-sm font-black text-rose-400">{formatCurrency(mt.valor)}</span>
+                                            <span className="text-sm font-bold text-[#D64545]">{formatCurrency(mt.valor)}</span>
                                             <button
                                                 onClick={() => handleDeleteManutencao(mt.id)}
-                                                className="p-1 text-slate-500 hover:text-rose-400 rounded transition"
+                                                className="p-1 text-[#64748B] hover:text-[#D64545] rounded transition cursor-pointer"
                                             >
-                                                <Trash2 className="w-4 h-4" />
+                                                <Trash2 className="w-4 h-4" strokeWidth={1.75} />
                                             </button>
                                         </div>
                                     </div>
                                 ))
                             ) : (
-                                <div className="text-center py-8 text-xs text-slate-500">
+                                <div className="text-center py-8 text-xs text-[#64748B]">
                                     Nenhuma manutenção registrada para esta máquina.
                                 </div>
                             )}

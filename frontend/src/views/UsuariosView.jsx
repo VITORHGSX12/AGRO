@@ -19,9 +19,9 @@ import {
 import { api } from '../services/api';
 
 const PAPEIS = [
-    { value: 'dono', label: 'Dono (Acesso Total + Gestão de Usuários)', badge: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
-    { value: 'gerente', label: 'Gerente (Acesso Operacional: Rebanho, Pastos, Agrícola, Patrimônio, RH)', badge: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
-    { value: 'contador', label: 'Contador (Acesso Exclusivo ao Financeiro e Dashboard)', badge: 'bg-purple-500/10 text-purple-400 border-purple-500/20' }
+    { value: 'dono', label: 'Dono (Acesso Total + Gestão de Usuários)', badge: 'bg-[#E8F5EF] text-[#087F5B] border-[#087F5B]/20' },
+    { value: 'gerente', label: 'Gerente (Acesso Operacional: Rebanho, Pastos, Agrícola, Patrimônio, RH)', badge: 'bg-blue-50 text-blue-700 border-blue-200' },
+    { value: 'contador', label: 'Contador (Acesso Exclusivo ao Financeiro e Dashboard)', badge: 'bg-amber-50 text-amber-700 border-amber-200' }
 ];
 
 export default function UsuariosView({ currentUser }) {
@@ -148,12 +148,12 @@ export default function UsuariosView({ currentUser }) {
         <div className="space-y-6">
             {/* Feedback Alert */}
             {feedback && (
-                <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 rounded-2xl flex items-center justify-between animate-fade-in shadow-sm">
+                <div className="p-4 bg-[#E8F5EF] border border-[#087F5B]/20 text-[#087F5B] rounded-2xl flex items-center justify-between animate-fade-in shadow-xs">
                     <div className="flex items-center gap-3">
-                        <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+                        <CheckCircle2 className="w-5 h-5 text-[#087F5B] shrink-0" />
                         <span className="text-sm font-medium">{feedback}</span>
                     </div>
-                    <button onClick={() => setFeedback('')} className="text-emerald-400 hover:text-emerald-300">
+                    <button onClick={() => setFeedback('')} className="text-[#087F5B] hover:text-[#087F5B]/80">
                         <X className="w-4 h-4" />
                     </button>
                 </div>
@@ -161,27 +161,27 @@ export default function UsuariosView({ currentUser }) {
 
             {/* Error Banner */}
             {error && (
-                <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-300 rounded-2xl flex items-center gap-3 text-xs">
+                <div className="p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl flex items-center gap-3 text-xs">
                     <AlertCircle className="w-5 h-5 shrink-0" />
                     <span>{error}</span>
                 </div>
             )}
 
             {/* Topbar Info & Action */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-900/90 border border-slate-800 p-6 rounded-3xl shadow-sm">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white border border-[#E6EBE8] p-6 rounded-2xl shadow-xs">
                 <div>
                     <div className="flex items-center gap-2 mb-1">
-                        <ShieldCheck className="w-5 h-5 text-emerald-400" />
-                        <h2 className="text-base font-bold text-white">Controle de Usuários & Permissões (RBAC)</h2>
+                        <ShieldCheck className="w-5 h-5 text-[#087F5B]" />
+                        <h2 className="text-base font-bold text-[#172033]">Controle de Usuários & Permissões (RBAC)</h2>
                     </div>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-[#64748B]">
                         Gerencie os membros da equipe com acesso ao sistema e defina papéis de acesso estritos.
                     </p>
                 </div>
 
                 <button
                     onClick={handleOpenNew}
-                    className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold text-xs px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-500/20 transition cursor-pointer"
+                    className="flex items-center gap-2 bg-[#087F5B] hover:bg-[#087F5B]/90 text-white font-medium text-xs px-4 py-2.5 rounded-xl shadow-xs transition cursor-pointer"
                 >
                     <UserPlus className="w-4 h-4" />
                     <span>Adicionar Usuário</span>
@@ -190,49 +190,49 @@ export default function UsuariosView({ currentUser }) {
 
             {/* Permissions Reference Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800/80">
+                <div className="p-4 rounded-2xl bg-white border border-[#E6EBE8] shadow-xs">
                     <div className="flex items-center gap-2 mb-1.5">
-                        <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 font-bold text-xs">D</div>
-                        <span className="text-xs font-bold text-white">Perfil: Dono</span>
+                        <div className="w-6 h-6 rounded-lg bg-[#E8F5EF] flex items-center justify-center text-[#087F5B] font-bold text-xs">D</div>
+                        <span className="text-xs font-bold text-[#172033]">Perfil: Dono</span>
                     </div>
-                    <p className="text-[11px] text-slate-400 leading-relaxed">
+                    <p className="text-[12px] text-[#64748B] leading-relaxed">
                         Acesso irrestrito a todos os módulos da fazenda, relatórios e gestão de usuários.
                     </p>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800/80">
+                <div className="p-4 rounded-2xl bg-white border border-[#E6EBE8] shadow-xs">
                     <div className="flex items-center gap-2 mb-1.5">
-                        <div className="w-6 h-6 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 font-bold text-xs">G</div>
-                        <span className="text-xs font-bold text-white">Perfil: Gerente</span>
+                        <div className="w-6 h-6 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 font-bold text-xs">G</div>
+                        <span className="text-xs font-bold text-[#172033]">Perfil: Gerente</span>
                     </div>
-                    <p className="text-[11px] text-slate-400 leading-relaxed">
-                        Acesso a Rebanho, Pastos, Sanidade, Agrícola, Máquinas e RH. <strong>Sem acesso a finanças nem usuários</strong>.
+                    <p className="text-[12px] text-[#64748B] leading-relaxed">
+                        Acesso a Rebanho, Pastos, Sanidade, Agrícola, Máquinas e RH. <strong className="text-[#172033]">Sem acesso a finanças nem usuários</strong>.
                     </p>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800/80">
+                <div className="p-4 rounded-2xl bg-white border border-[#E6EBE8] shadow-xs">
                     <div className="flex items-center gap-2 mb-1.5">
-                        <div className="w-6 h-6 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400 font-bold text-xs">C</div>
-                        <span className="text-xs font-bold text-white">Perfil: Contador</span>
+                        <div className="w-6 h-6 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600 font-bold text-xs">C</div>
+                        <span className="text-xs font-bold text-[#172033]">Perfil: Contador</span>
                     </div>
-                    <p className="text-[11px] text-slate-400 leading-relaxed">
-                        Acesso exclusivo ao <strong>Fluxo de Caixa / Financeiro e Dashboard</strong>.
+                    <p className="text-[12px] text-[#64748B] leading-relaxed">
+                        Acesso exclusivo ao <strong className="text-[#172033]">Fluxo de Caixa / Financeiro e Dashboard</strong>.
                     </p>
                 </div>
             </div>
 
             {/* Users Table */}
-            <div className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-sm">
-                <div className="p-5 border-b border-slate-800 flex items-center justify-between">
-                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                        <Users className="w-4 h-4 text-emerald-400" />
+            <div className="bg-white border border-[#E6EBE8] rounded-2xl overflow-hidden shadow-xs">
+                <div className="p-5 border-b border-[#E6EBE8] flex items-center justify-between">
+                    <h3 className="text-sm font-bold text-[#172033] flex items-center gap-2">
+                        <Users className="w-4 h-4 text-[#087F5B]" />
                         <span>Usuários Cadastrados ({usuarios.length})</span>
                     </h3>
                 </div>
 
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs">
-                        <thead className="bg-slate-950/80 text-slate-400 font-semibold border-b border-slate-800">
+                        <thead className="bg-[#F7F9F8] text-[#64748B] font-semibold border-b border-[#E6EBE8]">
                             <tr>
                                 <th className="p-4">Nome do Usuário</th>
                                 <th className="p-4">E-mail de Acesso</th>
@@ -242,28 +242,28 @@ export default function UsuariosView({ currentUser }) {
                                 <th className="p-4 text-right">Ações</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-800/60">
+                        <tbody className="divide-y divide-[#E6EBE8]">
                             {usuarios.map((u) => {
                                 const isSelf = u.id === currentUser?.id;
                                 const papelDef = PAPEIS.find(p => p.value === u.papel);
                                 return (
-                                    <tr key={u.id} className="hover:bg-slate-800/40 transition">
-                                        <td className="p-4 font-bold text-white flex items-center gap-2">
+                                    <tr key={u.id} className="hover:bg-[#F7F9F8]/70 transition">
+                                        <td className="p-4 font-bold text-[#172033] flex items-center gap-2">
                                             <span>{u.nome}</span>
                                             {isSelf && (
-                                                <span className="text-[9px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded font-normal border border-slate-700">
+                                                <span className="text-[10px] bg-[#E8F5EF] text-[#087F5B] px-2 py-0.5 rounded-full font-medium border border-[#087F5B]/20">
                                                     (Você)
                                                 </span>
                                             )}
                                         </td>
-                                        <td className="p-4 text-slate-300 font-mono text-[11px]">{u.email}</td>
+                                        <td className="p-4 text-[#64748B] font-mono text-[11px]">{u.email}</td>
                                         <td className="p-4">
                                             <span className={`text-[11px] px-2.5 py-1 rounded-full font-bold border uppercase ${
                                                 u.papel === 'dono'
-                                                    ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                                                    ? 'bg-[#E8F5EF] border-[#087F5B]/20 text-[#087F5B]'
                                                     : u.papel === 'gerente'
-                                                    ? 'bg-blue-500/10 border-blue-500/20 text-blue-400'
-                                                    : 'bg-purple-500/10 border-purple-500/20 text-purple-400'
+                                                    ? 'bg-blue-50 border-blue-200 text-blue-700'
+                                                    : 'bg-amber-50 border-amber-200 text-amber-700'
                                             }`}>
                                                 {u.papel}
                                             </span>
@@ -274,15 +274,15 @@ export default function UsuariosView({ currentUser }) {
                                                 disabled={isSelf}
                                                 className={`text-[10px] px-2.5 py-1 rounded-full font-bold border transition ${
                                                     u.status === 'ativo'
-                                                        ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-300 hover:bg-rose-500/20 hover:text-rose-300 hover:border-rose-500/30'
-                                                        : 'bg-rose-500/20 border-rose-500/30 text-rose-300 hover:bg-emerald-500/20 hover:text-emerald-300 hover:border-emerald-500/30'
-                                                } ${isSelf ? 'cursor-not-allowed opacity-80' : 'cursor-pointer'}`}
+                                                        ? 'bg-[#E8F5EF] border-[#087F5B]/30 text-[#087F5B] hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200'
+                                                        : 'bg-rose-50 border-rose-200 text-rose-600 hover:bg-[#E8F5EF] hover:text-[#087F5B] hover:border-[#087F5B]/30'
+                                                } ${isSelf ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}
                                                 title={isSelf ? 'Não é permitido desativar sua própria conta' : 'Clique para alternar status'}
                                             >
                                                 {u.status === 'ativo' ? 'Ativo' : 'Inativo'}
                                             </button>
                                         </td>
-                                        <td className="p-4 text-slate-400 whitespace-nowrap">
+                                        <td className="p-4 text-[#64748B] whitespace-nowrap">
                                             {u.created_at ? new Date(u.created_at).toLocaleDateString('pt-BR') : '-'}
                                         </td>
                                         <td className="p-4 text-right">
@@ -290,7 +290,7 @@ export default function UsuariosView({ currentUser }) {
                                                 <button
                                                     onClick={() => handleOpenEdit(u)}
                                                     title="Editar Papel / Senha"
-                                                    className="p-1.5 text-slate-400 hover:text-slate-100 hover:bg-slate-800 rounded-lg transition"
+                                                    className="p-1.5 text-[#64748B] hover:text-[#172033] hover:bg-[#F7F9F8] border border-transparent hover:border-[#E6EBE8] rounded-lg transition"
                                                 >
                                                     <Edit className="w-4 h-4" />
                                                 </button>
@@ -298,7 +298,7 @@ export default function UsuariosView({ currentUser }) {
                                                     <button
                                                         onClick={() => handleDelete(u)}
                                                         title="Excluir Usuário"
-                                                        className="p-1.5 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-lg transition"
+                                                        className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 border border-transparent hover:border-rose-100 rounded-lg transition"
                                                     >
                                                         <Trash2 className="w-4 h-4" />
                                                     </button>
@@ -315,52 +315,52 @@ export default function UsuariosView({ currentUser }) {
 
             {/* MODAL CADASTRAR / EDITAR USUÁRIO */}
             {modalOpen && (
-                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-fade-in">
-                        <div className="p-6 border-b border-slate-800 flex items-center justify-between">
-                            <h3 className="text-base font-bold text-white flex items-center gap-2">
-                                <UserPlus className="w-5 h-5 text-emerald-400" />
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+                    <div className="bg-white border border-[#E6EBE8] rounded-2xl w-full max-w-md overflow-hidden shadow-xl animate-fade-in">
+                        <div className="p-6 border-b border-[#E6EBE8] flex items-center justify-between">
+                            <h3 className="text-base font-bold text-[#172033] flex items-center gap-2">
+                                <UserPlus className="w-5 h-5 text-[#087F5B]" />
                                 <span>{editingUser ? 'Editar Usuário' : 'Novo Usuário do Sistema'}</span>
                             </h3>
-                            <button onClick={() => setModalOpen(false)} className="text-slate-400 hover:text-slate-100">
+                            <button onClick={() => setModalOpen(false)} className="text-[#64748B] hover:text-[#172033]">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
 
                         <form onSubmit={handleSave} className="p-6 space-y-4">
                             {modalError && (
-                                <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-300 text-xs flex items-center gap-2">
+                                <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs flex items-center gap-2">
                                     <AlertCircle className="w-4 h-4 shrink-0" />
                                     <span>{modalError}</span>
                                 </div>
                             )}
 
                             <div>
-                                <label className="block text-xs font-semibold text-slate-300 mb-1.5">Nome Completo *</label>
+                                <label className="block text-xs font-semibold text-[#172033] mb-1.5">Nome Completo *</label>
                                 <input
                                     type="text"
                                     required
                                     placeholder="Ex: Carlos Eduardo"
                                     value={userForm.nome}
                                     onChange={(e) => setUserForm({ ...userForm, nome: e.target.value })}
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-emerald-500"
+                                    className="w-full bg-white border border-[#E6EBE8] rounded-xl px-3.5 py-2.5 text-xs text-[#172033] focus:outline-none focus:border-[#087F5B]"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-xs font-semibold text-slate-300 mb-1.5">E-mail corporativo *</label>
+                                <label className="block text-xs font-semibold text-[#172033] mb-1.5">E-mail corporativo *</label>
                                 <input
                                     type="email"
                                     required
                                     placeholder="Ex: carlos@fazenda.com"
                                     value={userForm.email}
                                     onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-emerald-500"
+                                    className="w-full bg-white border border-[#E6EBE8] rounded-xl px-3.5 py-2.5 text-xs text-[#172033] focus:outline-none focus:border-[#087F5B]"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                                <label className="block text-xs font-semibold text-[#172033] mb-1.5">
                                     {editingUser ? 'Nova Senha (deixe em branco para manter a atual)' : 'Senha Inicial *'}
                                 </label>
                                 <input
@@ -368,17 +368,17 @@ export default function UsuariosView({ currentUser }) {
                                     placeholder="Mínimo 6 caracteres"
                                     value={userForm.senha}
                                     onChange={(e) => setUserForm({ ...userForm, senha: e.target.value })}
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-emerald-500"
+                                    className="w-full bg-white border border-[#E6EBE8] rounded-xl px-3.5 py-2.5 text-xs text-[#172033] focus:outline-none focus:border-[#087F5B]"
                                 />
                             </div>
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-xs font-semibold text-slate-300 mb-1.5">Papel / Permissão *</label>
+                                    <label className="block text-xs font-semibold text-[#172033] mb-1.5">Papel / Permissão *</label>
                                     <select
                                         value={userForm.papel}
                                         onChange={(e) => setUserForm({ ...userForm, papel: e.target.value })}
-                                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-emerald-500"
+                                        className="w-full bg-white border border-[#E6EBE8] rounded-xl px-3.5 py-2.5 text-xs text-[#172033] focus:outline-none focus:border-[#087F5B]"
                                     >
                                         <option value="dono">Dono (Acesso Total)</option>
                                         <option value="gerente">Gerente (Operacional)</option>
@@ -387,11 +387,11 @@ export default function UsuariosView({ currentUser }) {
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-semibold text-slate-300 mb-1.5">Status *</label>
+                                    <label className="block text-xs font-semibold text-[#172033] mb-1.5">Status *</label>
                                     <select
                                         value={userForm.status}
                                         onChange={(e) => setUserForm({ ...userForm, status: e.target.value })}
-                                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-emerald-500"
+                                        className="w-full bg-white border border-[#E6EBE8] rounded-xl px-3.5 py-2.5 text-xs text-[#172033] focus:outline-none focus:border-[#087F5B]"
                                     >
                                         <option value="ativo">Ativo</option>
                                         <option value="inativo">Inativo</option>
@@ -399,17 +399,17 @@ export default function UsuariosView({ currentUser }) {
                                 </div>
                             </div>
 
-                            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+                            <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#E6EBE8]">
                                 <button
                                     type="button"
                                     onClick={() => setModalOpen(false)}
-                                    className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white"
+                                    className="px-4 py-2 rounded-xl text-xs font-semibold text-[#64748B] hover:text-[#172033]"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold text-xs transition shadow-lg shadow-emerald-500/20"
+                                    className="px-5 py-2.5 rounded-xl bg-[#087F5B] hover:bg-[#087F5B]/90 text-white font-semibold text-xs transition shadow-xs cursor-pointer"
                                 >
                                     {editingUser ? 'Salvar Alterações' : 'Cadastrar Usuário'}
                                 </button>

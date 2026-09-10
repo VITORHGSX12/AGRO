@@ -16,11 +16,11 @@ export default function Pagination({
     if (totalItems === 0) return null;
 
     return (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-slate-900/90 border-t border-slate-800 text-xs text-slate-400 select-none">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-white border-t border-[#E6EBE8] text-xs text-[#64748B] select-none">
             {/* Itens per page & count */}
             <div className="flex items-center gap-3">
                 <span>
-                    Mostrando <strong className="text-white">{startItem}</strong> a <strong className="text-white">{endItem}</strong> de <strong className="text-white">{totalItems}</strong> registros
+                    Mostrando <strong className="text-[#172033] font-semibold">{startItem}</strong> a <strong className="text-[#172033] font-semibold">{endItem}</strong> de <strong className="text-[#172033] font-semibold">{totalItems}</strong> registros
                 </span>
 
                 {onItemsPerPageChange && (
@@ -29,7 +29,7 @@ export default function Pagination({
                         <select
                             value={itemsPerPage}
                             onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
-                            className="bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-slate-200 text-xs focus:outline-none focus:border-emerald-500"
+                            className="bg-[#F7F9F8] border border-[#E6EBE8] rounded-lg px-2 py-1 text-[#172033] text-xs focus:outline-none focus:border-[#087F5B]"
                         >
                             {pageSizeOptions.map(size => (
                                 <option key={size} value={size}>{size}</option>
@@ -44,7 +44,7 @@ export default function Pagination({
                 <button
                     onClick={() => onPageChange(1)}
                     disabled={currentPage === 1}
-                    className="p-1.5 rounded-lg border border-slate-800 bg-slate-950 text-slate-400 hover:text-white hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition"
+                    className="p-1.5 rounded-lg border border-[#E6EBE8] bg-[#F7F9F8] text-[#64748B] hover:text-[#172033] hover:bg-[#E8F5EF] disabled:opacity-40 disabled:pointer-events-none transition cursor-pointer"
                     title="Primeira Página"
                 >
                     <ChevronsLeft className="w-4 h-4" />
@@ -53,20 +53,20 @@ export default function Pagination({
                 <button
                     onClick={() => onPageChange(currentPage - 1)}
                     disabled={currentPage === 1}
-                    className="p-1.5 rounded-lg border border-slate-800 bg-slate-950 text-slate-400 hover:text-white hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition"
+                    className="p-1.5 rounded-lg border border-[#E6EBE8] bg-[#F7F9F8] text-[#64748B] hover:text-[#172033] hover:bg-[#E8F5EF] disabled:opacity-40 disabled:pointer-events-none transition cursor-pointer"
                     title="Página Anterior"
                 >
                     <ChevronLeft className="w-4 h-4" />
                 </button>
 
-                <div className="px-3 py-1 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 font-semibold text-xs">
+                <div className="px-3 py-1 bg-[#F7F9F8] border border-[#E6EBE8] rounded-lg text-[#172033] font-semibold text-xs">
                     Página {currentPage} de {totalPages}
                 </div>
 
                 <button
                     onClick={() => onPageChange(currentPage + 1)}
                     disabled={currentPage === totalPages}
-                    className="p-1.5 rounded-lg border border-slate-800 bg-slate-950 text-slate-400 hover:text-white hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition"
+                    className="p-1.5 rounded-lg border border-[#E6EBE8] bg-[#F7F9F8] text-[#64748B] hover:text-[#172033] hover:bg-[#E8F5EF] disabled:opacity-40 disabled:pointer-events-none transition cursor-pointer"
                     title="Próxima Página"
                 >
                     <ChevronRight className="w-4 h-4" />
@@ -75,7 +75,7 @@ export default function Pagination({
                 <button
                     onClick={() => onPageChange(totalPages)}
                     disabled={currentPage === totalPages}
-                    className="p-1.5 rounded-lg border border-slate-800 bg-slate-950 text-slate-400 hover:text-white hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition"
+                    className="p-1.5 rounded-lg border border-[#E6EBE8] bg-[#F7F9F8] text-[#64748B] hover:text-[#172033] hover:bg-[#E8F5EF] disabled:opacity-40 disabled:pointer-events-none transition cursor-pointer"
                     title="Última Página"
                 >
                     <ChevronsRight className="w-4 h-4" />

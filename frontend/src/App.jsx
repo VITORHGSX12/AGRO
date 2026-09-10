@@ -141,7 +141,7 @@ export default function App() {
     }
 
     return (
-        <div className="flex h-screen w-screen overflow-hidden bg-slate-950 font-sans text-slate-100">
+        <div className="flex h-screen w-screen overflow-hidden bg-[#F7F9F8] font-sans text-[#172033]">
             {/* Sidebar Navigation */}
             <Sidebar 
                 activeTab={activeTab} 
@@ -154,7 +154,7 @@ export default function App() {
             />
 
             {/* Main Content Area */}
-            <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-slate-900">
+            <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#F7F9F8]">
                 {/* Header Topbar */}
                 <Header 
                     fazenda={fazenda}

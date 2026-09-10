@@ -13,7 +13,8 @@ import {
     RefreshCw,
     Shield,
     AlertCircle,
-    Users
+    Users,
+    ArrowLeft
 } from 'lucide-react';
 import { api } from '../services/api';
 import Pagination from '../components/Pagination';
@@ -727,13 +728,14 @@ export default function SanidadeView({ onReloadDashboard, triggerNewModal, onRes
                                 />
                             </div>
 
-                            <div className="flex items-center justify-end gap-3 pt-3">
+                            <div className="flex items-center justify-end gap-2 pt-3">
                                 <button
                                     type="button"
                                     onClick={() => setModalOpen(false)}
-                                    className="px-4 py-2.5 text-[#64748B] hover:text-[#172033] bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl cursor-pointer font-medium"
+                                    className="px-4 py-2.5 text-[#64748B] hover:text-[#172033] bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl cursor-pointer font-medium flex items-center gap-1.5"
                                 >
-                                    Cancelar
+                                    <ArrowLeft className="w-3.5 h-3.5" />
+                                    <span>Voltar / Cancelar</span>
                                 </button>
                                 <button
                                     type="submit"
@@ -754,6 +756,13 @@ export default function SanidadeView({ onReloadDashboard, triggerNewModal, onRes
                     <div className="bg-white border border-[#E6EBE8] rounded-2xl w-full max-w-md p-6 shadow-xl">
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => setModalConcluirOpen(false)}
+                                    title="Voltar / Cancelar"
+                                    className="p-1 rounded-lg text-[#64748B] hover:text-[#172033] hover:bg-[#F7F9F8] transition cursor-pointer"
+                                >
+                                    <ArrowLeft className="w-4 h-4" />
+                                </button>
                                 <CheckCircle2 className="w-5 h-5 text-[#087F5B]" />
                                 <h3 className="text-base font-bold text-[#172033]">Confirmar Aplicação</h3>
                             </div>
@@ -807,13 +816,14 @@ export default function SanidadeView({ onReloadDashboard, triggerNewModal, onRes
                                 </label>
                             </div>
 
-                            <div className="flex items-center justify-end gap-3 pt-3">
+                            <div className="flex items-center justify-end gap-2 pt-3">
                                 <button
                                     type="button"
                                     onClick={() => setModalConcluirOpen(false)}
-                                    className="px-4 py-2.5 text-[#64748B] hover:text-[#172033] bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl font-medium cursor-pointer"
+                                    className="px-4 py-2.5 text-[#64748B] hover:text-[#172033] bg-[#F7F9F8] border border-[#E6EBE8] rounded-xl font-medium cursor-pointer flex items-center gap-1.5"
                                 >
-                                    Cancelar
+                                    <ArrowLeft className="w-3.5 h-3.5" />
+                                    <span>Voltar / Cancelar</span>
                                 </button>
                                 <button
                                     type="submit"

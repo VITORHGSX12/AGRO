@@ -16,7 +16,8 @@ import {
     Beef,
     Sprout,
     Users,
-    Wrench
+    Wrench,
+    ArrowLeft
 } from 'lucide-react';
 import { api } from '../services/api';
 import { exportToCSV } from '../utils/csvExporter';
@@ -526,12 +527,19 @@ export default function FinanceiroView({ mesAno, onReloadDashboard, triggerNewMo
                     <div className="bg-white border border-[#E6EBE8] rounded-2xl w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-150">
                         <div className="px-6 py-4 border-b border-[#E6EBE8] flex items-center justify-between">
                             <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => setModalOpen(false)}
+                                    title="Voltar / Cancelar"
+                                    className="p-1 rounded-lg text-[#64748B] hover:text-[#172033] hover:bg-[#F7F9F8] transition cursor-pointer"
+                                >
+                                    <ArrowLeft className="w-4 h-4" />
+                                </button>
                                 <div className="w-8 h-8 rounded-xl bg-[#E8F5EF] flex items-center justify-center text-[#087F5B]">
                                     <CircleDollarSign className="w-4 h-4" strokeWidth={2} />
                                 </div>
                                 <h3 className="font-bold text-sm text-[#172033]">Novo Lançamento Financeiro</h3>
                             </div>
-                            <button onClick={() => setModalOpen(false)} className="text-[#64748B] hover:text-[#172033] transition">
+                            <button onClick={() => setModalOpen(false)} className="text-[#64748B] hover:text-[#172033] transition cursor-pointer">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
@@ -641,13 +649,14 @@ export default function FinanceiroView({ mesAno, onReloadDashboard, triggerNewMo
                                 />
                             </div>
 
-                            <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#E6EBE8]">
+                            <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#E6EBE8]">
                                 <button
                                     type="button"
                                     onClick={() => setModalOpen(false)}
-                                    className="px-4 py-2 rounded-xl text-xs font-semibold text-[#64748B] hover:bg-slate-100 transition cursor-pointer"
+                                    className="px-4 py-2 rounded-xl text-xs font-semibold text-[#64748B] hover:bg-slate-100 transition cursor-pointer flex items-center gap-1.5"
                                 >
-                                    Cancelar
+                                    <ArrowLeft className="w-3.5 h-3.5" />
+                                    <span>Voltar / Cancelar</span>
                                 </button>
                                 <button
                                     type="submit"

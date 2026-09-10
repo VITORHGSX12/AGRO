@@ -11,7 +11,8 @@ import {
     DollarSign,
     CheckCircle2,
     Beef,
-    ArrowRight
+    ArrowRight,
+    ArrowLeft
 } from 'lucide-react';
 import { api } from '../services/api';
 
@@ -804,12 +805,13 @@ export default function FazendaView({ fazenda, onReloadFazenda, piquetes = [], o
                             )}
                         </div>
 
-                        <div className="flex justify-end">
+                        <div className="flex justify-between items-center">
                             <button
                                 onClick={() => setSelectedPiqueteAnimais(null)}
-                                className="px-4 py-2 bg-[#F7F9F8] hover:bg-[#E6EBE8] text-[#172033] rounded-xl text-xs font-semibold cursor-pointer"
+                                className="px-4 py-2 bg-[#F7F9F8] hover:bg-[#E6EBE8] text-[#172033] rounded-xl text-xs font-semibold cursor-pointer flex items-center gap-1.5"
                             >
-                                Fechar
+                                <ArrowLeft className="w-3.5 h-3.5" />
+                                <span>Voltar aos Pastos</span>
                             </button>
                         </div>
                     </div>
@@ -821,9 +823,18 @@ export default function FazendaView({ fazenda, onReloadFazenda, piquetes = [], o
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
                     <div className="w-full max-w-md bg-white border border-[#E6EBE8] rounded-2xl overflow-hidden shadow-xl p-6 space-y-4">
                         <div className="flex items-center justify-between">
-                            <h3 className="text-base font-bold text-[#172033]">
-                                {editingPiquete ? 'Editar Piquete' : 'Novo Piquete / Pasto'}
-                            </h3>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => setModalPiqueteOpen(false)}
+                                    title="Voltar / Cancelar"
+                                    className="p-1 rounded-lg text-[#64748B] hover:text-[#172033] hover:bg-[#F7F9F8] transition cursor-pointer"
+                                >
+                                    <ArrowLeft className="w-4 h-4" />
+                                </button>
+                                <h3 className="text-base font-bold text-[#172033]">
+                                    {editingPiquete ? 'Editar Piquete' : 'Novo Piquete / Pasto'}
+                                </h3>
+                            </div>
                             <button onClick={() => setModalPiqueteOpen(false)} className="text-[#64748B] hover:text-[#172033] cursor-pointer">
                                 <X className="w-5 h-5" />
                             </button>
@@ -877,9 +888,10 @@ export default function FazendaView({ fazenda, onReloadFazenda, piquetes = [], o
                                 <button
                                     type="button"
                                     onClick={() => setModalPiqueteOpen(false)}
-                                    className="px-4 py-2 bg-[#F7F9F8] hover:bg-[#E6EBE8] text-[#172033] border border-[#E6EBE8] rounded-xl text-xs font-semibold cursor-pointer"
+                                    className="px-4 py-2 bg-[#F7F9F8] hover:bg-[#E6EBE8] text-[#172033] border border-[#E6EBE8] rounded-xl text-xs font-semibold cursor-pointer flex items-center gap-1.5"
                                 >
-                                    Cancelar
+                                    <ArrowLeft className="w-3.5 h-3.5" />
+                                    <span>Voltar / Cancelar</span>
                                 </button>
                                 <button
                                     type="submit"
@@ -899,7 +911,16 @@ export default function FazendaView({ fazenda, onReloadFazenda, piquetes = [], o
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
                     <div className="w-full max-w-md bg-white border border-[#E6EBE8] rounded-2xl overflow-hidden shadow-xl p-6 space-y-4">
                         <div className="flex items-center justify-between">
-                            <h3 className="text-base font-bold text-[#172033]">Registrar Evento de Rotação</h3>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => setModalRotacaoOpen(false)}
+                                    title="Voltar / Cancelar"
+                                    className="p-1 rounded-lg text-[#64748B] hover:text-[#172033] hover:bg-[#F7F9F8] transition cursor-pointer"
+                                >
+                                    <ArrowLeft className="w-4 h-4" />
+                                </button>
+                                <h3 className="text-base font-bold text-[#172033]">Registrar Evento de Rotação</h3>
+                            </div>
                             <button onClick={() => setModalRotacaoOpen(false)} className="text-[#64748B] hover:text-[#172033] cursor-pointer">
                                 <X className="w-5 h-5" />
                             </button>
@@ -974,9 +995,10 @@ export default function FazendaView({ fazenda, onReloadFazenda, piquetes = [], o
                                 <button
                                     type="button"
                                     onClick={() => setModalRotacaoOpen(false)}
-                                    className="px-4 py-2 bg-[#F7F9F8] hover:bg-[#E6EBE8] text-[#172033] border border-[#E6EBE8] rounded-xl text-xs font-semibold cursor-pointer"
+                                    className="px-4 py-2 bg-[#F7F9F8] hover:bg-[#E6EBE8] text-[#172033] border border-[#E6EBE8] rounded-xl text-xs font-semibold cursor-pointer flex items-center gap-1.5"
                                 >
-                                    Cancelar
+                                    <ArrowLeft className="w-3.5 h-3.5" />
+                                    <span>Voltar / Cancelar</span>
                                 </button>
                                 <button
                                     type="submit"
@@ -996,7 +1018,16 @@ export default function FazendaView({ fazenda, onReloadFazenda, piquetes = [], o
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
                     <div className="w-full max-w-lg bg-white border border-[#E6EBE8] rounded-2xl overflow-hidden shadow-xl p-6 space-y-4">
                         <div className="flex items-center justify-between">
-                            <h3 className="text-base font-bold text-[#172033]">Novo Contrato de Arrendamento Rural</h3>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => setModalArrendamentoOpen(false)}
+                                    title="Voltar / Cancelar"
+                                    className="p-1 rounded-lg text-[#64748B] hover:text-[#172033] hover:bg-[#F7F9F8] transition cursor-pointer"
+                                >
+                                    <ArrowLeft className="w-4 h-4" />
+                                </button>
+                                <h3 className="text-base font-bold text-[#172033]">Novo Contrato de Arrendamento Rural</h3>
+                            </div>
                             <button onClick={() => setModalArrendamentoOpen(false)} className="text-[#64748B] hover:text-[#172033] cursor-pointer">
                                 <X className="w-5 h-5" />
                             </button>
@@ -1105,9 +1136,10 @@ export default function FazendaView({ fazenda, onReloadFazenda, piquetes = [], o
                                 <button
                                     type="button"
                                     onClick={() => setModalArrendamentoOpen(false)}
-                                    className="px-4 py-2 bg-[#F7F9F8] hover:bg-[#E6EBE8] text-[#172033] border border-[#E6EBE8] rounded-xl text-xs font-semibold cursor-pointer"
+                                    className="px-4 py-2 bg-[#F7F9F8] hover:bg-[#E6EBE8] text-[#172033] border border-[#E6EBE8] rounded-xl text-xs font-semibold cursor-pointer flex items-center gap-1.5"
                                 >
-                                    Cancelar
+                                    <ArrowLeft className="w-3.5 h-3.5" />
+                                    <span>Voltar / Cancelar</span>
                                 </button>
                                 <button
                                     type="submit"

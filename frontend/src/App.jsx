@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import LoginView from './views/LoginView';
 import HomeView from './views/HomeView';
@@ -21,7 +20,6 @@ export default function App() {
 
     const [activeTab, setActiveTab] = useState('home');
     const [mesAno, setMesAno] = useState(() => new Date().toISOString().slice(0, 7)); // 'YYYY-MM'
-    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     
     // Global Data
     const [fazenda, setFazenda] = useState(null);
@@ -153,37 +151,24 @@ export default function App() {
         );
     }
 
-    // PÁGINAS INTERNAS: Exibe com Sidebar e Header com botão de voltar para o Início
+    // PÁGINAS INTERNAS: Exibe com Header completo (sem sidebar) e botão de voltar ao Menu Principal
     return (
-        <div className="flex h-screen w-full overflow-hidden bg-[#F7F9F8] font-sans text-[#172033]">
-            {/* Sidebar Navigation */}
-            <Sidebar 
-                activeTab={activeTab} 
-                setActiveTab={setActiveTab} 
-                counts={counts}
+        <div className="min-h-screen w-full bg-[#F7F9F8] font-sans text-[#172033] flex flex-col">
+            {/* Header Topbar com botão "← Menu Principal" */}
+            <Header 
+                fazenda={fazenda}
+                mesAno={mesAno}
+                setMesAno={setMesAno}
+                onQuickAction={handleQuickAction}
+                activeTab={activeTab}
                 currentUser={currentUser}
                 onLogout={handleLogout}
-                mobileOpen={mobileMenuOpen}
-                onCloseMobile={() => setMobileMenuOpen(false)}
+                onNavigateHome={() => setActiveTab('home')}
             />
 
-            {/* Main Content Area */}
-            <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#F7F9F8]">
-                {/* Header Topbar */}
-                <Header 
-                    fazenda={fazenda}
-                    mesAno={mesAno}
-                    setMesAno={setMesAno}
-                    onQuickAction={handleQuickAction}
-                    activeTab={activeTab}
-                    currentUser={currentUser}
-                    onOpenMobile={() => setMobileMenuOpen(true)}
-                    onNavigateHome={() => setActiveTab('home')}
-                />
-
-                {/* Main Scrollable View */}
-                <main className="flex-1 overflow-y-auto p-3.5 sm:p-5 lg:p-6">
-                    <div className="w-full max-w-7xl mx-auto pb-12">
+            {/* Main Scrollable View */}
+            <main className="flex-1 overflow-y-auto p-3.5 sm:p-5 lg:p-6">
+                <div className="w-full max-w-7xl mx-auto pb-12">
                         {activeTab === 'dashboard' && (
                             <DashboardView 
                                 mesAno={mesAno} 
@@ -278,7 +263,6 @@ export default function App() {
                         )}
                     </div>
                 </main>
-            </div>
         </div>
     );
 }

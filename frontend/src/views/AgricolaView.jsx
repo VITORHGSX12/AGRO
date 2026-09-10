@@ -20,7 +20,8 @@ import {
     Search,
     Filter,
     ChevronRight,
-    BarChart3
+    BarChart3,
+    ArrowLeft
 } from 'lucide-react';
 import { api } from '../services/api';
 
@@ -883,13 +884,14 @@ export default function AgricolaView({ onReloadDashboard, triggerNewModal, onRes
                                 </div>
                             </div>
 
-                            <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#E6EBE8]">
+                            <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#E6EBE8]">
                                 <button
                                     type="button"
                                     onClick={() => setModalTalhaoOpen(false)}
-                                    className="px-4 py-2.5 text-[#64748B] hover:bg-slate-100 rounded-xl font-medium cursor-pointer"
+                                    className="px-4 py-2.5 text-[#64748B] hover:bg-slate-100 rounded-xl font-medium cursor-pointer flex items-center gap-1.5"
                                 >
-                                    Cancelar
+                                    <ArrowLeft className="w-3.5 h-3.5" />
+                                    <span>Voltar / Cancelar</span>
                                 </button>
                                 <button
                                     type="submit"
@@ -910,6 +912,13 @@ export default function AgricolaView({ onReloadDashboard, triggerNewModal, onRes
                     <div className="bg-white border border-[#E6EBE8] rounded-2xl w-full max-w-lg p-6 shadow-2xl">
                         <div className="flex items-center justify-between mb-5">
                             <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => setModalSafraOpen(false)}
+                                    title="Voltar / Cancelar"
+                                    className="p-1 rounded-lg text-[#64748B] hover:text-[#172033] hover:bg-[#F7F9F8] transition cursor-pointer"
+                                >
+                                    <ArrowLeft className="w-4 h-4" />
+                                </button>
                                 <div className="w-8 h-8 rounded-xl bg-[#E8F5EF] flex items-center justify-center text-[#087F5B]">
                                     <Sprout className="w-4 h-4" strokeWidth={2} />
                                 </div>
@@ -917,7 +926,7 @@ export default function AgricolaView({ onReloadDashboard, triggerNewModal, onRes
                             </div>
                             <button
                                 onClick={() => setModalSafraOpen(false)}
-                                className="p-1.5 text-[#64748B] hover:text-[#172033] rounded-lg transition"
+                                className="p-1.5 text-[#64748B] hover:text-[#172033] rounded-lg transition cursor-pointer"
                             >
                                 <X className="w-5 h-5" />
                             </button>
@@ -993,13 +1002,14 @@ export default function AgricolaView({ onReloadDashboard, triggerNewModal, onRes
                                 />
                             </div>
 
-                            <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#E6EBE8]">
+                            <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#E6EBE8]">
                                 <button
                                     type="button"
                                     onClick={() => setModalSafraOpen(false)}
-                                    className="px-4 py-2.5 text-[#64748B] hover:bg-slate-100 rounded-xl font-medium cursor-pointer"
+                                    className="px-4 py-2.5 text-[#64748B] hover:bg-slate-100 rounded-xl font-medium cursor-pointer flex items-center gap-1.5"
                                 >
-                                    Cancelar
+                                    <ArrowLeft className="w-3.5 h-3.5" />
+                                    <span>Voltar / Cancelar</span>
                                 </button>
                                 <button
                                     type="submit"
@@ -1019,15 +1029,24 @@ export default function AgricolaView({ onReloadDashboard, triggerNewModal, onRes
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
                     <div className="bg-white border border-[#E6EBE8] rounded-2xl w-full max-w-lg p-6 shadow-2xl">
                         <div className="flex items-center justify-between mb-5">
-                            <div>
-                                <h3 className="text-base font-bold text-[#172033]">Lançar Insumo Agrícola</h3>
-                                <p className="text-xs text-[#64748B] font-medium mt-0.5">
-                                    Safra: <strong className="text-[#087F5B]">{selectedSafraParaInsumo.cultura}</strong> ({selectedSafraParaInsumo.talhao_nome})
-                                </p>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => setModalInsumoOpen(false)}
+                                    title="Voltar / Cancelar"
+                                    className="p-1 rounded-lg text-[#64748B] hover:text-[#172033] hover:bg-[#F7F9F8] transition cursor-pointer"
+                                >
+                                    <ArrowLeft className="w-4 h-4" />
+                                </button>
+                                <div>
+                                    <h3 className="text-base font-bold text-[#172033]">Lançar Insumo Agrícola</h3>
+                                    <p className="text-xs text-[#64748B] font-medium mt-0.5">
+                                        Safra: <strong className="text-[#087F5B]">{selectedSafraParaInsumo.cultura}</strong> ({selectedSafraParaInsumo.talhao_nome})
+                                    </p>
+                                </div>
                             </div>
                             <button
                                 onClick={() => setModalInsumoOpen(false)}
-                                className="p-1.5 text-[#64748B] hover:text-[#172033] rounded-lg transition"
+                                className="p-1.5 text-[#64748B] hover:text-[#172033] rounded-lg transition cursor-pointer"
                             >
                                 <X className="w-5 h-5" />
                             </button>
@@ -1118,13 +1137,14 @@ export default function AgricolaView({ onReloadDashboard, triggerNewModal, onRes
                                 <span>Lançar automaticamente como despesa no Financeiro</span>
                             </label>
 
-                            <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#E6EBE8]">
+                            <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#E6EBE8]">
                                 <button
                                     type="button"
                                     onClick={() => setModalInsumoOpen(false)}
-                                    className="px-4 py-2.5 text-[#64748B] hover:bg-slate-100 rounded-xl font-medium cursor-pointer"
+                                    className="px-4 py-2.5 text-[#64748B] hover:bg-slate-100 rounded-xl font-medium cursor-pointer flex items-center gap-1.5"
                                 >
-                                    Cancelar
+                                    <ArrowLeft className="w-3.5 h-3.5" />
+                                    <span>Voltar / Cancelar</span>
                                 </button>
                                 <button
                                     type="submit"
@@ -1144,15 +1164,24 @@ export default function AgricolaView({ onReloadDashboard, triggerNewModal, onRes
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
                     <div className="bg-white border border-[#E6EBE8] rounded-2xl w-full max-w-lg p-6 shadow-2xl">
                         <div className="flex items-center justify-between mb-5">
-                            <div>
-                                <h3 className="text-base font-bold text-[#172033]">Fechamento & Registro de Colheita</h3>
-                                <p className="text-xs text-[#64748B] font-medium mt-0.5">
-                                    Safra: <strong className="text-[#087F5B]">{selectedSafraParaColher.cultura}</strong> ({selectedSafraParaColher.talhao_nome}, {selectedSafraParaColher.talhao_area} ha)
-                                </p>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => setModalColheitaOpen(false)}
+                                    title="Voltar / Cancelar"
+                                    className="p-1 rounded-lg text-[#64748B] hover:text-[#172033] hover:bg-[#F7F9F8] transition cursor-pointer"
+                                >
+                                    <ArrowLeft className="w-4 h-4" />
+                                </button>
+                                <div>
+                                    <h3 className="text-base font-bold text-[#172033]">Fechamento & Registro de Colheita</h3>
+                                    <p className="text-xs text-[#64748B] font-medium mt-0.5">
+                                        Safra: <strong className="text-[#087F5B]">{selectedSafraParaColher.cultura}</strong> ({selectedSafraParaColher.talhao_nome}, {selectedSafraParaColher.talhao_area} ha)
+                                    </p>
+                                </div>
                             </div>
                             <button
                                 onClick={() => setModalColheitaOpen(false)}
-                                className="p-1.5 text-[#64748B] hover:text-[#172033] rounded-lg transition"
+                                className="p-1.5 text-[#64748B] hover:text-[#172033] rounded-lg transition cursor-pointer"
                             >
                                 <X className="w-5 h-5" />
                             </button>
@@ -1233,13 +1262,14 @@ export default function AgricolaView({ onReloadDashboard, triggerNewModal, onRes
                                 <span>Lançar receita de venda automaticamente no Financeiro</span>
                             </label>
 
-                            <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#E6EBE8]">
+                            <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#E6EBE8]">
                                 <button
                                     type="button"
                                     onClick={() => setModalColheitaOpen(false)}
-                                    className="px-4 py-2.5 text-[#64748B] hover:bg-slate-100 rounded-xl font-medium cursor-pointer"
+                                    className="px-4 py-2.5 text-[#64748B] hover:bg-slate-100 rounded-xl font-medium cursor-pointer flex items-center gap-1.5"
                                 >
-                                    Cancelar
+                                    <ArrowLeft className="w-3.5 h-3.5" />
+                                    <span>Voltar / Cancelar</span>
                                 </button>
                                 <button
                                     type="submit"
@@ -1262,22 +1292,31 @@ export default function AgricolaView({ onReloadDashboard, triggerNewModal, onRes
                         <div className="space-y-6">
                             {/* Header Drawer */}
                             <div className="flex items-start justify-between border-b border-[#E6EBE8] pb-4">
-                                <div>
-                                    <div className="flex items-center gap-2">
-                                        <h2 className="text-lg font-bold text-[#172033] tracking-tight">
-                                            Safra: {safraDetalhes.cultura}
-                                        </h2>
-                                        <span className={`text-[10px] uppercase font-bold px-2.5 py-0.5 rounded-full border ${
-                                            safraDetalhes.status === 'colhida'
-                                                ? 'bg-[#E8F5EF] text-[#087F5B] border-[#C3E6D6]'
-                                                : 'bg-[#FEF9E7] text-[#D9A441] border-[#FDE8B3]'
-                                        }`}>
-                                            {safraDetalhes.status}
-                                        </span>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => setDrawerOpen(false)}
+                                        title="Voltar às Safras"
+                                        className="p-1.5 text-[#64748B] hover:text-[#172033] hover:bg-[#F7F9F8] rounded-xl transition cursor-pointer"
+                                    >
+                                        <ArrowLeft className="w-4 h-4" />
+                                    </button>
+                                    <div>
+                                        <div className="flex items-center gap-2">
+                                            <h2 className="text-lg font-bold text-[#172033] tracking-tight">
+                                                Safra: {safraDetalhes.cultura}
+                                            </h2>
+                                            <span className={`text-[10px] uppercase font-bold px-2.5 py-0.5 rounded-full border ${
+                                                safraDetalhes.status === 'colhida'
+                                                    ? 'bg-[#E8F5EF] text-[#087F5B] border-[#C3E6D6]'
+                                                    : 'bg-[#FEF9E7] text-[#D9A441] border-[#FDE8B3]'
+                                            }`}>
+                                                {safraDetalhes.status}
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-[#64748B] mt-1 font-medium">
+                                            Talhão: <strong className="text-[#172033]">{safraDetalhes.talhao_nome}</strong> ({safraDetalhes.talhao_area} ha)
+                                        </p>
                                     </div>
-                                    <p className="text-xs text-[#64748B] mt-1 font-medium">
-                                        Talhão: <strong className="text-[#172033]">{safraDetalhes.talhao_nome}</strong> ({safraDetalhes.talhao_area} ha)
-                                    </p>
                                 </div>
                                 <button
                                     onClick={() => setDrawerOpen(false)}
@@ -1375,9 +1414,10 @@ export default function AgricolaView({ onReloadDashboard, triggerNewModal, onRes
                         <div className="pt-4 border-t border-[#E6EBE8]">
                             <button
                                 onClick={() => setDrawerOpen(false)}
-                                className="w-full bg-[#F7F9F8] hover:bg-slate-100 border border-[#E6EBE8] text-[#172033] text-xs font-semibold py-2.5 rounded-xl transition-all cursor-pointer"
+                                className="w-full bg-[#F7F9F8] hover:bg-slate-100 border border-[#E6EBE8] text-[#172033] text-xs font-semibold py-2.5 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
                             >
-                                Fechar Ficha
+                                <ArrowLeft className="w-3.5 h-3.5" />
+                                <span>Voltar às Safras</span>
                             </button>
                         </div>
                     </div>

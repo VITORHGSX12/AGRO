@@ -10,7 +10,8 @@ import {
     Scale, 
     Activity, 
     ShieldAlert, 
-    AlertCircle
+    AlertCircle,
+    ArrowLeft
 } from 'lucide-react';
 import { api } from '../services/api';
 import Pagination from '../components/Pagination';
@@ -766,6 +767,24 @@ export default function RebanhoView({ piquetes = [], onReloadPiquetes, triggerNe
                                 </>
                             )}
                         </div>
+
+                        {/* Footer Ficha */}
+                        <div className="p-4 bg-[#F7F9F8] border-t border-[#E6EBE8] flex items-center justify-between">
+                            <button
+                                onClick={() => setSelectedAnimalId(null)}
+                                className="px-4 py-2 bg-white hover:bg-[#E8F5EF] text-[#172033] hover:text-[#087F5B] border border-[#E6EBE8] rounded-xl text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+                            >
+                                <ArrowLeft className="w-3.5 h-3.5" />
+                                <span>Voltar ao Rebanho</span>
+                            </button>
+                            <button
+                                onClick={() => handleOpenPesagem(animalDetails)}
+                                className="px-4 py-2 bg-[#087F5B] hover:bg-[#159A70] text-white rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer"
+                            >
+                                <Scale className="w-3.5 h-3.5" />
+                                <span>Registrar Nova Pesagem</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
@@ -775,9 +794,18 @@ export default function RebanhoView({ piquetes = [], onReloadPiquetes, triggerNe
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
                     <div className="w-full max-w-lg bg-white border border-[#E6EBE8] rounded-2xl overflow-hidden shadow-xl p-6 space-y-4">
                         <div className="flex items-center justify-between">
-                            <h3 className="text-base font-bold text-[#172033]">
-                                {editingAnimal ? `Editar Animal — ${editingAnimal.identificacao}` : 'Novo Animal no Rebanho'}
-                            </h3>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => setModalOpen(false)}
+                                    title="Voltar / Cancelar"
+                                    className="p-1 rounded-lg text-[#64748B] hover:text-[#172033] hover:bg-[#F7F9F8] transition cursor-pointer"
+                                >
+                                    <ArrowLeft className="w-4 h-4" />
+                                </button>
+                                <h3 className="text-base font-bold text-[#172033]">
+                                    {editingAnimal ? `Editar Animal — ${editingAnimal.identificacao}` : 'Novo Animal no Rebanho'}
+                                </h3>
+                            </div>
                             <button onClick={() => setModalOpen(false)} className="text-[#64748B] hover:text-[#172033] cursor-pointer">
                                 <X className="w-5 h-5" />
                             </button>
@@ -911,9 +939,10 @@ export default function RebanhoView({ piquetes = [], onReloadPiquetes, triggerNe
                                 <button
                                     type="button"
                                     onClick={() => setModalOpen(false)}
-                                    className="px-4 py-2 bg-[#F7F9F8] hover:bg-[#E6EBE8] text-[#172033] border border-[#E6EBE8] rounded-xl text-xs font-semibold cursor-pointer"
+                                    className="px-4 py-2 bg-[#F7F9F8] hover:bg-[#E6EBE8] text-[#172033] border border-[#E6EBE8] rounded-xl text-xs font-semibold cursor-pointer flex items-center gap-1.5"
                                 >
-                                    Cancelar
+                                    <ArrowLeft className="w-3.5 h-3.5" />
+                                    <span>Voltar / Cancelar</span>
                                 </button>
                                 <button
                                     type="submit"
@@ -934,6 +963,13 @@ export default function RebanhoView({ piquetes = [], onReloadPiquetes, triggerNe
                     <div className="w-full max-w-md bg-white border border-[#E6EBE8] rounded-2xl overflow-hidden shadow-xl p-6 space-y-4">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => setModalPesagemOpen(false)}
+                                    title="Voltar / Cancelar"
+                                    className="p-1 rounded-lg text-[#64748B] hover:text-[#172033] hover:bg-[#F7F9F8] transition cursor-pointer"
+                                >
+                                    <ArrowLeft className="w-4 h-4" />
+                                </button>
                                 <Scale className="w-5 h-5 text-[#087F5B]" />
                                 <h3 className="text-base font-bold text-[#172033]">
                                     Registrar Pesagem — Brinco {pesagemAnimal?.identificacao}
@@ -995,9 +1031,10 @@ export default function RebanhoView({ piquetes = [], onReloadPiquetes, triggerNe
                                 <button
                                     type="button"
                                     onClick={() => setModalPesagemOpen(false)}
-                                    className="px-4 py-2 bg-[#F7F9F8] hover:bg-[#E6EBE8] text-[#172033] border border-[#E6EBE8] rounded-xl text-xs font-semibold cursor-pointer"
+                                    className="px-4 py-2 bg-[#F7F9F8] hover:bg-[#E6EBE8] text-[#172033] border border-[#E6EBE8] rounded-xl text-xs font-semibold cursor-pointer flex items-center gap-1.5"
                                 >
-                                    Cancelar
+                                    <ArrowLeft className="w-3.5 h-3.5" />
+                                    <span>Voltar / Cancelar</span>
                                 </button>
                                 <button
                                     type="submit"

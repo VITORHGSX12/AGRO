@@ -42,7 +42,7 @@ export default function HomeView({ onNavigate, currentUser, onLogout, fazenda, c
         },
         {
             id: 'piquetes',
-            title: 'Pastos',
+            title: 'Pastos & Piquetes',
             description: 'Acompanhe a ocupação, manejo e produtividade dos pastos.',
             icon: Fence,
             image: 'https://images.unsplash.com/photo-1500595046743-cd271d694d30?auto=format&fit=crop&w=800&q=80',
@@ -67,7 +67,7 @@ export default function HomeView({ onNavigate, currentUser, onLogout, fazenda, c
         },
         {
             id: 'sanidade',
-            title: 'Sanidade',
+            title: 'Sanidade & Protocolos',
             description: 'Controle vacinas, tratamentos e a saúde do seu rebanho.',
             icon: ShieldAlert,
             badge: (counts.vacinasAtrasadas || 0) > 0 ? `${counts.vacinasAtrasadas} atrasada(s)` : null,
@@ -76,19 +76,11 @@ export default function HomeView({ onNavigate, currentUser, onLogout, fazenda, c
             roles: ['dono', 'gerente']
         },
         {
-            id: 'dashboard',
-            title: 'Relatórios & Indicadores',
-            description: 'Gere relatórios e tenha uma visão completa da sua operação.',
-            icon: BarChart3,
-            image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80',
-            roles: ['dono', 'gerente', 'contador']
-        },
-        {
-            id: 'fazenda',
-            title: 'Configurações',
-            description: 'Personalize o sistema conforme sua necessidade.',
-            icon: Settings2,
-            image: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80',
+            id: 'movimentacoes',
+            title: 'Movimentações de Gado',
+            description: 'Acompanhe entradas, saídas e transferências do rebanho.',
+            icon: ArrowLeftRight,
+            image: 'https://images.unsplash.com/photo-1516467508483-a7212febe31a?auto=format&fit=crop&w=800&q=80',
             roles: ['dono', 'gerente']
         },
         {
@@ -109,25 +101,33 @@ export default function HomeView({ onNavigate, currentUser, onLogout, fazenda, c
             roles: ['dono', 'gerente']
         },
         {
-            id: 'sanidade',
-            title: 'Atividades & Calendário',
-            description: 'Confira suas próximas tarefas, vacinações e compromissos.',
-            icon: Calendar,
-            image: 'https://images.unsplash.com/photo-1506784365847-bbad939e9335?auto=format&fit=crop&w=800&q=80',
-            roles: ['dono', 'gerente']
+            id: 'usuarios',
+            title: 'Usuários & Acessos',
+            description: 'Gerencie contas, credenciais e permissões da equipe.',
+            icon: Users,
+            image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80',
+            roles: ['dono']
         },
         {
-            id: 'movimentacoes',
-            title: 'Movimentações',
-            description: 'Acompanhe entradas, saídas e movimentações do rebanho.',
-            icon: ArrowLeftRight,
-            image: 'https://images.unsplash.com/photo-1516467508483-a7212febe31a?auto=format&fit=crop&w=800&q=80',
+            id: 'fazenda',
+            title: 'Configurações da Fazenda',
+            description: 'Personalize os parâmetros cadastrais e áreas da propriedade.',
+            icon: Settings2,
+            image: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80',
             roles: ['dono', 'gerente']
         },
         {
             id: 'dashboard',
+            title: 'Relatórios & Indicadores',
+            description: 'Gere relatórios analíticos e indicadores de desempenho.',
+            icon: BarChart3,
+            image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80',
+            roles: ['dono', 'gerente', 'contador']
+        },
+        {
+            id: 'dashboard',
             title: 'Visão Geral da Fazenda',
-            description: 'Acompanhe os principais indicadores consolidados da sua fazenda.',
+            description: 'Painel executivo com resumo de todas as frentes da operação.',
             icon: Home,
             image: 'https://images.unsplash.com/photo-1500076656116-558758c991c1?auto=format&fit=crop&w=800&q=80',
             roles: ['dono', 'gerente', 'contador']

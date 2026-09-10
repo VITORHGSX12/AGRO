@@ -43,7 +43,7 @@ export default function LoginView({ onLoginSuccess }) {
     };
 
     return (
-        <div className="min-h-screen w-screen bg-[#F7F9F8] flex flex-col justify-center items-center p-4 selection:bg-[#E8F5EF] selection:text-[#087F5B] relative overflow-hidden">
+        <div className="min-h-screen w-full bg-[#F7F9F8] flex flex-col justify-center items-center p-4 selection:bg-[#E8F5EF] selection:text-[#087F5B] relative overflow-hidden">
             {/* Background Decorative Glows */}
             <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#087F5B]/5 rounded-full blur-3xl pointer-events-none"></div>
             <div className="absolute bottom-1/4 right-1/3 w-80 h-80 bg-[#159A70]/5 rounded-full blur-3xl pointer-events-none"></div>

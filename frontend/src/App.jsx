@@ -141,7 +141,7 @@ export default function App() {
     }
 
     return (
-        <div className="flex h-screen w-screen overflow-hidden bg-[#F7F9F8] font-sans text-[#172033]">
+        <div className="flex h-screen w-full overflow-hidden bg-[#F7F9F8] font-sans text-[#172033]">
             {/* Sidebar Navigation */}
             <Sidebar 
                 activeTab={activeTab} 
@@ -167,8 +167,8 @@ export default function App() {
                 />
 
                 {/* Main Scrollable View */}
-                <main className="flex-1 overflow-y-auto p-6">
-                    <div className="max-w-7xl mx-auto pb-12">
+                <main className="flex-1 overflow-y-auto p-3.5 sm:p-5 lg:p-6">
+                    <div className="w-full max-w-7xl mx-auto pb-12">
                         {activeTab === 'dashboard' && (
                             <DashboardView 
                                 mesAno={mesAno} 

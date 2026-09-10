@@ -340,42 +340,42 @@ export default function FazendaView({ fazenda, onReloadFazenda, piquetes = [], o
             </div>
 
             {/* Navigation Tabs */}
-            <div className="flex border border-[#E6EBE8] bg-white rounded-2xl p-1 gap-1 shadow-xs">
+            <div className="grid grid-cols-2 lg:grid-cols-4 border border-[#E6EBE8] bg-white rounded-2xl p-1 gap-1 shadow-xs">
                 <button
                     onClick={() => setActiveTab('piquetes')}
-                    className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-2 cursor-pointer ${
+                    className={`py-2.5 px-3 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer ${
                         activeTab === 'piquetes' ? 'bg-[#E8F5EF] text-[#087F5B]' : 'text-[#64748B] hover:text-[#172033] hover:bg-[#F7F9F8]'
                     }`}
                 >
-                    <Fence className="w-4 h-4" />
-                    <span>Piquetes & Pastos ({piquetes.length})</span>
+                    <Fence className="w-4 h-4 shrink-0" />
+                    <span className="truncate">Piquetes ({piquetes.length})</span>
                 </button>
                 <button
                     onClick={() => setActiveTab('rotacao')}
-                    className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-2 cursor-pointer ${
+                    className={`py-2.5 px-3 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer ${
                         activeTab === 'rotacao' ? 'bg-[#E8F5EF] text-[#087F5B]' : 'text-[#64748B] hover:text-[#172033] hover:bg-[#F7F9F8]'
                     }`}
                 >
-                    <History className="w-4 h-4" />
-                    <span>Histórico de Rotação</span>
+                    <History className="w-4 h-4 shrink-0" />
+                    <span className="truncate">Histórico Rotação</span>
                 </button>
                 <button
                     onClick={() => setActiveTab('arrendamentos')}
-                    className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-2 cursor-pointer ${
+                    className={`py-2.5 px-3 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer ${
                         activeTab === 'arrendamentos' ? 'bg-[#E8F5EF] text-[#087F5B]' : 'text-[#64748B] hover:text-[#172033] hover:bg-[#F7F9F8]'
                     }`}
                 >
-                    <FileText className="w-4 h-4" />
-                    <span>Arrendamentos ({arrendamentos.length})</span>
+                    <FileText className="w-4 h-4 shrink-0" />
+                    <span className="truncate">Arrendamentos ({arrendamentos.length})</span>
                 </button>
                 <button
                     onClick={() => setActiveTab('propriedade')}
-                    className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-2 cursor-pointer ${
+                    className={`py-2.5 px-3 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer ${
                         activeTab === 'propriedade' ? 'bg-[#E8F5EF] text-[#087F5B]' : 'text-[#64748B] hover:text-[#172033] hover:bg-[#F7F9F8]'
                     }`}
                 >
-                    <Building2 className="w-4 h-4" />
-                    <span>Dados da Fazenda</span>
+                    <Building2 className="w-4 h-4 shrink-0" />
+                    <span className="truncate">Dados da Fazenda</span>
                 </button>
             </div>
 

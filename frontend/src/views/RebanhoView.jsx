@@ -470,13 +470,21 @@ export default function RebanhoView({ piquetes = [], onReloadPiquetes, triggerNe
                                         </td>
 
                                         <td className="p-4">
-                                            <div className="font-bold text-slate-100 flex items-baseline gap-1">
+                                            <div className="font-bold text-slate-100 flex items-center gap-1.5 flex-wrap">
                                                 <span>{animal.peso_atual ? `${animal.peso_atual} kg` : '-'}</span>
-                                                {animal.ultimo_gmd > 0 && (
-                                                    <span className="text-[10px] text-emerald-400 font-semibold">
-                                                        (+{animal.ultimo_gmd} kg/d)
+                                                {animal.ultimo_gmd !== null && animal.ultimo_gmd !== undefined && animal.total_pesagens > 1 ? (
+                                                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold border ${
+                                                        animal.ultimo_gmd > 0 
+                                                            ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' 
+                                                            : animal.ultimo_gmd < 0 
+                                                            ? 'bg-rose-500/15 text-rose-400 border-rose-500/30' 
+                                                            : 'bg-slate-700/50 text-slate-300 border-slate-600'
+                                                    }`}>
+                                                        {animal.ultimo_gmd > 0 ? `+${animal.ultimo_gmd}` : animal.ultimo_gmd} kg/d
                                                     </span>
-                                                )}
+                                                ) : animal.total_pesagens === 1 ? (
+                                                    <span className="text-[10px] text-slate-500 font-medium">(Base)</span>
+                                                ) : null}
                                             </div>
                                         </td>
 

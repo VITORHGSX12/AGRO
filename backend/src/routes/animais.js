@@ -3,7 +3,46 @@ import db from '../db/database.js';
 
 const router = Router();
 
-// GET /api/animais - Lista animais com filtros avançados
+// Função utilitária para cálculo dinâmico de idade em tempo real a partir de data_nascimento
+export function calcularIdadeDinamica(dataNascimento) {
+    if (!dataNascimento) {
+        return { idade_meses: null, idade_formatada: 'Não informada' };
+    }
+    const nasc = new Date(dataNascimento);
+    if (isNaN(nasc.getTime())) {
+        return { idade_meses: null, idade_formatada: 'Data inválida' };
+    }
+    const hoje = new Date();
+    
+    let anos = hoje.getFullYear() - nasc.getFullYear();
+    let meses = hoje.getMonth() - nasc.getMonth();
+    let dias = hoje.getDate() - nasc.getDate();
+
+    if (dias < 0) {
+        meses -= 1;
+    }
+    if (meses < 0) {
+        anos -= 1;
+        meses += 12;
+    }
+
+    const totalMeses = Math.max(0, (anos * 12) + meses);
+    let formatada = '';
+    if (anos === 0) {
+        formatada = `${totalMeses} ${totalMeses === 1 ? 'mês' : 'meses'}`;
+    } else if (meses === 0) {
+        formatada = `${anos} ${anos === 1 ? 'ano' : 'anos'}`;
+    } else {
+        formatada = `${anos}a ${meses}m (${totalMeses}m)`;
+    }
+
+    return {
+        idade_meses: totalMeses,
+        idade_formatada: formatada
+    };
+}
+
+// GET /api/animais - Lista animais com filtros avançados e cálculo dinâmico de idade & GMD
 router.get('/', (req, res) => {
     try {
         const { status, categoria, piquete_id, busca, sexo } = req.query;
@@ -24,7 +63,14 @@ router.get('/', (req, res) => {
                     WHERE ps.animal_id = a.id 
                     ORDER BY ps.data_pesagem DESC, ps.id DESC 
                     LIMIT 1
-                ) as ultimo_gmd
+                ) as ultimo_gmd,
+                (
+                    SELECT ps.ganho_peso_kg 
+                    FROM pesagens ps 
+                    WHERE ps.animal_id = a.id 
+                    ORDER BY ps.data_pesagem DESC, ps.id DESC 
+                    LIMIT 1
+                ) as ultimo_ganho_peso
             FROM animais a
             LEFT JOIN piquetes p ON a.piquete_atual_id = p.id
             WHERE 1=1
@@ -59,7 +105,18 @@ router.get('/', (req, res) => {
 
         query += ` ORDER BY a.created_at DESC`;
 
-        const animais = db.prepare(query).all(...params);
+        const animaisRaw = db.prepare(query).all(...params);
+        
+        // Enriquecimento com cálculo dinâmico de idade (nunca armazenada fixa)
+        const animais = animaisRaw.map(animal => {
+            const idadeInfo = calcularIdadeDinamica(animal.data_nascimento);
+            return {
+                ...animal,
+                idade_meses: idadeInfo.idade_meses,
+                idade_formatada: idadeInfo.idade_formatada
+            };
+        });
+
         res.json(animais);
     } catch (error) {
         console.error('Erro ao buscar animais:', error);
@@ -133,8 +190,12 @@ router.get('/:id', (req, res) => {
             ORDER BY data_aplicacao DESC, created_at DESC
         `).all(id);
 
+        const idadeInfo = calcularIdadeDinamica(animal.data_nascimento);
+
         res.json({
             ...animal,
+            idade_meses: idadeInfo.idade_meses,
+            idade_formatada: idadeInfo.idade_formatada,
             pesagens,
             estatisticas_peso: {
                 peso_inicial: pesoInicial,
@@ -303,7 +364,7 @@ router.post('/', (req, res) => {
 
         // Se informou peso inicial, cria automaticamente o primeiro registro na tabela de pesagens
         if (pesoNum && pesoNum > 0) {
-            const dataInicial = data_nascimento || new Date().toISOString().split('T')[0];
+            const dataInicial = req.body.data_pesagem_inicial || new Date().toISOString().split('T')[0];
             db.prepare(`
                 INSERT INTO pesagens (animal_id, data_pesagem, peso, ganho_peso_kg, gmd_kg_dia, observacoes)
                 VALUES (?, ?, ?, 0, 0, 'Pesagem inicial de cadastro')

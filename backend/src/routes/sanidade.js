@@ -11,26 +11,30 @@ function addDays(dateStr, days) {
     return d.toISOString().split('T')[0];
 }
 
-// Função auxiliar para calcular status dinâmico e controle de carência
+// Função auxiliar para calcular status dinâmico e controle de carência em tempo real
 function enrichSanidadeStatus(registro) {
     const today = new Date().toISOString().split('T')[0];
     
-    // Prazo de 7 dias para alertas
+    // Janela de 7 dias para alertas preventivos
     const d = new Date();
     d.setDate(d.getDate() + 7);
     const in7Days = d.toISOString().split('T')[0];
 
     let computedStatus = registro.status;
 
+    // O status NUNCA é lido de campo fixo no banco quando pendente; é sempre avaliado contra a data de hoje
     if (registro.status !== 'aplicada') {
-        if (registro.data_proxima_dose) {
-            if (registro.data_proxima_dose < today) {
+        const dataAlvo = registro.data_proxima_dose || registro.data_aplicacao;
+        if (dataAlvo) {
+            if (dataAlvo < today) {
                 computedStatus = 'atrasada';
-            } else if (registro.data_proxima_dose <= in7Days) {
+            } else if (dataAlvo <= in7Days) {
                 computedStatus = 'alerta_vencendo';
             } else {
                 computedStatus = 'pendente';
             }
+        } else {
+            computedStatus = 'pendente';
         }
     }
 
@@ -49,6 +53,7 @@ function enrichSanidadeStatus(registro) {
 
     return {
         ...registro,
+        custo: Number(registro.custo) || 0,
         dias_carencia: Number(registro.dias_carencia) || 0,
         data_fim_carencia: registro.data_fim_carencia || null,
         computed_status: computedStatus,
@@ -59,7 +64,7 @@ function enrichSanidadeStatus(registro) {
     };
 }
 
-// GET /api/sanidade/kpis - Indicadores consolidados do painel sanitário
+// GET /api/sanidade/kpis - Indicadores consolidados do painel sanitário em tempo real
 router.get('/kpis', (req, res) => {
     try {
         const rawList = db.prepare(`
@@ -86,7 +91,7 @@ router.get('/kpis', (req, res) => {
     }
 });
 
-// GET /api/sanidade - Lista registros com filtros avançados
+// GET /api/sanidade - Lista registros com filtros avançados e status recalculado
 router.get('/', (req, res) => {
     try {
         const { animal_id, tipo, status_filtro, data_inicio, data_fim, busca } = req.query;
@@ -150,7 +155,7 @@ router.get('/', (req, res) => {
     }
 });
 
-// POST /api/sanidade - Cadastra nova aplicação/agendamento de sanidade com cálculo de carência
+// POST /api/sanidade - Cadastra nova aplicação/agendamento com cálculo de carência e financeiro
 router.post('/', (req, res) => {
     try {
         const {
@@ -162,8 +167,10 @@ router.post('/', (req, res) => {
             data_aplicacao,
             data_proxima_dose = null,
             dias_carencia = 0,
+            custo = 0,
             status = 'pendente',
-            observacoes = ''
+            observacoes = '',
+            gerar_lancamento_financeiro = true
         } = req.body;
 
         if (!tipo) {
@@ -179,6 +186,7 @@ router.post('/', (req, res) => {
         }
 
         const diasCarenciaNum = Number(dias_carencia) || 0;
+        const custoNum = Number(custo) || 0;
         let dataFimCarencia = null;
 
         if (status === 'aplicada' && diasCarenciaNum > 0) {
@@ -189,8 +197,8 @@ router.post('/', (req, res) => {
             INSERT INTO sanidade (
                 fazenda_id, animal_id, lote_ou_grupo, tipo,
                 nome_produto, data_aplicacao, data_proxima_dose,
-                dias_carencia, data_fim_carencia, status, observacoes
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                dias_carencia, data_fim_carencia, custo, status, observacoes
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `).run(
             fazenda_id,
             animal_id ? Number(animal_id) : null,
@@ -201,9 +209,28 @@ router.post('/', (req, res) => {
             data_proxima_dose || null,
             diasCarenciaNum,
             dataFimCarencia,
+            custoNum,
             status,
             observacoes ? observacoes.trim() : null
         );
+
+        const newId = insert.lastInsertRowid;
+
+        // Se já foi aplicada e tem custo > 0, lança despesa no Financeiro automaticamente
+        if (status === 'aplicada' && custoNum > 0 && gerar_lancamento_financeiro) {
+            let desc = `Aplicação de ${nome_produto.trim()} (${tipo})`;
+            if (animal_id) {
+                const anim = db.prepare('SELECT identificacao FROM animais WHERE id = ?').get(animal_id);
+                if (anim) desc += ` - Brinco ${anim.identificacao}`;
+            } else if (lote_ou_grupo) {
+                desc += ` - ${lote_ou_grupo}`;
+            }
+
+            db.prepare(`
+                INSERT INTO financeiro (fazenda_id, tipo, categoria, valor, data, descricao, animal_id)
+                VALUES (?, 'despesa', 'vacina_medicamento', ?, ?, ?, ?)
+            `).run(fazenda_id, custoNum, data_aplicacao, desc, animal_id ? Number(animal_id) : null);
+        }
 
         const newRegistro = db.prepare(`
             SELECT 
@@ -215,7 +242,7 @@ router.post('/', (req, res) => {
             LEFT JOIN animais a ON s.animal_id = a.id
             LEFT JOIN piquetes p ON a.piquete_atual_id = p.id
             WHERE s.id = ?
-        `).get(insert.lastInsertRowid);
+        `).get(newId);
 
         res.status(201).json(enrichSanidadeStatus(newRegistro));
     } catch (error) {
@@ -224,11 +251,15 @@ router.post('/', (req, res) => {
     }
 });
 
-// PUT /api/sanidade/:id/concluir - Marca dose como aplicada e calcula fim da carência
+// PUT /api/sanidade/:id/concluir - Marca dose como aplicada, calcula carência e gera despesa financeira
 router.put('/:id/concluir', (req, res) => {
     try {
         const { id } = req.params;
-        const { data_aplicacao = new Date().toISOString().split('T')[0] } = req.body;
+        const { 
+            data_aplicacao = new Date().toISOString().split('T')[0],
+            custo = null,
+            gerar_lancamento_financeiro = true
+        } = req.body;
 
         const reg = db.prepare('SELECT * FROM sanidade WHERE id = ?').get(id);
         if (!reg) {
@@ -240,11 +271,29 @@ router.put('/:id/concluir', (req, res) => {
             dataFimCarencia = addDays(data_aplicacao, reg.dias_carencia);
         }
 
+        const custoFinal = custo !== null && custo !== undefined ? Number(custo) : (Number(reg.custo) || 0);
+
         db.prepare(`
             UPDATE sanidade
-            SET status = 'aplicada', data_aplicacao = ?, data_fim_carencia = ?
+            SET status = 'aplicada', data_aplicacao = ?, data_fim_carencia = ?, custo = ?
             WHERE id = ?
-        `).run(data_aplicacao, dataFimCarencia, id);
+        `).run(data_aplicacao, dataFimCarencia, custoFinal, id);
+
+        // Lança despesa financeira se custo > 0 e solicitado
+        if (custoFinal > 0 && gerar_lancamento_financeiro) {
+            let desc = `Aplicação de ${reg.nome_produto} (${reg.tipo})`;
+            if (reg.animal_id) {
+                const anim = db.prepare('SELECT identificacao FROM animais WHERE id = ?').get(reg.animal_id);
+                if (anim) desc += ` - Brinco ${anim.identificacao}`;
+            } else if (reg.lote_ou_grupo) {
+                desc += ` - ${reg.lote_ou_grupo}`;
+            }
+
+            db.prepare(`
+                INSERT INTO financeiro (fazenda_id, tipo, categoria, valor, data, descricao, animal_id)
+                VALUES (?, 'despesa', 'vacina_medicamento', ?, ?, ?, ?)
+            `).run(reg.fazenda_id || 1, custoFinal, data_aplicacao, desc, reg.animal_id || null);
+        }
 
         const updated = db.prepare(`
             SELECT 

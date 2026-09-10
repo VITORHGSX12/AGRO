@@ -38,6 +38,14 @@ export default function SanidadeView({ onReloadDashboard, triggerNewModal, onRes
 
     // Modal state
     const [modalOpen, setModalOpen] = useState(false);
+    const [modalConcluirOpen, setModalConcluirOpen] = useState(false);
+    const [itemToConcluir, setItemToConcluir] = useState(null);
+    const [concluirData, setConcluirData] = useState({
+        data_aplicacao: new Date().toISOString().split('T')[0],
+        custo: '',
+        gerar_lancamento_financeiro: true
+    });
+
     const [formData, setFormData] = useState({
         tipo: 'vacina',
         nome_produto: '',
@@ -46,7 +54,9 @@ export default function SanidadeView({ onReloadDashboard, triggerNewModal, onRes
         data_aplicacao: new Date().toISOString().split('T')[0],
         data_proxima_dose: '',
         dias_carencia: '0',
+        custo: '',
         status: 'pendente',
+        gerar_lancamento_financeiro: true,
         observacoes: ''
     });
     const [isColetivo, setIsColetivo] = useState(true);
@@ -104,7 +114,9 @@ export default function SanidadeView({ onReloadDashboard, triggerNewModal, onRes
             data_aplicacao: new Date().toISOString().split('T')[0],
             data_proxima_dose: '',
             dias_carencia: '0',
+            custo: '',
             status: 'pendente',
+            gerar_lancamento_financeiro: true,
             observacoes: ''
         });
         setIsColetivo(true);
@@ -122,7 +134,9 @@ export default function SanidadeView({ onReloadDashboard, triggerNewModal, onRes
                 ...formData,
                 animal_id: isColetivo ? null : (formData.animal_id ? Number(formData.animal_id) : null),
                 lote_ou_grupo: isColetivo ? formData.lote_ou_grupo : null,
-                dias_carencia: Number(formData.dias_carencia) || 0
+                dias_carencia: Number(formData.dias_carencia) || 0,
+                custo: Number(formData.custo) || 0,
+                gerar_lancamento_financeiro: formData.gerar_lancamento_financeiro
             });
             showFeedback('Protocolo sanitário registrado com sucesso!');
             setModalOpen(false);
@@ -135,16 +149,35 @@ export default function SanidadeView({ onReloadDashboard, triggerNewModal, onRes
         }
     };
 
-    const handleConcluir = async (id, produto) => {
+    const handleOpenConcluirModal = (item) => {
+        setItemToConcluir(item);
+        setConcluirData({
+            data_aplicacao: new Date().toISOString().split('T')[0],
+            custo: item.custo > 0 ? String(item.custo) : '',
+            gerar_lancamento_financeiro: true
+        });
+        setModalConcluirOpen(true);
+    };
+
+    const handleSaveConcluir = async (e) => {
+        e.preventDefault();
+        if (!itemToConcluir) return;
+        setSaving(true);
         try {
-            await api.concluirSanidade(id, {
-                data_aplicacao: new Date().toISOString().split('T')[0]
+            await api.concluirSanidade(itemToConcluir.id, {
+                data_aplicacao: concluirData.data_aplicacao,
+                custo: Number(concluirData.custo) || 0,
+                gerar_lancamento_financeiro: concluirData.gerar_lancamento_financeiro
             });
-            showFeedback(`Aplicação de ${produto} confirmada com sucesso!`);
+            showFeedback(`Aplicação de ${itemToConcluir.nome_produto} confirmada com sucesso!`);
+            setModalConcluirOpen(false);
+            setItemToConcluir(null);
             loadData();
             if (onReloadDashboard) onReloadDashboard();
         } catch (err) {
             alert(err.message);
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -462,7 +495,7 @@ export default function SanidadeView({ onReloadDashboard, triggerNewModal, onRes
                                                 <div className="flex items-center justify-end gap-1.5">
                                                     {!isAplicada && (
                                                         <button
-                                                            onClick={() => handleConcluir(item.id, item.nome_produto)}
+                                                            onClick={() => handleOpenConcluirModal(item)}
                                                             className="flex items-center gap-1 bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all shadow-md shadow-emerald-600/20"
                                                             title="Confirmar Aplicação da Dose"
                                                         >
@@ -569,7 +602,7 @@ export default function SanidadeView({ onReloadDashboard, triggerNewModal, onRes
                                     >
                                         <option value="">Selecione o animal...</option>
                                         {animais.map(a => (
-                                            <option key={a.id} value={a.id}>
+                                             <option key={a.id} value={a.id}>
                                                 {a.identificacao} - {a.raca || 'S/R'} ({a.categoria}, {a.peso_atual ? `${a.peso_atual} kg` : 's/ peso'})
                                             </option>
                                         ))}
@@ -655,6 +688,36 @@ export default function SanidadeView({ onReloadDashboard, triggerNewModal, onRes
                                 </div>
                             </div>
 
+                            {/* Custo Total */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-slate-400 mb-1 font-medium">Custo Total dos Medicamentos (R$)</label>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        placeholder="0,00"
+                                        value={formData.custo}
+                                        onChange={(e) => setFormData({ ...formData, custo: e.target.value })}
+                                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-emerald-500"
+                                    />
+                                </div>
+                                {formData.status === 'aplicada' && (
+                                    <div className="flex items-center gap-2 pt-6">
+                                        <input
+                                            type="checkbox"
+                                            id="chkFinanceiro"
+                                            checked={formData.gerar_lancamento_financeiro}
+                                            onChange={(e) => setFormData({ ...formData, gerar_lancamento_financeiro: e.target.checked })}
+                                            className="rounded bg-slate-800 border-slate-700 text-emerald-500 focus:ring-emerald-500 h-4 w-4"
+                                        />
+                                        <label htmlFor="chkFinanceiro" className="text-slate-300 font-medium cursor-pointer">
+                                            Lançar despesa no Financeiro
+                                        </label>
+                                    </div>
+                                )}
+                            </div>
+
                             <div>
                                 <label className="block text-slate-400 mb-1 font-medium">Observações & Dosagem</label>
                                 <textarea
@@ -680,6 +743,86 @@ export default function SanidadeView({ onReloadDashboard, triggerNewModal, onRes
                                     className="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-semibold shadow-lg shadow-emerald-600/20"
                                 >
                                     {saving ? 'Salvando...' : 'Salvar Registro'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal Confirmar Conclusão da Aplicação */}
+            {modalConcluirOpen && itemToConcluir && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2">
+                                <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                                <h3 className="text-lg font-bold text-white">Confirmar Aplicação</h3>
+                            </div>
+                            <button
+                                onClick={() => setModalConcluirOpen(false)}
+                                className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <p className="text-xs text-slate-300 mb-4">
+                            Você está confirmando a aplicação de <strong className="text-white">{itemToConcluir.nome_produto}</strong> ({itemToConcluir.animal_brinco ? `Brinco ${itemToConcluir.animal_brinco}` : itemToConcluir.lote_ou_grupo}).
+                        </p>
+
+                        <form onSubmit={handleSaveConcluir} className="space-y-4 text-xs">
+                            <div>
+                                <label className="block text-slate-400 mb-1 font-medium">Data Efetiva da Aplicação *</label>
+                                <input
+                                    type="date"
+                                    required
+                                    value={concluirData.data_aplicacao}
+                                    onChange={(e) => setConcluirData({ ...concluirData, data_aplicacao: e.target.value })}
+                                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-emerald-500"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-slate-400 mb-1 font-medium">Custo Total dos Medicamentos (R$)</label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    placeholder="0,00"
+                                    value={concluirData.custo}
+                                    onChange={(e) => setConcluirData({ ...concluirData, custo: e.target.value })}
+                                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-emerald-500"
+                                />
+                            </div>
+
+                            <div className="flex items-center gap-2 pt-1">
+                                <input
+                                    type="checkbox"
+                                    id="chkFinanceiroConcluir"
+                                    checked={concluirData.gerar_lancamento_financeiro}
+                                    onChange={(e) => setConcluirData({ ...concluirData, gerar_lancamento_financeiro: e.target.checked })}
+                                    className="rounded bg-slate-800 border-slate-700 text-emerald-500 focus:ring-emerald-500 h-4 w-4"
+                                />
+                                <label htmlFor="chkFinanceiroConcluir" className="text-slate-300 font-medium cursor-pointer">
+                                    Lançar despesa no Financeiro automaticamente (se valor &gt; 0)
+                                </label>
+                            </div>
+
+                            <div className="flex items-center justify-end gap-3 pt-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setModalConcluirOpen(false)}
+                                    className="px-4 py-2.5 text-slate-400 hover:text-white rounded-xl"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={saving}
+                                    className="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-semibold shadow-lg shadow-emerald-600/20"
+                                >
+                                    {saving ? 'Confirmando...' : 'Confirmar Aplicação'}
                                 </button>
                             </div>
                         </form>

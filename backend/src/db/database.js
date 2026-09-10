@@ -37,6 +37,11 @@ const schemaPath = path.resolve(__dirname, 'schema.sql');
 const schemaSql = fs.readFileSync(schemaPath, 'utf-8');
 db.exec(schemaSql);
 
+// Migrações dinâmicas de colunas
+try {
+    db.exec(`ALTER TABLE sanidade ADD COLUMN custo REAL DEFAULT 0;`);
+} catch (e) {}
+
 // Seed automático de usuários e fazenda inicial
 try {
     let fazenda = db.prepare('SELECT id FROM fazenda LIMIT 1').get();

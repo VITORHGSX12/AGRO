@@ -77,6 +77,7 @@ CREATE TABLE IF NOT EXISTS sanidade (
     data_proxima_dose TEXT,
     dias_carencia INTEGER DEFAULT 0,
     data_fim_carencia TEXT,
+    custo REAL DEFAULT 0,
     status TEXT DEFAULT 'pendente' CHECK(status IN ('pendente', 'aplicada', 'atrasada')),
     observacoes TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP

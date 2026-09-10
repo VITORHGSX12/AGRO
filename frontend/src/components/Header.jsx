@@ -1,8 +1,9 @@
 import React from 'react';
-import { Building2, Calendar, Plus, Menu } from 'lucide-react';
+import { Building2, Calendar, Plus, Menu, LayoutGrid } from 'lucide-react';
 
-export default function Header({ fazenda, mesAno, setMesAno, onQuickAction, activeTab, onOpenMobile }) {
+export default function Header({ fazenda, mesAno, setMesAno, onQuickAction, activeTab, onOpenMobile, onNavigateHome }) {
     const titles = {
+        home: 'Início (Portal)',
         dashboard: 'Dashboard Geral',
         rebanho: 'Gestão do Rebanho',
         movimentacoes: 'Movimentações de Animais',
@@ -18,7 +19,7 @@ export default function Header({ fazenda, mesAno, setMesAno, onQuickAction, acti
 
     return (
         <header className="min-h-16 sm:h-18 border-b border-[#E6EBE8] bg-white/95 backdrop-blur px-3 sm:px-6 flex items-center justify-between sticky top-0 z-10 select-none py-2 sm:py-0">
-            {/* Page Title & Farm Badge */}
+            {/* Page Title, Home Button & Farm Badge */}
             <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                 {/* Mobile Drawer Trigger Button */}
                 <button
@@ -28,6 +29,18 @@ export default function Header({ fazenda, mesAno, setMesAno, onQuickAction, acti
                 >
                     <Menu className="w-5 h-5" strokeWidth={2} />
                 </button>
+
+                {/* Back to Home Portal Button */}
+                {onNavigateHome && (
+                    <button
+                        onClick={onNavigateHome}
+                        title="Voltar para o Menu Principal / Início"
+                        className="p-2 min-h-[38px] rounded-xl bg-[#F7F9F8] hover:bg-[#E8F5EF] text-[#64748B] hover:text-[#087F5B] border border-[#E6EBE8] transition cursor-pointer flex items-center gap-1.5 text-xs font-semibold shrink-0"
+                    >
+                        <LayoutGrid className="w-4 h-4" strokeWidth={2} />
+                        <span className="hidden md:inline">Início</span>
+                    </button>
+                )}
 
                 <div className="min-w-0">
                     <h1 className="text-sm sm:text-lg font-bold text-[#172033] tracking-tight truncate">

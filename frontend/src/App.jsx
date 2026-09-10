@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import LoginView from './views/LoginView';
+import HomeView from './views/HomeView';
 import DashboardView from './views/DashboardView';
 import RebanhoView from './views/RebanhoView';
 import MovimentacoesView from './views/MovimentacoesView';
@@ -18,7 +19,7 @@ export default function App() {
     const [currentUser, setCurrentUser] = useState(null);
     const [authLoading, setAuthLoading] = useState(true);
 
-    const [activeTab, setActiveTab] = useState('dashboard');
+    const [activeTab, setActiveTab] = useState('home');
     const [mesAno, setMesAno] = useState(() => new Date().toISOString().slice(0, 7)); // 'YYYY-MM'
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     
@@ -41,7 +42,6 @@ export default function App() {
         const verifyAuth = async () => {
             const token = getAuthToken();
             if (!token) {
-                // Se não há token, inicia com usuário Dono padrão para conveniência ou tela de login
                 setAuthLoading(false);
                 return;
             }
@@ -98,15 +98,15 @@ export default function App() {
         const papel = currentUser.papel;
 
         if (papel === 'gerente' && (activeTab === 'financeiro' || activeTab === 'usuarios')) {
-            setActiveTab('dashboard');
-        } else if (papel === 'contador' && activeTab !== 'dashboard' && activeTab !== 'financeiro') {
-            setActiveTab('dashboard');
+            setActiveTab('home');
+        } else if (papel === 'contador' && activeTab !== 'home' && activeTab !== 'dashboard' && activeTab !== 'financeiro') {
+            setActiveTab('home');
         }
     }, [currentUser, activeTab]);
 
     const handleLoginSuccess = (user) => {
         setCurrentUser(user);
-        setActiveTab('dashboard');
+        setActiveTab('home');
     };
 
     const handleLogout = () => {
@@ -129,8 +129,8 @@ export default function App() {
 
     if (authLoading) {
         return (
-            <div className="min-h-screen w-screen bg-slate-950 flex items-center justify-center">
-                <div className="w-8 h-8 border-3 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+            <div className="min-h-screen w-full bg-slate-950 flex items-center justify-center">
+                <div className="w-8 h-8 border-3 border-[#087F5B] border-t-transparent rounded-full animate-spin"></div>
             </div>
         );
     }
@@ -140,6 +140,20 @@ export default function App() {
         return <LoginView onLoginSuccess={handleLoginSuccess} />;
     }
 
+    // SE ESTIVER NA HOME: Exibe a tela inicial sem sidebar, ocupando 100% da largura
+    if (activeTab === 'home') {
+        return (
+            <HomeView
+                onNavigate={(targetTab) => setActiveTab(targetTab)}
+                currentUser={currentUser}
+                onLogout={handleLogout}
+                fazenda={fazenda}
+                counts={counts}
+            />
+        );
+    }
+
+    // PÁGINAS INTERNAS: Exibe com Sidebar e Header com botão de voltar para o Início
     return (
         <div className="flex h-screen w-full overflow-hidden bg-[#F7F9F8] font-sans text-[#172033]">
             {/* Sidebar Navigation */}
@@ -164,6 +178,7 @@ export default function App() {
                     activeTab={activeTab}
                     currentUser={currentUser}
                     onOpenMobile={() => setMobileMenuOpen(true)}
+                    onNavigateHome={() => setActiveTab('home')}
                 />
 
                 {/* Main Scrollable View */}
@@ -267,4 +282,3 @@ export default function App() {
         </div>
     );
 }
-

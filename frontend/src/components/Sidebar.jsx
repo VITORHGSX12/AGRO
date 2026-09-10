@@ -1,5 +1,6 @@
 import React from 'react';
 import { 
+    Home,
     LayoutDashboard, 
     Beef, 
     ArrowLeftRight, 
@@ -12,7 +13,8 @@ import {
     ShieldCheck,
     Settings2,
     LogOut,
-    X
+    X,
+    LayoutGrid
 } from 'lucide-react';
 
 export default function Sidebar({ activeTab, setActiveTab, counts = {}, currentUser, onLogout, mobileOpen, onCloseMobile }) {
@@ -20,7 +22,8 @@ export default function Sidebar({ activeTab, setActiveTab, counts = {}, currentU
 
     // Lista de todos os itens com seus papéis autorizados
     const allNavItems = [
-        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['dono', 'gerente', 'contador'] },
+        { id: 'home', label: 'Início (Portal)', icon: LayoutGrid, roles: ['dono', 'gerente', 'contador'] },
+        { id: 'dashboard', label: 'Dashboard Geral', icon: LayoutDashboard, roles: ['dono', 'gerente', 'contador'] },
         { id: 'rebanho', label: 'Rebanho', icon: Beef, badge: counts.ativos, roles: ['dono', 'gerente'] },
         { id: 'movimentacoes', label: 'Movimentações', icon: ArrowLeftRight, roles: ['dono', 'gerente'] },
         { 

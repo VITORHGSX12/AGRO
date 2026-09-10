@@ -391,12 +391,53 @@ export default function FazendaView({ fazenda, onReloadFazenda, piquetes = [], o
             {/* ABA 1: PIQUETES & PASTOS */}
             {activeTab === 'piquetes' && (
                 <div className="space-y-6">
+                    {/* Top KPIs de Pastagens com UA */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-sm">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Total de Pastos</span>
+                            <div className="text-2xl font-bold text-white">{piquetes.length} <span className="text-xs font-normal text-slate-400">piquetes</span></div>
+                            <span className="text-[11px] text-slate-500 block mt-1">Divisões de pastagem</span>
+                        </div>
+
+                        <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-sm">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Área de Pastagens</span>
+                            <div className="text-2xl font-bold text-emerald-400">
+                                {piquetes.reduce((acc, p) => acc + (Number(p.tamanho_hectares) || 0), 0)} <span className="text-xs font-normal text-slate-400">ha</span>
+                            </div>
+                            <span className="text-[11px] text-slate-500 block mt-1">Área útil de pastejo</span>
+                        </div>
+
+                        <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-sm">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Carga Animal Total</span>
+                            <div className="text-2xl font-bold text-amber-400">
+                                {Number(piquetes.reduce((acc, p) => acc + (Number(p.total_ua_ativas) || 0), 0).toFixed(1))} <span className="text-xs font-normal text-slate-400">UA</span>
+                            </div>
+                            <span className="text-[11px] text-slate-400 block mt-1">
+                                {piquetes.reduce((acc, p) => acc + (Number(p.total_animais_ativos) || 0), 0)} cabeças no pasto
+                            </span>
+                        </div>
+
+                        <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-sm">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Lotação Média</span>
+                            <div className="text-2xl font-bold text-cyan-400">
+                                {(() => {
+                                    const area = piquetes.reduce((acc, p) => acc + (Number(p.tamanho_hectares) || 0), 0);
+                                    const ua = piquetes.reduce((acc, p) => acc + (Number(p.total_ua_ativas) || 0), 0);
+                                    return area > 0 ? (ua / area).toFixed(2) : '0.00';
+                                })()} <span className="text-xs font-normal text-slate-400">UA/ha</span>
+                            </div>
+                            <span className="text-[11px] text-slate-500 block mt-1">Padrão Embrapa</span>
+                        </div>
+                    </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                         {piquetes.map((p) => {
                             const total = p.total_animais_ativos || 0;
+                            const totalUA = p.total_ua_ativas || 0;
                             const cap = p.capacidade_suporte || 0;
                             const taxa = p.taxa_ocupacao_pct || (cap > 0 ? Math.round((total / cap) * 100) : 0);
-                            const densidade = p.densidade_cab_ha || (p.tamanho_hectares > 0 ? (total / p.tamanho_hectares).toFixed(2) : 0);
+                            const densidadeCab = p.densidade_cab_ha || (p.tamanho_hectares > 0 ? (total / p.tamanho_hectares).toFixed(2) : 0);
+                            const densidadeUA = p.densidade_ua_ha || (p.tamanho_hectares > 0 ? (totalUA / p.tamanho_hectares).toFixed(2) : 0);
 
                             return (
                                 <div 
@@ -412,7 +453,7 @@ export default function FazendaView({ fazenda, onReloadFazenda, piquetes = [], o
                                                     {p.nome}
                                                 </h3>
                                                 <div className="text-[11px] text-slate-400 mt-0.5">
-                                                    {p.tamanho_hectares ? `${p.tamanho_hectares} hectares` : 'Área não definida'} • {densidade} cab/ha
+                                                    {p.tamanho_hectares ? `${p.tamanho_hectares} hectares` : 'Área não definida'}
                                                 </div>
                                             </div>
 
@@ -432,12 +473,30 @@ export default function FazendaView({ fazenda, onReloadFazenda, piquetes = [], o
                                             </div>
                                         </div>
 
+                                        {/* Indicadores Zootécnicos de Lotação */}
+                                        <div className="grid grid-cols-2 gap-2 my-3 p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80">
+                                            <div>
+                                                <span className="text-[10px] text-slate-400 uppercase font-semibold block">Taxa de Lotação</span>
+                                                <span className="text-xs font-extrabold text-cyan-400">
+                                                    {densidadeUA} <span className="text-[10px] font-normal text-slate-400">UA/ha</span>
+                                                </span>
+                                                <span className="text-[10px] text-slate-500 block">({densidadeCab} cab/ha)</span>
+                                            </div>
+                                            <div>
+                                                <span className="text-[10px] text-slate-400 uppercase font-semibold block">Carga Presente</span>
+                                                <span className="text-xs font-extrabold text-amber-400">
+                                                    {totalUA} <span className="text-[10px] font-normal text-slate-400">UA</span>
+                                                </span>
+                                                <span className="text-[10px] text-slate-500 block">({total} cabeças)</span>
+                                            </div>
+                                        </div>
+
                                         {/* Barra de Lotação */}
-                                        <div className="space-y-1.5 mt-3">
+                                        <div className="space-y-1.5">
                                             <div className="flex items-center justify-between text-xs">
-                                                <span className="text-slate-400 font-medium">Lotação Atual</span>
+                                                <span className="text-slate-400 font-medium">Ocupação / Capacidade</span>
                                                 <span className="font-bold text-slate-200">
-                                                    {total} / {cap || '-'} cabeças ({taxa}%)
+                                                    {total} / {cap || '-'} cab. ({taxa}%)
                                                 </span>
                                             </div>
                                             <div className="w-full bg-slate-950 rounded-full h-2.5 overflow-hidden border border-slate-800/80">
@@ -457,7 +516,7 @@ export default function FazendaView({ fazenda, onReloadFazenda, piquetes = [], o
                                             taxa >= 80 ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' :
                                             'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
                                         }`}>
-                                            {taxa > 100 ? 'Superlotado' : taxa >= 80 ? 'Alerta Lotação' : 'Manejo Normal'}
+                                            {taxa > 100 ? '🚨 Superlotado' : taxa >= 80 ? '⚠️ Alerta Lotação' : '✅ Manejo Adequado'}
                                         </span>
 
                                         <span className="text-emerald-400 text-[11px] font-semibold flex items-center gap-1 group-hover:underline">
@@ -700,12 +759,28 @@ export default function FazendaView({ fazenda, onReloadFazenda, piquetes = [], o
                                     Animais em {selectedPiqueteAnimais.nome}
                                 </h3>
                                 <p className="text-xs text-slate-400">
-                                    Total de {selectedPiqueteAnimais.animais?.length || selectedPiqueteAnimais.total_animais_ativos} cabeça(s) alocada(s)
+                                    {selectedPiqueteAnimais.animais?.length || selectedPiqueteAnimais.total_animais_ativos} cabeças • {selectedPiqueteAnimais.total_ua_ativas || 0} UA total • {selectedPiqueteAnimais.tamanho_hectares || 0} ha
                                 </p>
                             </div>
                             <button onClick={() => setSelectedPiqueteAnimais(null)} className="text-slate-400 hover:text-white">
                                 <X className="w-5 h-5" />
                             </button>
+                        </div>
+
+                        {/* Badges de Lotação do Pasto */}
+                        <div className="grid grid-cols-3 gap-2 bg-slate-950/60 p-3 rounded-2xl border border-slate-800/80 text-xs">
+                            <div>
+                                <span className="text-[10px] text-slate-400 uppercase font-semibold block">Carga Presente</span>
+                                <span className="font-extrabold text-amber-400 text-sm">{selectedPiqueteAnimais.total_ua_ativas || 0} UA</span>
+                            </div>
+                            <div>
+                                <span className="text-[10px] text-slate-400 uppercase font-semibold block">Lotação (UA/ha)</span>
+                                <span className="font-extrabold text-cyan-400 text-sm">{selectedPiqueteAnimais.densidade_ua_ha || 0} UA/ha</span>
+                            </div>
+                            <div>
+                                <span className="text-[10px] text-slate-400 uppercase font-semibold block">Capacidade Estimada</span>
+                                <span className="font-extrabold text-emerald-400 text-sm">{selectedPiqueteAnimais.capacidade_suporte || '-'} cab.</span>
+                            </div>
                         </div>
 
                         <div className="max-h-80 overflow-y-auto divide-y divide-slate-800 bg-slate-950/40 rounded-2xl border border-slate-800/80">
@@ -717,12 +792,17 @@ export default function FazendaView({ fazenda, onReloadFazenda, piquetes = [], o
                                                 <Beef className="w-3.5 h-3.5" />
                                             </div>
                                             <div>
-                                                <div className="font-bold text-xs text-white">Brinco {a.identificacao}</div>
+                                                <div className="font-bold text-xs text-white flex items-center gap-2">
+                                                    <span>Brinco {a.identificacao}</span>
+                                                    <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                                        {a.ua || 1.0} UA
+                                                    </span>
+                                                </div>
                                                 <div className="text-[11px] text-slate-400">{a.categoria} • {a.raca || 'Nelore'} • {a.sexo === 'M' ? 'Macho' : 'Fêmea'}</div>
                                             </div>
                                         </div>
                                         <div className="text-xs font-semibold text-slate-200">
-                                            {a.peso_atual ? `${a.peso_atual} kg` : '-'}
+                                            {a.peso_atual ? `${a.peso_atual} kg` : 's/ peso'}
                                         </div>
                                     </div>
                                 ))

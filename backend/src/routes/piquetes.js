@@ -3,7 +3,34 @@ import db from '../db/database.js';
 
 const router = Router();
 
-// GET /api/piquetes - Lista todos os piquetes com métricas completas e animais alocados
+// Tabela de conversão zootécnica de Unidade Animal (Padrão Embrapa)
+export const FATORES_CONVERSAO_UA = {
+    touro: 1.2,
+    vaca: 1.0,
+    matriz: 1.0,
+    boi: 1.0,
+    boi_gordo: 1.0,
+    novilha: 0.7,
+    garrote: 0.7,
+    bezerro: 0.4,
+    desmamado: 0.4
+};
+
+export function calcularUAAnimal(animal) {
+    if (!animal) return 1.0;
+    const cat = (animal.categoria || '').toLowerCase().trim();
+    for (const [key, factor] of Object.entries(FATORES_CONVERSAO_UA)) {
+        if (cat.includes(key)) {
+            return factor;
+        }
+    }
+    if (animal.peso_atual && Number(animal.peso_atual) > 0) {
+        return Number((Number(animal.peso_atual) / 450).toFixed(2));
+    }
+    return 1.0;
+}
+
+// GET /api/piquetes - Lista todos os piquetes com métricas completas de UA e animais alocados
 router.get('/', (req, res) => {
     try {
         const piquetes = db.prepare(`
@@ -25,19 +52,27 @@ router.get('/', (req, res) => {
         const enriched = piquetes.map(p => {
             const cap = p.capacidade_suporte || 0;
             const total = p.total_animais_ativos || 0;
+            const animaisNestePiquete = animaisAtivos
+                .filter(a => a.piquete_atual_id === p.id)
+                .map(a => ({ ...a, ua: calcularUAAnimal(a) }));
+
+            const totalUA = Number(animaisNestePiquete.reduce((sum, a) => sum + (a.ua || 1), 0).toFixed(2));
             const taxa = cap > 0 ? Number(((total / cap) * 100).toFixed(1)) : 0;
-            const densidade = p.tamanho_hectares > 0 ? Number((total / p.tamanho_hectares).toFixed(2)) : 0;
+            const taxaUA = cap > 0 ? Number(((totalUA / cap) * 100).toFixed(1)) : 0;
+            const densidadeCabHa = p.tamanho_hectares > 0 ? Number((total / p.tamanho_hectares).toFixed(2)) : 0;
+            const densidadeUaHa = p.tamanho_hectares > 0 ? Number((totalUA / p.tamanho_hectares).toFixed(2)) : 0;
 
             let statusOcupacao = 'normal';
-            if (taxa > 100) statusOcupacao = 'superlotado';
-            else if (taxa >= 80) statusOcupacao = 'alerta';
-
-            const animaisNestePiquete = animaisAtivos.filter(a => a.piquete_atual_id === p.id);
+            if (taxa > 100 || taxaUA > 100) statusOcupacao = 'superlotado';
+            else if (taxa >= 80 || taxaUA >= 80) statusOcupacao = 'alerta';
 
             return {
                 ...p,
+                total_ua_ativas: totalUA,
                 taxa_ocupacao_pct: taxa,
-                densidade_cab_ha: densidade,
+                taxa_ocupacao_ua_pct: taxaUA,
+                densidade_cab_ha: densidadeCabHa,
+                densidade_ua_ha: densidadeUaHa,
                 status_ocupacao: statusOcupacao,
                 animais: animaisNestePiquete
             };

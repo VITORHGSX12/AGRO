@@ -201,31 +201,63 @@ router.get('/', (req, res) => {
             };
         });
 
-        // 9. Dados de Ocupação e Lotação dos Piquetes
+        // 9. Dados de Ocupação e Lotação dos Piquetes com Unidade Animal (UA)
+        const animaisAtivosParaPastos = db.prepare(`
+            SELECT id, categoria, peso_atual, piquete_atual_id
+            FROM animais
+            WHERE status = 'ativo'
+        `).all();
+
+        const FATORES_UA = {
+            touro: 1.2, vaca: 1.0, matriz: 1.0, boi: 1.0, boi_gordo: 1.0,
+            novilha: 0.7, garrote: 0.7, bezerro: 0.4, desmamado: 0.4
+        };
+
+        const calcUA = (animal) => {
+            if (!animal) return 1.0;
+            const cat = (animal.categoria || '').toLowerCase().trim();
+            for (const [key, factor] of Object.entries(FATORES_UA)) {
+                if (cat.includes(key)) return factor;
+            }
+            if (animal.peso_atual && Number(animal.peso_atual) > 0) {
+                return Number((Number(animal.peso_atual) / 450).toFixed(2));
+            }
+            return 1.0;
+        };
+
+        const totalUAGlobal = Number(animaisAtivosParaPastos.reduce((acc, a) => acc + calcUA(a), 0).toFixed(2));
+
         const ocupacaoPiquetes = db.prepare(`
             SELECT 
                 p.id,
                 p.nome,
                 p.capacidade_suporte,
-                p.tamanho_hectares,
-                COUNT(CASE WHEN a.status = 'ativo' THEN 1 END) as total_animais
+                p.tamanho_hectares
             FROM piquetes p
-            LEFT JOIN animais a ON a.piquete_atual_id = p.id
-            GROUP BY p.id
-            ORDER BY total_animais DESC
+            ORDER BY p.nome ASC
         `).all().map(p => {
             const cap = p.capacidade_suporte || 0;
-            const taxa = cap > 0 ? Number(((p.total_animais / cap) * 100).toFixed(1)) : 0;
-            const densidade = p.tamanho_hectares > 0 ? Number((p.total_animais / p.tamanho_hectares).toFixed(2)) : 0;
+            const animaisNoPiq = animaisAtivosParaPastos.filter(a => a.piquete_atual_id === p.id);
+            const totalAnimais = animaisNoPiq.length;
+            const totalUA = Number(animaisNoPiq.reduce((acc, a) => acc + calcUA(a), 0).toFixed(2));
+            const taxa = cap > 0 ? Number(((totalAnimais / cap) * 100).toFixed(1)) : 0;
+            const taxaUA = cap > 0 ? Number(((totalUA / cap) * 100).toFixed(1)) : 0;
+            const densidade = p.tamanho_hectares > 0 ? Number((totalAnimais / p.tamanho_hectares).toFixed(2)) : 0;
+            const densidadeUA = p.tamanho_hectares > 0 ? Number((totalUA / p.tamanho_hectares).toFixed(2)) : 0;
             return {
                 ...p,
+                total_animais: totalAnimais,
+                total_ua: totalUA,
                 taxa_ocupacao_pct: taxa,
-                densidade_cab_ha: densidade
+                taxa_ocupacao_ua_pct: taxaUA,
+                densidade_cab_ha: densidade,
+                densidade_ua_ha: densidadeUA
             };
         });
 
         const totalHectaresPastos = ocupacaoPiquetes.reduce((acc, p) => acc + (p.tamanho_hectares || 0), 0);
         const taxaLotacaoGlobal = totalHectaresPastos > 0 ? Number((totalAtivos / totalHectaresPastos).toFixed(2)) : 0;
+        const taxaLotacaoGlobalUA = totalHectaresPastos > 0 ? Number((totalUAGlobal / totalHectaresPastos).toFixed(2)) : 0;
 
         // 10. Métricas Agrícolas (Produtividade e Safras)
         const ultimasColheitas = db.prepare(`
@@ -287,7 +319,9 @@ router.get('/', (req, res) => {
             },
             pastagens: {
                 total_hectares: totalHectaresPastos,
+                total_ua_global: totalUAGlobal,
                 taxa_lotacao_global_cab_ha: taxaLotacaoGlobal,
+                taxa_lotacao_global_ua_ha: taxaLotacaoGlobalUA,
                 ocupacao_piquetes: ocupacaoPiquetes
             },
             rh: {

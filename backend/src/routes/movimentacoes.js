@@ -80,17 +80,44 @@ router.post('/', (req, res) => {
             return res.status(400).json({ error: 'Data da movimentação é obrigatória' });
         }
 
-        if (tipo === 'transferencia' && !piquete_destino_id) {
-            return res.status(400).json({ error: 'Piquete de destino é obrigatório para transferências' });
+        const animal = db.prepare('SELECT * FROM animais WHERE id = ?').get(animal_id);
+        if (!animal) {
+            return res.status(404).json({ error: 'Animal não encontrado' });
+        }
+
+        // Validações específicas por tipo de movimentação
+        if (tipo === 'transferencia') {
+            if (!piquete_destino_id) {
+                return res.status(400).json({ error: 'Pasto de destino é obrigatório para transferências' });
+            }
+            if (animal.status !== 'ativo') {
+                return res.status(400).json({ error: `Não é possível transferir um animal com status "${animal.status}"` });
+            }
+            if (animal.piquete_atual_id && Number(animal.piquete_atual_id) === Number(piquete_destino_id)) {
+                return res.status(400).json({ error: 'O pasto de destino não pode ser o mesmo pasto atual do animal' });
+            }
+        } else if (tipo === 'morte') {
+            if (animal.status === 'morto') {
+                return res.status(400).json({ error: 'Este animal já consta com óbito registrado' });
+            }
+            if (!observacao || !observacao.trim()) {
+                return res.status(400).json({ error: 'O motivo/causa da morte é obrigatório para registrar a baixa' });
+            }
+        } else if (tipo === 'venda') {
+            if (animal.status !== 'ativo') {
+                return res.status(400).json({ error: `Não é possível vender um animal com status "${animal.status}"` });
+            }
+            if (valor === undefined || valor === null || Number(valor) < 0) {
+                return res.status(400).json({ error: 'Informe um valor válido para a venda' });
+            }
+        } else if (tipo === 'compra') {
+            if (valor === undefined || valor === null || Number(valor) < 0) {
+                return res.status(400).json({ error: 'Informe um valor válido para a compra' });
+            }
         }
 
         // Execução em transação atômica
         const executeMovimentacao = db.transaction(() => {
-            const animal = db.prepare('SELECT * FROM animais WHERE id = ?').get(animal_id);
-            if (!animal) {
-                throw new Error('Animal não encontrado');
-            }
-
             const piqueteOrigemId = animal.piquete_atual_id;
             let piqueteOrigemNome = null;
             let piqueteDestinoNome = null;
@@ -100,7 +127,7 @@ router.post('/', (req, res) => {
                 if (po) piqueteOrigemNome = po.nome;
             }
 
-            if (piquete_destino_id) {
+            if (piquete_destino_id && (tipo === 'transferencia' || tipo === 'compra')) {
                 const pd = db.prepare('SELECT nome FROM piquetes WHERE id = ?').get(Number(piquete_destino_id));
                 if (pd) piqueteDestinoNome = pd.nome;
             }
@@ -117,9 +144,9 @@ router.post('/', (req, res) => {
                 animal_id,
                 tipo,
                 data,
-                Number(valor) || 0,
+                (tipo === 'venda' || tipo === 'compra') ? (Number(valor) || 0) : 0,
                 piqueteOrigemId,
-                tipo === 'transferencia' ? Number(piquete_destino_id) : (tipo === 'compra' && piquete_destino_id ? Number(piquete_destino_id) : null),
+                (tipo === 'transferencia' || (tipo === 'compra' && piquete_destino_id)) ? Number(piquete_destino_id) : null,
                 piqueteOrigemNome,
                 piqueteDestinoNome,
                 observacao ? observacao.trim() : null
@@ -142,7 +169,7 @@ router.post('/', (req, res) => {
                         animal.fazenda_id,
                         Number(valor),
                         data,
-                        `Venda do animal brinco ${animal.identificacao} (${animal.categoria})`,
+                        `Venda do animal brinco ${animal.identificacao} (${animal.categoria}) - ${observacao || 'Venda comercial'}`,
                         animal_id
                     );
                 }

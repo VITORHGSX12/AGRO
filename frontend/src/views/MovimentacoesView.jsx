@@ -83,8 +83,8 @@ export default function MovimentacoesView({ piquetes, onReloadAll, triggerNewMod
                 animal_id: Number(animalId),
                 tipo,
                 data,
-                valor: valor ? Number(valor) : 0,
-                piquete_destino_id: tipo === 'transferencia' ? Number(piqueteDestinoId) : null,
+                valor: (tipo === 'venda' || tipo === 'compra') && valor ? Number(valor) : 0,
+                piquete_destino_id: (tipo === 'transferencia' || (tipo === 'compra' && piqueteDestinoId)) ? Number(piqueteDestinoId) : null,
                 observacao,
                 gerar_lancamento_financeiro: gerarFinanceiro
             });
@@ -192,7 +192,7 @@ export default function MovimentacoesView({ piquetes, onReloadAll, triggerNewMod
                             )}
                         </div>
 
-                        {/* Se Transferência: Piquete Destino */}
+                        {/* Se Transferência: Piquete Destino Obrigatório */}
                         {tipo === 'transferencia' && (
                             <div>
                                 <label className="block text-xs font-semibold text-slate-300 mb-1">Pasto / Piquete Destino *</label>
@@ -203,9 +203,31 @@ export default function MovimentacoesView({ piquetes, onReloadAll, triggerNewMod
                                     className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
                                 >
                                     <option value="">Selecione o pasto destino...</option>
+                                    {piquetes.map((p) => {
+                                        const isCurrent = selectedAnimal && Number(selectedAnimal.piquete_atual_id) === Number(p.id);
+                                        return (
+                                            <option key={p.id} value={p.id} disabled={isCurrent}>
+                                                {p.nome} {isCurrent ? '(Pasto Atual - Origem)' : `(Capacidade: ${p.capacidade_suporte || '-'} cab)`}
+                                            </option>
+                                        );
+                                    })}
+                                </select>
+                            </div>
+                        )}
+
+                        {/* Se Compra: Piquete de Entrada Opcional */}
+                        {tipo === 'compra' && (
+                            <div>
+                                <label className="block text-xs font-semibold text-slate-300 mb-1">Pasto / Piquete de Entrada (Opcional)</label>
+                                <select
+                                    value={piqueteDestinoId}
+                                    onChange={(e) => setPiqueteDestinoId(e.target.value)}
+                                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                                >
+                                    <option value="">Sem pasto alocado inicialmente</option>
                                     {piquetes.map((p) => (
                                         <option key={p.id} value={p.id}>
-                                            {p.nome} (Ocupação: {p.total_animais_ativos || 0}/{p.capacidade_suporte || '-'})
+                                            {p.nome} (Capacidade: {p.capacidade_suporte || '-'} cab)
                                         </option>
                                     ))}
                                 </select>
@@ -215,11 +237,15 @@ export default function MovimentacoesView({ piquetes, onReloadAll, triggerNewMod
                         {/* Se Venda ou Compra: Valor */}
                         {(tipo === 'venda' || tipo === 'compra') && (
                             <div>
-                                <label className="block text-xs font-semibold text-slate-300 mb-1">Valor da Negociação (R$)</label>
+                                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                                    {tipo === 'venda' ? 'Valor da Venda (R$) *' : 'Valor da Compra (R$) *'}
+                                </label>
                                 <input
                                     type="number"
                                     step="0.01"
-                                    placeholder="Ex: 4500.00"
+                                    min="0"
+                                    required
+                                    placeholder={tipo === 'venda' ? 'Ex: 4800.00 (Preço recebido)' : 'Ex: 3200.00 (Preço pago)'}
                                     value={valor}
                                     onChange={(e) => setValor(e.target.value)}
                                     className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
@@ -233,7 +259,7 @@ export default function MovimentacoesView({ piquetes, onReloadAll, triggerNewMod
                                         className="rounded bg-slate-900 border-slate-700 text-emerald-500 focus:ring-0 cursor-pointer"
                                     />
                                     <label htmlFor="gerarFin" className="text-[11px] text-slate-300 cursor-pointer">
-                                        Lançar automaticamente no fluxo financeiro
+                                        Lançar automaticamente no fluxo de caixa ({tipo === 'venda' ? 'Receita' : 'Despesa'})
                                     </label>
                                 </div>
                             </div>
@@ -251,12 +277,37 @@ export default function MovimentacoesView({ piquetes, onReloadAll, triggerNewMod
                             />
                         </div>
 
-                        {/* Observações */}
+                        {/* Observações / Motivo */}
                         <div>
-                            <label className="block text-xs font-semibold text-slate-300 mb-1">Observações / Motivo</label>
+                            <label className="block text-xs font-semibold text-slate-300 mb-1">
+                                {tipo === 'morte' ? 'Causa / Motivo do Óbito *' : tipo === 'venda' ? 'Comprador / Observação' : tipo === 'compra' ? 'Fornecedor / Origem' : 'Observações'}
+                            </label>
+                            {tipo === 'morte' && (
+                                <div className="flex flex-wrap gap-1 mb-2">
+                                    {['Doença / Enfermidade', 'Acidente / Predador', 'Picada de Peçonhento', 'Descarte Sanitário', 'Causa Natural / Velhice'].map((tag) => (
+                                        <button
+                                            key={tag}
+                                            type="button"
+                                            onClick={() => setObservacao(tag)}
+                                            className="px-2 py-0.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/20 text-[10px] font-medium transition cursor-pointer"
+                                        >
+                                            + {tag}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
                             <textarea
                                 rows="2"
-                                placeholder="Ex: Motivo da transferência, comprador, etc."
+                                required={tipo === 'morte'}
+                                placeholder={
+                                    tipo === 'morte'
+                                        ? 'Informe a causa da morte do animal (obrigatório)...'
+                                        : tipo === 'venda'
+                                        ? 'Ex: Frigorífico X, Comprador Fulano, Nota Fiscal...'
+                                        : tipo === 'compra'
+                                        ? 'Ex: Leilão GD, Fazenda São José...'
+                                        : 'Ex: Rotação periódica de pasto...'
+                                }
                                 value={observacao}
                                 onChange={(e) => setObservacao(e.target.value)}
                                 className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
